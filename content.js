@@ -11,6 +11,75 @@
 	const HEBREW_YEARS = [5784,5785,5786,5787,5788,5789,5790];
 	const SEM_TO_IDX = {'אלול':0, '1':0, 'א':1, '2':1, 'ב':2, '3':2};
 	let paletteByYearHeb = null;
+	let favoriteCourseIds = new Set();
+	const processedCards = new WeakSet();
+	let isReordering = false;
+	let scheduled = false;
+
+	function scheduleLightUpdate() {
+		if (scheduled || isReordering) return;
+		scheduled = true;
+		requestAnimationFrame(() => {
+			scheduled = false;
+			markCoursesContainers();
+			ensureStructureAndColor();
+			refreshFavoritesUI();
+		});
+	}
+
+	function loadFavorites() {
+		return new Promise((resolve) => {
+			try {
+				chrome.storage.sync.get({ favoriteCourseIds: [] }, (res) => {
+					const arr = Array.isArray(res.favoriteCourseIds) ? res.favoriteCourseIds : [];
+					favoriteCourseIds = new Set(arr.map(String));
+					resolve(favoriteCourseIds);
+				});
+			} catch (_e) { resolve(favoriteCourseIds); }
+		});
+	}
+
+	function saveFavorites() {
+		try {
+			chrome.storage.sync.set({ favoriteCourseIds: Array.from(favoriteCourseIds) });
+		} catch (_e) { /* ignore */ }
+	}
+
+	function isFavorite(courseId) { return courseId && favoriteCourseIds.has(String(courseId)); }
+
+	function toggleFavorite(courseId) {
+		if (!courseId) return;
+		const key = String(courseId);
+		if (favoriteCourseIds.has(key)) favoriteCourseIds.delete(key); else favoriteCourseIds.add(key);
+		saveFavorites();
+		refreshFavoritesUI();
+	}
+
+	function getCourseIdFromCard(card) {
+		let mainLink = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+		if (mainLink && mainLink.href) {
+			const m = mainLink.href.match(/[?&]id=(\d+)/);
+			if (m) return m[1];
+		}
+		const idFromAttr = card.getAttribute('data-course-id') || card.dataset.courseId;
+		if (idFromAttr) return String(idFromAttr);
+		return null;
+	}
+
+	function refreshFavoritesUI() {
+		// Update star icons and reorder containers
+		isReordering = true;
+		try { document.querySelectorAll('.jct-courses-grid').forEach(reorderContainerByFavorites); }
+		finally { isReordering = false; }
+		document.querySelectorAll('.jct-fav-toggle').forEach((btn) => {
+			const card = btn.closest('.list-group-item, .coursebox, .card.course, li, .dashboard-card');
+			const cid = card ? getCourseIdFromCard(card) : null;
+			btn.classList.toggle('jct-fav-on', isFavorite(cid));
+			btn.setAttribute('aria-pressed', isFavorite(cid) ? 'true' : 'false');
+			btn.textContent = isFavorite(cid) ? '★' : '☆';
+			if (card) card.setAttribute('data-jct-fav', isFavorite(cid) ? '1' : '0');
+		});
+	}
 
 	function hexToHsl(hex) {
 		hex = (hex || '').replace('#','');
@@ -77,9 +146,21 @@
 		return hexToHsl(hex);
 	}
 
+	const CARD_STYLE_SELECTOR = '.list-group-item, .coursebox, .card.course, .course-list > li';
+
+	function getStyledCardEl(card) {
+		if (!card) return null;
+		if (card.matches && card.matches(CARD_STYLE_SELECTOR)) return card;
+		return card.querySelector(CARD_STYLE_SELECTOR) || card;
+	}
+
 	function ensureStructureAndColor() {
 		const cards = document.querySelectorAll('.jct-courses-grid > .list-group-item, .jct-courses-grid .list-group > .list-group-item, .jct-courses-grid .coursebox, .jct-courses-grid .card.course, .jct-courses-grid .course-list > li, .jct-courses-grid > .dashboard-card');
 		cards.forEach((card) => {
+			// Ensure base positioning for overlays
+			if (!card.style.position) card.style.position = 'relative';
+
+			const already = processedCards.has(card);
 			let topThumb = card.querySelector('.jct-thumb-wrap');
 			if (!topThumb) {
 				topThumb = document.createElement('div');
@@ -99,23 +180,68 @@
 				ph.src = getPlaceholderUrl();
 				topThumb.appendChild(ph);
 			}
-			const text = card.innerText || '';
-			const { year, semIdx } = parseHebrewYearAndSemester(text);
+			// Always recompute color so palette or detected text changes reflect immediately
+			const text = card.innerText || card.textContent || '';
+			let { year, semIdx } = parseHebrewYearAndSemester(text);
+			if (year == null || semIdx == null) {
+				// Fallback: derive stable indices from course id so colors vary and use options palette
+				const cid = getCourseIdFromCard(card) || '';
+				let hash = 0; for (let i = 0; i < cid.length; i++) { hash = ((hash << 5) - hash) + cid.charCodeAt(i); hash |= 0; }
+				const row = Math.abs(hash) % HEBREW_YEARS.length;
+				year = HEBREW_YEARS[row];
+				const sems = [0,1,2];
+				semIdx = sems[Math.abs(hash >> 3) % sems.length];
+			}
 			const { h, s, l } = colorFor(year, semIdx);
-			card.style.setProperty('--jct-accent-h', String(h));
-			card.style.setProperty('--jct-accent-s', String(s) + '%');
-			card.style.setProperty('--jct-accent-l', String(l) + '%');
+			const styledEl = getStyledCardEl(card);
+			styledEl.style.setProperty('--jct-accent-h', String(h));
+			styledEl.style.setProperty('--jct-accent-s', String(s) + '%');
+			styledEl.style.setProperty('--jct-accent-l', String(l) + '%');
+			// Favorite toggle
+			let favBtn = card.querySelector('.jct-fav-toggle');
+			const courseId = getCourseIdFromCard(card);
+			if (!favBtn) {
+				favBtn = document.createElement('button');
+				favBtn.type = 'button';
+				favBtn.className = 'jct-fav-toggle';
+				favBtn.title = 'Toggle favorite';
+				favBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					const cid = getCourseIdFromCard(card);
+					toggleFavorite(cid);
+				});
+				card.appendChild(favBtn);
+			}
+			card.setAttribute('data-jct-fav', isFavorite(courseId) ? '1' : '0');
+			favBtn.classList.toggle('jct-fav-on', isFavorite(courseId));
+			favBtn.setAttribute('aria-pressed', isFavorite(courseId) ? 'true' : 'false');
+			favBtn.textContent = isFavorite(courseId) ? '★' : '☆';
+			if (!card.hasAttribute('data-jct-idx')) {
+				const parent = card.parentElement;
+				if (parent) {
+					const idx = Array.prototype.indexOf.call(parent.children, card);
+					card.setAttribute('data-jct-idx', String(idx));
+				}
+			}
+
 			// Clickable logic preserved...
 			let mainLink = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
 			if (mainLink && !card.classList.contains('jct-clickable')) {
 				card.classList.add('jct-clickable');
 				card.style.cursor = 'pointer';
 				card.addEventListener('click', (event) => {
+					if (event.target.closest('.jct-fav-toggle')) return;
 					if (event.target.closest('a[href*="/course/view.php"]')) return;
 					window.open(mainLink.href, '_self');
 				});
 			}
+			processedCards.add(card);
 		});
+		// After ensuring cards, reorder each grid container in a guarded way
+		isReordering = true;
+		try { document.querySelectorAll('.jct-courses-grid').forEach(reorderContainerByFavorites); }
+		finally { isReordering = false; }
 	}
 
 	function markCoursesContainers() {
@@ -136,6 +262,31 @@
 				el.classList.add('jct-courses-grid');
 			}
 		});
+	}
+
+	function reorderContainerByFavorites(container) {
+		if (!container) return;
+		const children = Array.from(container.children);
+		// Determine favorites and keep stable order by original index
+		const withMeta = children.map((el, i) => {
+			const card = el;
+			const idx = Number(card.getAttribute('data-jct-idx') || i);
+			const cid = getCourseIdFromCard(card) || getCourseIdFromCard(card.querySelector('.list-group-item, .coursebox, .card.course, li') || card);
+			const fav = isFavorite(cid) || card.getAttribute('data-jct-fav') === '1';
+			return { card, fav, idx };
+		});
+		const sorted = withMeta.slice().sort((a, b) => {
+			if (a.fav !== b.fav) return a.fav ? -1 : 1;
+			return a.idx - b.idx;
+		});
+		let changed = false;
+		sorted.forEach(({ card }, pos) => {
+			if (container.children[pos] !== card) { changed = true; container.appendChild(card); }
+		});
+		if (changed) {
+			// Update indices
+			Array.from(container.children).forEach((c, i) => c.setAttribute('data-jct-idx', String(i)));
+		}
 	}
 
 	function getPlaceholderUrl() { return chrome.runtime.getURL('assets/placeholder.svg'); }
@@ -173,18 +324,23 @@
 		document.documentElement.classList.add('jct-moodle-redesign');
 		const html = document.documentElement;
 		if (html.dir === 'rtl') html.classList.add('jct-rtl');
-		await loadPaletteHeb();
+		await Promise.all([loadPaletteHeb(), loadFavorites()]);
 		markCoursesContainers();
 		ensureStructureAndColor();
 		relocateTopBlocksAfterCourses();
 		hideFrontClutter();
-		const obs = new MutationObserver(() => { markCoursesContainers(); ensureStructureAndColor(); relocateTopBlocksAfterCourses(); hideFrontClutter(); });
+	const obs = new MutationObserver(() => { scheduleLightUpdate(); });
 		obs.observe(document.body, { childList: true, subtree: true });
 		if (chrome?.storage?.onChanged) {
 			chrome.storage.onChanged.addListener((changes, area) => {
 				if (area === 'sync' && changes.paletteByYearHeb) {
 					paletteByYearHeb = changes.paletteByYearHeb.newValue;
 					ensureStructureAndColor();
+				}
+				if (area === 'sync' && changes.favoriteCourseIds) {
+					const arr = Array.isArray(changes.favoriteCourseIds.newValue) ? changes.favoriteCourseIds.newValue : [];
+					favoriteCourseIds = new Set(arr.map(String));
+					refreshFavoritesUI();
 				}
 			});
 		}
