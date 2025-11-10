@@ -10,9 +10,19 @@
 
 	const HEBREW_YEARS = [5784,5785,5786,5787,5788,5789,5790];
 	const SEM_TO_IDX = {'אלול':0, '1':0, 'א':1, '2':1, 'ב':2, '3':2};
+	const DEFAULT_PALETTE = [
+		["#3b82f6","#818cf8","#bae6fd"], // 5784
+		["#22c55e","#4ade80","#bbf7d0"], // 5785
+		["#f97316","#fbbf24","#fed7aa"], // 5786
+		["#f43f5e","#fda4af","#fecdd3"], // 5787
+		["#a21caf","#f472b6","#f3e8ff"], // 5788
+		["#2563eb","#60a5fa","#dbeafe"], // 5789
+		["#b45309","#f59e42","#fde68a"]  // 5790
+	];
 	let paletteByYearHeb = null;
 	let favoriteCourseIds = new Set();
 	let courseSchedules = {};
+	let courseAssignments = {}; // Store assignments by courseId
 	const processedCards = new WeakSet();
 	let isReordering = false;
 	let scheduled = false;
@@ -100,6 +110,409 @@
 				resolve(courseSchedules);
 			}
 		});
+	}
+
+	function loadCourseAssignments() {
+		return new Promise((resolve) => {
+			try {
+				chrome.storage.local.get({ courseAssignments: {} }, (res) => {
+					if (chrome.runtime.lastError) {
+						chrome.storage.sync.get({ courseAssignments: {} }, (res2) => {
+							courseAssignments = res2.courseAssignments || {};
+							resolve(courseAssignments);
+						});
+						return;
+					}
+					courseAssignments = res.courseAssignments || {};
+					resolve(courseAssignments);
+				});
+			} catch (e) {
+				console.error('Error in loadCourseAssignments:', e);
+				resolve(courseAssignments);
+			}
+		});
+	}
+
+	function saveCourseAssignments() {
+		return new Promise((resolve) => {
+			try {
+				chrome.storage.local.set({ courseAssignments: courseAssignments }, () => {
+					if (chrome.runtime.lastError) {
+						chrome.storage.sync.set({ courseAssignments: courseAssignments }, () => resolve());
+					} else {
+						resolve();
+					}
+				});
+			} catch (e) {
+				console.error('Error saving assignments:', e);
+				resolve();
+			}
+		});
+	}
+
+	async function fetchAssignmentsForCourse(courseId) {
+		if (!courseId) {
+			return [];
+		}
+		
+		try {
+			// Check if we have cached data that's less than 5 minutes old
+			if (courseAssignments[courseId] && courseAssignments[courseId]._timestamp) {
+				const age = Date.now() - courseAssignments[courseId]._timestamp;
+				if (age < 5 * 60 * 1000) { // 5 minutes
+					return courseAssignments[courseId].assignments || [];
+				}
+			}
+
+			// Get Moodle config from window - wait longer if not ready
+			let moodleCfg = window.M?.cfg;
+			
+			// Try multiple times to get the config
+			if (!moodleCfg) {
+				for (let i = 0; i < 10; i++) {
+					await new Promise(resolve => setTimeout(resolve, 200));
+					moodleCfg = window.M?.cfg;
+					if (moodleCfg && moodleCfg.sesskey && moodleCfg.wwwroot) {
+						break;
+					}
+				}
+			}
+			
+			// If still not found, try to get wwwroot from current URL
+			if (!moodleCfg || !moodleCfg.wwwroot) {
+				const currentUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
+				if (currentUrl.includes('moodle')) {
+					moodleCfg = moodleCfg || {};
+					moodleCfg.wwwroot = currentUrl;
+				}
+			}
+			
+			// Try to get sesskey from the page
+			if (!moodleCfg || !moodleCfg.sesskey) {
+				const sesskeyInput = document.querySelector('input[name="sesskey"]');
+				if (sesskeyInput) {
+					moodleCfg = moodleCfg || {};
+					moodleCfg.sesskey = sesskeyInput.value;
+				}
+			}
+			
+			if (!moodleCfg || !moodleCfg.wwwroot) {
+				if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
+					return courseAssignments[courseId].assignments;
+				}
+				return [];
+			}
+
+			// Try multiple approaches to get assignments
+			
+			// Approach 1: Try Moodle AJAX API
+			try {
+				const apiUrl = `${moodleCfg.wwwroot}/lib/ajax/service.php`;
+				const requestData = [{
+					index: 0,
+					methodname: 'core_course_get_contents',
+					args: {
+						courseid: parseInt(courseId)
+					}
+				}];
+
+				const requestBody = moodleCfg.sesskey 
+					? { sesskey: moodleCfg.sesskey, info: requestData }
+					: { info: requestData };
+
+				const response = await fetch(apiUrl, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					credentials: 'include',
+					body: JSON.stringify(requestBody)
+				});
+
+				if (response.ok) {
+					const data = await response.json();
+					
+					if (data && data[0] && !data[0].error && data[0].data) {
+						const sections = Array.isArray(data[0].data) ? data[0].data : [];
+						const assignments = [];
+						
+						// Parse sections to find assignments
+						sections.forEach(section => {
+							if (section.modules && Array.isArray(section.modules)) {
+								section.modules.forEach(module => {
+									if (module.modname === 'assign' && module.id) {
+										// Find due date
+										let dueDate = null;
+										if (module.dates && Array.isArray(module.dates)) {
+											// Look for due date (could be labeled in Hebrew or English)
+											const dueDateObj = module.dates.find(d => 
+												d && d.label && (
+													d.label.includes('תאריך') || 
+													d.label.includes('Due') || 
+													d.label.includes('due') ||
+													d.label.includes('תאריך הגשה') ||
+													d.label.includes('תאריך סיום')
+												)
+											);
+											if (dueDateObj && dueDateObj.timestamp) {
+												dueDate = Math.floor(dueDateObj.timestamp);
+											} else if (module.dates[0] && module.dates[0].timestamp) {
+												dueDate = Math.floor(module.dates[0].timestamp);
+											}
+										}
+										
+										// Also check module.duedate if available
+										if (!dueDate && module.duedate) {
+											dueDate = Math.floor(module.duedate);
+										}
+										
+										// Ensure URL points to assignment view
+										let moduleUrl = module.url || `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
+										if (!moduleUrl.includes('/mod/assign/view.php')) {
+											moduleUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
+										}
+										
+										// Check if assignment is submitted
+										let isSubmitted = false;
+										if (module.completiondata && module.completiondata.state === 1) {
+											isSubmitted = true;
+										} else if (module.completion && module.completion === 1) {
+											isSubmitted = true;
+										}
+										
+										assignments.push({
+											id: String(module.id),
+											name: module.name || 'מטלה ללא שם',
+											duedate: dueDate,
+											url: moduleUrl,
+											submission: isSubmitted ? { status: 'submitted' } : null
+										});
+									}
+								});
+							}
+						});
+						
+						if (assignments.length > 0) {
+							courseAssignments[courseId] = {
+								assignments: assignments,
+								_timestamp: Date.now()
+							};
+						saveCourseAssignments().catch(() => {});
+						return assignments;
+						}
+					}
+				}
+			} catch (apiError) {
+				// API failed, try page fetch
+			}
+			
+			// Approach 2: Try to fetch course page (may fail due to CORS)
+			try {
+				const courseUrl = `${moodleCfg.wwwroot}/course/view.php?id=${courseId}`;
+				const response = await fetch(courseUrl, {
+					method: 'GET',
+					credentials: 'include'
+				});
+				
+				if (response.ok) {
+					const html = await response.text();
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(html, 'text/html');
+					
+					// Find assignment links
+					const assignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+					const assignments = [];
+					
+					assignmentLinks.forEach(link => {
+						const href = link.getAttribute('href');
+						const match = href.match(/[?&]id=(\d+)/);
+						if (match) {
+							const assignId = match[1];
+							const name = link.textContent.trim() || link.innerText.trim();
+							
+							// Try to find due date - multiple approaches
+							let dueDate = null;
+							
+							// Approach 1: Look in parent elements
+							const parent = link.closest('.activity, .modtype_assign, li, .course-content, .activityinstance, .activity-item');
+							if (parent) {
+								// Try to find date in various formats
+								const dateText = parent.textContent || parent.innerText || '';
+								
+								// Hebrew date format: DD/MM/YYYY
+								let dateMatch = dateText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+								if (dateMatch) {
+									const [_, day, month, year] = dateMatch;
+									dueDate = Math.floor(new Date(`${year}-${month}-${day}`).getTime() / 1000);
+								} else {
+									// Try YYYY-MM-DD format
+									dateMatch = dateText.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+									if (dateMatch) {
+										const [_, year, month, day] = dateMatch;
+										dueDate = Math.floor(new Date(`${year}-${month}-${day}`).getTime() / 1000);
+									} else {
+										// Try to find data attributes
+										const dateAttr = parent.getAttribute('data-duedate') || 
+											parent.querySelector('[data-duedate]')?.getAttribute('data-duedate');
+										if (dateAttr) {
+											dueDate = parseInt(dateAttr);
+										}
+									}
+								}
+							}
+							
+							// Approach 2: Look for date in nearby text elements
+							if (!dueDate) {
+								// Check siblings and nearby elements
+								let current = link.parentElement;
+								for (let i = 0; i < 5 && current; i++) {
+									const text = current.textContent || '';
+									// Look for various date patterns
+									let dateMatch = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+									if (dateMatch) {
+										const [_, day, month, year] = dateMatch;
+										dueDate = Math.floor(new Date(`${year}-${month}-${day}`).getTime() / 1000);
+										break;
+									}
+									dateMatch = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+									if (dateMatch) {
+										const [_, year, month, day] = dateMatch;
+										dueDate = Math.floor(new Date(`${year}-${month}-${day}`).getTime() / 1000);
+										break;
+									}
+									current = current.parentElement;
+								}
+							}
+							
+							// Approach 3: Try to fetch assignment page (async, don't block) to check submission status
+							// This will be done in background and cached for next time
+							if (assignId) {
+								// Fetch in background and update cache
+								fetch(`${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`, {
+									method: 'GET',
+									credentials: 'include'
+								}).then(response => {
+									if (response.ok) {
+										return response.text();
+									}
+								}).then(html => {
+									if (html) {
+										const parser = new DOMParser();
+										const doc = parser.parseFromString(html, 'text/html');
+										
+										// Check if assignment is submitted
+										let isSubmitted = false;
+										const pageText = doc.body.textContent || doc.body.innerText || '';
+										if (pageText.includes('הוגש') || pageText.includes('הושלם') || 
+											pageText.includes('Submitted') || pageText.includes('Complete') ||
+											doc.querySelector('.submissionstatussubmitted, .submission-status-submitted, [class*="submitted"], [id*="submitted"]')) {
+											isSubmitted = true;
+										}
+										
+										// Look for due date in various places
+										const dueDateEl = doc.querySelector('[data-duedate], .duedate, .assignment-due-date, [class*="due"], [id*="duedate"]');
+										if (dueDateEl) {
+											let dateText = dueDateEl.textContent || dueDateEl.getAttribute('data-duedate');
+											if (!dateText) {
+												dateText = dueDateEl.getAttribute('title') || dueDateEl.getAttribute('aria-label');
+											}
+											
+											if (dateText) {
+												let dateMatch = dateText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+												if (dateMatch) {
+													const [_, day, month, year] = dateMatch;
+													const timestamp = Math.floor(new Date(`${year}-${month}-${day}`).getTime() / 1000);
+													// Update cached assignment
+													if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
+														const assign = courseAssignments[courseId].assignments.find(a => a.id === assignId);
+														if (assign) {
+															assign.duedate = timestamp;
+															if (isSubmitted) {
+																assign.submission = { status: 'submitted' };
+															}
+															saveCourseAssignments().catch(() => {});
+														}
+													}
+												}
+											}
+										} else if (isSubmitted) {
+											// Update submission status even if no date found
+											if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
+												const assign = courseAssignments[courseId].assignments.find(a => a.id === assignId);
+												if (assign) {
+													assign.submission = { status: 'submitted' };
+													saveCourseAssignments().catch(() => {});
+												}
+											}
+										}
+									}
+								}).catch(() => {});
+							}
+							
+							// Fix URL - make sure it's absolute and points to the assignment
+							let finalUrl = href;
+							if (!href.startsWith('http')) {
+								if (href.startsWith('/')) {
+									finalUrl = `${moodleCfg.wwwroot}${href}`;
+								} else {
+									finalUrl = `${moodleCfg.wwwroot}/${href}`;
+								}
+							}
+							
+							// Ensure URL points to assignment view, not course
+							if (!finalUrl.includes('/mod/assign/view.php')) {
+								finalUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`;
+							}
+							
+							// Check if assignment is submitted by looking at the link or parent element
+							let isSubmitted = false;
+							const parentEl = link.closest('.activity, .modtype_assign, li, .course-content, .activityinstance, .activity-item');
+							if (parentEl) {
+								const parentText = parentEl.textContent || parentEl.innerText || '';
+								// Look for Hebrew indicators of submission
+								if (parentText.includes('הוגש') || parentText.includes('הושלם') || 
+									parentText.includes('Submitted') || parentText.includes('Complete') ||
+									parentEl.classList.contains('completed') || parentEl.classList.contains('submitted') ||
+									parentEl.querySelector('.submissionstatussubmitted, .submission-status-submitted, [class*="submitted"]')) {
+									isSubmitted = true;
+								}
+							}
+							
+							assignments.push({
+								id: assignId,
+								name: name,
+								duedate: dueDate,
+								url: finalUrl,
+								submission: isSubmitted ? { status: 'submitted' } : null
+							});
+						}
+					});
+					
+					if (assignments.length > 0) {
+						courseAssignments[courseId] = {
+							assignments: assignments,
+							_timestamp: Date.now()
+						};
+						saveCourseAssignments().catch(() => {});
+						return assignments;
+					}
+				}
+			} catch (fetchError) {
+				// Page fetch failed
+			}
+			
+			// Return cached data if available
+			if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
+				return courseAssignments[courseId].assignments;
+			}
+			return [];
+		} catch (error) {
+			console.error('Error fetching assignments for course', courseId, error);
+			if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
+				return courseAssignments[courseId].assignments;
+			}
+			return [];
+		}
 	}
 	
 	function saveScheduleViewState() {
@@ -239,11 +652,11 @@
 	}
 
 	function colorFor(year, semIdx) {
-		// Default fallback
-		if (!Array.isArray(paletteByYearHeb)) return { h: 220,s:60,l:60 };
+		// Use DEFAULT_PALETTE if paletteByYearHeb is not loaded yet
+		const palette = Array.isArray(paletteByYearHeb) ? paletteByYearHeb : DEFAULT_PALETTE;
 		const row = HEBREW_YEARS.indexOf(year);
 		if (row === -1 || semIdx == null) return { h: 220, s: 60, l: 60 };
-		let hex = paletteByYearHeb[row] && paletteByYearHeb[row][semIdx];
+		let hex = palette[row] && palette[row][semIdx];
 		if (!hex) hex = "#cccccc";
 		return hexToHsl(hex);
 	}
@@ -254,6 +667,486 @@
 		if (!card) return null;
 		if (card.matches && card.matches(CARD_STYLE_SELECTOR)) return card;
 		return card.querySelector(CARD_STYLE_SELECTOR) || card;
+	}
+
+	async function updateAssignmentsDisplay(card, courseId) {
+		if (!courseId) {
+			return;
+		}
+		
+		// Skip if already processed
+		if (card.hasAttribute('data-jct-assignments-processed')) {
+			return;
+		}
+		card.setAttribute('data-jct-assignments-processed', 'true');
+		
+		try {
+			let assignmentsContainer = card.querySelector('.jct-assignments-container');
+			if (!assignmentsContainer) {
+				assignmentsContainer = document.createElement('div');
+				assignmentsContainer.className = 'jct-assignments-container';
+				assignmentsContainer.style.display = 'none';
+				// Insert after the course name/link but before other content
+				const courseNameEl = card.querySelector('.coursename, .course-title, a[href*="/course/view.php"]');
+				if (courseNameEl && courseNameEl.parentElement) {
+					courseNameEl.parentElement.insertBefore(assignmentsContainer, courseNameEl.nextSibling);
+				} else {
+					// Fallback: add at the end of card
+					card.appendChild(assignmentsContainer);
+				}
+			}
+
+			// Try to fetch assignments
+			const assignments = await fetchAssignmentsForCourse(courseId);
+			
+			if (!assignments || assignments.length === 0) {
+				assignmentsContainer.innerHTML = '';
+				assignmentsContainer.style.display = 'none';
+				return;
+			}
+
+			// Filter assignments: only show relevant ones (not submitted, with due date or recent)
+			const now = Math.floor(Date.now() / 1000);
+			const sevenDaysFromNow = now + (7 * 24 * 60 * 60); // Show only next 7 days
+			
+			// Get max days for overdue assignments from settings
+			let maxOverdueDays = 30; // Default: 30 days
+			try {
+				const settings = await new Promise(resolve => {
+					chrome.storage.sync.get({ maxOverdueDays: 30 }, res => resolve(res));
+				});
+				maxOverdueDays = settings.maxOverdueDays || 30;
+			} catch (e) {
+				// Use default
+			}
+			const maxOverdueTimestamp = now - (maxOverdueDays * 24 * 60 * 60);
+			
+			// Filter out submitted assignments and very old overdue assignments
+			const activeAssignments = assignments.filter(a => {
+				if (!a) return false;
+				// Skip if submitted
+				if (a.submission && a.submission.status === 'submitted') return false;
+				// Skip if overdue for more than maxOverdueDays
+				if (a.duedate && a.duedate > 0 && a.duedate < now && a.duedate < maxOverdueTimestamp) {
+					return false;
+				}
+				return true;
+			});
+			
+			// Separate by due date
+			const assignmentsWithDueDates = activeAssignments
+				.filter(a => a.duedate && a.duedate > 0)
+				.sort((a, b) => a.duedate - b.duedate);
+			
+			// Show only urgent assignments (next 7 days) or overdue
+			const urgentAssignments = assignmentsWithDueDates.filter(a => 
+				a.duedate <= sevenDaysFromNow // Includes overdue and upcoming within 7 days
+			);
+			
+			// Always show only 1 assignment initially (unless user clicks "Show All")
+			let assignmentsToShow = [];
+			if (urgentAssignments.length > 0) {
+				assignmentsToShow = urgentAssignments.slice(0, 1); // Only 1 urgent assignment
+			} else {
+				// No urgent assignments, show first assignment without date
+				const assignmentsWithoutDueDates = activeAssignments
+					.filter(a => (!a.duedate || a.duedate <= 0))
+					.slice(0, 1);
+				assignmentsToShow = assignmentsWithoutDueDates;
+			}
+
+			if (assignmentsToShow.length === 0) {
+				assignmentsContainer.innerHTML = '';
+				assignmentsContainer.style.display = 'none';
+				return;
+			}
+
+			// Build HTML with carousel functionality
+			// Store references for toggle functionality
+			const allActiveAssignmentsRef = activeAssignments;
+			const assignmentsToShowRef = assignmentsToShow;
+			const nowRef = now;
+			const hasMore = allActiveAssignmentsRef.length > assignmentsToShowRef.length;
+			
+			let html = '<div class="jct-assignments-header">';
+			html += '<span class="jct-assignments-title">📝 מטלות קרובות</span>';
+			if (hasMore) {
+				html += `<button class="jct-assignments-toggle" data-expanded="false" style="display: inline-block !important; visibility: visible !important; opacity: 1 !important;">הצג הכל (${allActiveAssignmentsRef.length})</button>`;
+			}
+			html += '</div>';
+			html += '<div class="jct-assignments-list">';
+			
+			// Show all assignments when expanded
+			const assignmentsToRender = assignmentsToShow;
+			
+			assignmentsToRender.forEach(assign => {
+				if (!assign || !assign.name) return;
+				
+				try {
+					let dueDate = null;
+					let daysUntilDue = null;
+					let isOverdue = false;
+					let isUrgent = false;
+					let dateStr = '';
+					
+					if (assign.duedate && assign.duedate > 0) {
+						dueDate = new Date(assign.duedate * 1000);
+						daysUntilDue = Math.ceil((assign.duedate - now) / (24 * 60 * 60));
+						isOverdue = assign.duedate < now;
+						isUrgent = daysUntilDue <= 3 && !isOverdue;
+						dateStr = dueDate.toLocaleDateString('he-IL', { 
+							day: 'numeric', 
+							month: 'numeric',
+							year: 'numeric'
+						});
+					}
+					
+					const isSubmitted = assign.submission && assign.submission.status === 'submitted';
+					
+					let statusClass = '';
+					let statusText = '';
+					if (isSubmitted) {
+						statusClass = 'jct-assignment-submitted';
+						statusText = '✓ הוגש';
+					} else if (isOverdue) {
+						statusClass = 'jct-assignment-overdue';
+						statusText = '⚠️ איחור';
+					} else if (isUrgent) {
+						statusClass = 'jct-assignment-urgent';
+						statusText = `⏰ ${daysUntilDue} ימים`;
+					} else if (daysUntilDue !== null) {
+						statusClass = 'jct-assignment-upcoming';
+						statusText = `${daysUntilDue} ימים`;
+					} else {
+						statusClass = 'jct-assignment-upcoming';
+						statusText = 'ללא תאריך';
+					}
+
+					const safeName = (assign.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+					const safeUrl = assign.url || '';
+
+					html += `<div class="jct-assignment-item ${statusClass}" data-assignment-url="${safeUrl ? safeUrl.replace(/"/g, '&quot;') : ''}">`;
+					html += `<div class="jct-assignment-name">${safeName}</div>`;
+					html += `<div class="jct-assignment-meta">`;
+					if (dateStr) {
+						html += `<span class="jct-assignment-date">${dateStr}</span>`;
+					}
+					html += `<span class="jct-assignment-status">${statusText}</span>`;
+					html += `</div>`;
+					if (safeUrl) {
+						html += `<a href="${safeUrl}" class="jct-assignment-link" target="_blank" data-href="${safeUrl}">פתח →</a>`;
+					}
+					html += `</div>`;
+				} catch (e) {
+					console.error('Error processing assignment:', e, assign);
+				}
+			});
+
+			// Show count of remaining assignments if there are more
+			const remainingCount = activeAssignments.length - assignmentsToShow.length;
+			if (remainingCount > 0) {
+				html += `<div class="jct-assignments-more">+${remainingCount} מטלות נוספות</div>`;
+			}
+
+			html += '</div>';
+			assignmentsContainer.innerHTML = html;
+			assignmentsContainer.style.display = 'block';
+			
+			// Add click handlers to all links in initial HTML
+			const allLinks = assignmentsContainer.querySelectorAll('.jct-assignment-link');
+			allLinks.forEach(link => {
+				link.addEventListener('click', (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					let href = link.getAttribute('href') || link.getAttribute('data-href');
+					// Fix URL if needed
+					if (href && !href.includes('/mod/assign/view.php')) {
+						const urlMatch = href.match(/[?&]id=(\d+)/);
+						if (urlMatch) {
+							href = `${window.location.origin}/mod/assign/view.php?id=${urlMatch[1]}`;
+						}
+					}
+					if (href) {
+						window.location.href = href;
+					}
+				});
+			});
+			
+			// Helper function to create assignment element
+			const createAssignmentElement = (assign, now) => {
+				if (!assign) {
+					return null;
+				}
+				const div = document.createElement('div');
+				
+				let dueDate = null;
+				let daysUntilDue = null;
+				let isOverdue = false;
+				let isUrgent = false;
+				let dateStr = '';
+				
+				if (assign.duedate && assign.duedate > 0) {
+					dueDate = new Date(assign.duedate * 1000);
+					daysUntilDue = Math.ceil((assign.duedate - now) / (24 * 60 * 60));
+					isOverdue = assign.duedate < now;
+					isUrgent = daysUntilDue <= 3 && !isOverdue;
+					dateStr = dueDate.toLocaleDateString('he-IL', { 
+						day: 'numeric', 
+						month: 'numeric',
+						year: 'numeric'
+					});
+				}
+				
+				const isSubmitted = assign.submission && assign.submission.status === 'submitted';
+				
+				let statusClass = '';
+				let statusText = '';
+				if (isSubmitted) {
+					statusClass = 'jct-assignment-submitted';
+					statusText = '✓ הוגש';
+				} else if (isOverdue) {
+					statusClass = 'jct-assignment-overdue';
+					statusText = '⚠️ איחור';
+				} else if (isUrgent) {
+					statusClass = 'jct-assignment-urgent';
+					statusText = `⏰ ${daysUntilDue} ימים`;
+				} else if (daysUntilDue !== null) {
+					statusClass = 'jct-assignment-upcoming';
+					statusText = `${daysUntilDue} ימים`;
+				} else {
+					statusClass = 'jct-assignment-upcoming';
+					statusText = 'ללא תאריך';
+				}
+
+				const safeName = (assign.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+				
+				// Fix URL - ensure it points to assignment view
+				let safeUrl = assign.url || '';
+				if (safeUrl && !safeUrl.includes('/mod/assign/view.php')) {
+					// Try to extract assignment ID from URL
+					const urlMatch = safeUrl.match(/[?&]id=(\d+)/);
+					if (urlMatch && urlMatch[1]) {
+						safeUrl = `${window.location.origin}/mod/assign/view.php?id=${urlMatch[1]}`;
+					} else if (assign.id) {
+						safeUrl = `${window.location.origin}/mod/assign/view.php?id=${assign.id}`;
+					}
+				} else if (!safeUrl && assign.id) {
+					safeUrl = `${window.location.origin}/mod/assign/view.php?id=${assign.id}`;
+				}
+
+				div.className = `jct-assignment-item ${statusClass}`;
+				
+				const nameDiv = document.createElement('div');
+				nameDiv.className = 'jct-assignment-name';
+				nameDiv.textContent = safeName;
+				
+				const metaDiv = document.createElement('div');
+				metaDiv.className = 'jct-assignment-meta';
+				
+				if (dateStr) {
+					const dateSpan = document.createElement('span');
+					dateSpan.className = 'jct-assignment-date';
+					dateSpan.textContent = dateStr;
+					metaDiv.appendChild(dateSpan);
+				}
+				
+				const statusSpan = document.createElement('span');
+				statusSpan.className = 'jct-assignment-status';
+				statusSpan.textContent = statusText;
+				metaDiv.appendChild(statusSpan);
+				
+				div.appendChild(nameDiv);
+				div.appendChild(metaDiv);
+				
+				// Make the entire card clickable, but stop propagation to course card
+				div.style.cursor = 'pointer';
+				div.addEventListener('click', (e) => {
+					// Don't navigate if clicking on buttons
+					if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+						return;
+					}
+					e.stopPropagation();
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					if (safeUrl) {
+						window.location.href = safeUrl;
+					}
+					return false;
+				});
+				div.addEventListener('mousedown', (e) => {
+					e.stopPropagation();
+					e.stopImmediatePropagation();
+				});
+				
+				if (safeUrl) {
+					const link = document.createElement('a');
+					link.href = safeUrl;
+					link.className = 'jct-assignment-link';
+					link.target = '_blank';
+					link.textContent = 'פתח →';
+					link.style.cursor = 'pointer';
+					link.addEventListener('click', (e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						e.stopImmediatePropagation();
+						if (safeUrl) {
+							window.location.href = safeUrl;
+						}
+						return false;
+					});
+					link.addEventListener('mousedown', (e) => {
+						e.stopPropagation();
+						e.stopImmediatePropagation();
+					});
+					div.appendChild(link);
+				}
+				return div;
+			};
+			
+			// Add carousel functionality
+			const toggleBtn = assignmentsContainer.querySelector('.jct-assignments-toggle');
+			if (toggleBtn) {
+				let currentIndex = 0;
+				
+				toggleBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					const isExpanded = toggleBtn.getAttribute('data-expanded') === 'true';
+					const list = assignmentsContainer.querySelector('.jct-assignments-list');
+					
+					if (isExpanded) {
+						// Collapse - show only urgent
+						toggleBtn.setAttribute('data-expanded', 'false');
+						toggleBtn.textContent = `הצג הכל (${allActiveAssignmentsRef.length})`;
+						list.innerHTML = '';
+						assignmentsToShowRef.forEach(assign => {
+							list.appendChild(createAssignmentElement(assign, nowRef));
+						});
+						// Remove carousel controls
+						const carouselControls = assignmentsContainer.querySelector('.jct-assignments-carousel-controls');
+						if (carouselControls) {
+							carouselControls.remove();
+						}
+						// Show "more" message if it exists
+						const moreDiv = assignmentsContainer.querySelector('.jct-assignments-more');
+						if (moreDiv) {
+							const remainingCount = allActiveAssignmentsRef.length - assignmentsToShowRef.length;
+							if (remainingCount > 0) {
+								moreDiv.textContent = `+${remainingCount} מטלות נוספות`;
+								moreDiv.style.display = 'block';
+							} else {
+								moreDiv.style.display = 'none';
+							}
+						}
+					} else {
+						// Expand - show carousel
+						toggleBtn.setAttribute('data-expanded', 'true');
+						toggleBtn.textContent = 'הסתר';
+						currentIndex = 0;
+						
+						// Create carousel container
+						list.innerHTML = '';
+						const carouselWrapper = document.createElement('div');
+						carouselWrapper.className = 'jct-assignments-carousel-wrapper';
+						
+						// Create carousel items container
+						const carouselItems = document.createElement('div');
+						carouselItems.className = 'jct-assignments-carousel-items';
+						
+						// Create all assignment elements
+						allActiveAssignmentsRef.forEach((assign, index) => {
+							const element = createAssignmentElement(assign, nowRef);
+							if (element) {
+								element.className += ' jct-assignment-carousel-item';
+								element.style.display = index === 0 ? 'block' : 'none';
+								carouselItems.appendChild(element);
+							}
+						});
+						
+						carouselWrapper.appendChild(carouselItems);
+						
+						// Create carousel controls
+						const carouselControls = document.createElement('div');
+						carouselControls.className = 'jct-assignments-carousel-controls';
+						
+						const prevBtn = document.createElement('button');
+						prevBtn.className = 'jct-carousel-btn jct-carousel-prev';
+						prevBtn.textContent = '←';
+						prevBtn.addEventListener('click', (e) => {
+							e.stopPropagation();
+							e.preventDefault();
+							e.stopImmediatePropagation();
+							if (currentIndex > 0) {
+								currentIndex--;
+								updateCarousel();
+							}
+							return false;
+						});
+						prevBtn.addEventListener('mousedown', (e) => {
+							e.stopPropagation();
+							e.stopImmediatePropagation();
+						});
+						
+						const nextBtn = document.createElement('button');
+						nextBtn.className = 'jct-carousel-btn jct-carousel-next';
+						nextBtn.textContent = '→';
+						nextBtn.addEventListener('click', (e) => {
+							e.stopPropagation();
+							e.preventDefault();
+							e.stopImmediatePropagation();
+							if (currentIndex < allActiveAssignmentsRef.length - 1) {
+								currentIndex++;
+								updateCarousel();
+							}
+							return false;
+						});
+						nextBtn.addEventListener('mousedown', (e) => {
+							e.stopPropagation();
+							e.stopImmediatePropagation();
+						});
+						
+						const counter = document.createElement('span');
+						counter.className = 'jct-carousel-counter';
+						counter.textContent = `1 / ${allActiveAssignmentsRef.length}`;
+						
+						carouselControls.appendChild(prevBtn);
+						carouselControls.appendChild(counter);
+						carouselControls.appendChild(nextBtn);
+						
+						carouselWrapper.appendChild(carouselControls);
+						list.appendChild(carouselWrapper);
+						
+						// Update carousel function
+						const updateCarousel = () => {
+							const items = carouselItems.querySelectorAll('.jct-assignment-carousel-item');
+							items.forEach((item, index) => {
+								item.style.display = index === currentIndex ? 'block' : 'none';
+							});
+							counter.textContent = `${currentIndex + 1} / ${allActiveAssignmentsRef.length}`;
+							prevBtn.disabled = currentIndex === 0;
+							nextBtn.disabled = currentIndex === allActiveAssignmentsRef.length - 1;
+						};
+						
+						// Initialize
+						updateCarousel();
+						
+						// Hide "more" message
+						const moreDiv = assignmentsContainer.querySelector('.jct-assignments-more');
+						if (moreDiv) {
+							moreDiv.style.display = 'none';
+						}
+					}
+				});
+			}
+		} catch (error) {
+			console.error('Error updating assignments display:', error);
+			// Hide container on error
+			const assignmentsContainer = card.querySelector('.jct-assignments-container');
+			if (assignmentsContainer) {
+				assignmentsContainer.innerHTML = '';
+				assignmentsContainer.style.display = 'none';
+			}
+		}
 	}
 
 	function ensureStructureAndColor() {
@@ -379,6 +1272,15 @@
 					const idx = Array.prototype.indexOf.call(parent.children, card);
 					card.setAttribute('data-jct-idx', String(idx));
 				}
+			}
+
+			// Add assignments display (async, don't block) - only once per card
+			if (courseId && !card.hasAttribute('data-jct-assignments-loaded')) {
+				card.setAttribute('data-jct-assignments-loaded', 'true');
+				// Delay a bit to avoid blocking initial render
+				setTimeout(() => {
+					updateAssignmentsDisplay(card, courseId).catch(() => {});
+				}, 100);
 			}
 
 			// Clickable logic preserved...
@@ -1020,16 +1922,74 @@
 		});
 	}
 
+	// Add settings button to page
+	function addSettingsButton() {
+		// Check if button already exists
+		if (document.getElementById('jct-settings-button')) {
+			return;
+		}
+		
+		// Find the main page header with title
+		const pageHeader = document.querySelector('#page-header, .page-header');
+		const pageTitleContainer = document.querySelector('.page-header-headings, .page-context-header, #page-header .card-body, .page-header-content');
+		
+		const settingsBtn = document.createElement('button');
+		settingsBtn.id = 'jct-settings-button';
+		settingsBtn.className = 'jct-settings-button';
+		settingsBtn.innerHTML = '⚙️ אפשרויות';
+		settingsBtn.title = 'פתח את אפשרויות התוסף';
+		
+		settingsBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			// Try to open options page via background script
+			chrome.runtime.sendMessage({action: 'openOptions'}, (response) => {
+				if (chrome.runtime.lastError) {
+					// Fallback: try direct method
+					try {
+						chrome.runtime.openOptionsPage();
+					} catch (err) {
+						console.error('Failed to open options:', err);
+					}
+				}
+			});
+		});
+		
+		// Add to page header on the LEFT side (in RTL this is visually on the RIGHT side of screen)
+		if (pageTitleContainer) {
+			// Add at the END of the title container (will be on the left/right side in RTL)
+			pageTitleContainer.appendChild(settingsBtn);
+		} else if (mainTitle && mainTitle.parentElement) {
+			// Add after the title
+			if (mainTitle.nextSibling) {
+				mainTitle.parentElement.insertBefore(settingsBtn, mainTitle.nextSibling);
+			} else {
+				mainTitle.parentElement.appendChild(settingsBtn);
+			}
+		} else if (pageHeader) {
+			// Add to page header at the end
+			pageHeader.appendChild(settingsBtn);
+		} else {
+			// Fallback: fixed position top left (right in RTL)
+			settingsBtn.style.position = 'fixed';
+			settingsBtn.style.top = '20px';
+			settingsBtn.style.left = '20px';
+			settingsBtn.style.zIndex = '10000';
+			document.body.appendChild(settingsBtn);
+		}
+	}
+
 	docReady(async () => {
 		document.documentElement.classList.add('jct-moodle-redesign');
 		const html = document.documentElement;
 		if (html.dir === 'rtl') html.classList.add('jct-rtl');
-		await Promise.all([loadPaletteHeb(), loadFavorites(), loadCourseSchedules()]);
+		await Promise.all([loadPaletteHeb(), loadFavorites(), loadCourseSchedules(), loadCourseAssignments()]);
 		markCoursesContainers();
 		ensureStructureAndColor();
 		relocateTopBlocksAfterCourses();
 		hideFrontClutter();
 		createWeeklyScheduleView();
+		addSettingsButton();
 	const obs = new MutationObserver(() => { scheduleLightUpdate(); });
 		obs.observe(document.body, { childList: true, subtree: true });
 		if (chrome?.storage?.onChanged) {

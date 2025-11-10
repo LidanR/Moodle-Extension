@@ -27,6 +27,11 @@
 	<label for="columnCount">מספר עמודות (3–6): </label>
 	<input id="columnCount" type="number" min="3" max="6" step="1" style="width:60px;">
 	</div>
+	<div style="margin:16px 0;">
+	<label for="maxOverdueDays">הסתר מטלות באיחור אחרי (ימים): </label>
+	<input id="maxOverdueDays" type="number" min="0" step="1" style="width:60px;" value="30">
+	<span class="small">(0 = הצג תמיד)</span>
+	</div>
 	<div class="actions">
 		<button id="save" class="primary">שמירה</button>
 		<button id="reset">איפוס לברירת מחדל</button>

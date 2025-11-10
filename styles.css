@@ -719,3 +719,298 @@
 .jct-rtl .jct-schedule-modal-footer {
 	justify-content: flex-start;
 }
+
+/* Assignments display */
+.jct-assignments-container {
+	margin-top: 12px;
+	margin-bottom: 8px;
+	width: 100%;
+	font-size: 0.9rem;
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.jct-assignments-loading {
+	color: #6b7280;
+	text-align: center;
+	padding: 8px;
+	font-size: 0.8rem;
+}
+
+.jct-assignments-header {
+	font-weight: 600;
+	color: #374151;
+	margin-bottom: 10px;
+	font-size: 0.9rem;
+	display: flex !important;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 4px;
+	gap: 8px;
+	flex-wrap: nowrap;
+	width: 100%;
+}
+
+.jct-assignments-title {
+	flex: 1;
+	min-width: 0;
+}
+
+.jct-assignments-toggle {
+	background: #3b82f6 !important;
+	color: white !important;
+	border: none !important;
+	padding: 4px 10px !important;
+	border-radius: 4px !important;
+	font-size: 0.75rem !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	transition: all 0.2s ease !important;
+	line-height: 1.4 !important;
+	white-space: nowrap !important;
+	flex-shrink: 0 !important;
+	display: inline-block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.jct-assignments-toggle:hover {
+	background: #2563eb;
+}
+
+.jct-assignments-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.jct-assignments-carousel-wrapper {
+	position: relative;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+.jct-assignments-carousel-items {
+	position: relative;
+	min-height: 100px;
+	width: 100%;
+	overflow: hidden;
+}
+
+.jct-assignment-carousel-item {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+}
+
+.jct-assignments-carousel-controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 10px;
+	margin-top: 10px;
+	padding: 6px 0;
+}
+
+.jct-carousel-btn {
+	background: #3b82f6;
+	color: white;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 4px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	min-width: 36px;
+}
+
+.jct-carousel-btn:hover:not(:disabled) {
+	background: #2563eb;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.jct-carousel-btn:disabled {
+	background: #9ca3af;
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.jct-carousel-counter {
+	font-weight: 500;
+	color: #6b7280;
+	font-size: 0.85rem;
+	min-width: 50px;
+	text-align: center;
+}
+
+.jct-assignment-item {
+	background: #ffffff;
+	border-radius: 8px;
+	padding: 12px;
+	border: 1px solid #e5e7eb;
+	border-right: 3px solid #e5e7eb;
+	transition: all 0.2s ease;
+	margin-bottom: 8px;
+	box-sizing: border-box;
+	width: 100%;
+	position: relative;
+	z-index: 1;
+}
+
+.jct-assignment-item:hover {
+	background: #f9fafb;
+	border-color: #d1d5db;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.jct-assignment-item.jct-assignment-urgent {
+	border-right-color: #f59e0b;
+	background: #fef3c7;
+}
+
+.jct-assignment-item.jct-assignment-overdue {
+	border-right-color: #ef4444;
+	background: #fee2e2;
+}
+
+.jct-assignment-item.jct-assignment-submitted {
+	border-right-color: #10b981;
+	background: #d1fae5;
+	opacity: 0.8;
+}
+
+.jct-assignment-name {
+	font-weight: 500;
+	color: #111827;
+	margin-bottom: 6px;
+	font-size: 0.85rem;
+	line-height: 1.4;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.jct-assignment-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.75rem;
+	color: #6b7280;
+	margin-bottom: 4px;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.jct-assignment-date {
+	font-weight: 500;
+}
+
+.jct-assignment-status {
+	font-weight: 600;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgba(0, 0, 0, 0.05);
+}
+
+.jct-assignment-item.jct-assignment-urgent .jct-assignment-status {
+	background: #fbbf24;
+	color: #78350f;
+}
+
+.jct-assignment-item.jct-assignment-overdue .jct-assignment-status {
+	background: #f87171;
+	color: #7f1d1d;
+}
+
+.jct-assignment-item.jct-assignment-submitted .jct-assignment-status {
+	background: #34d399;
+	color: #064e3b;
+}
+
+.jct-assignment-link {
+	display: inline-block;
+	margin-top: 4px;
+	color: #2563eb;
+	font-size: 0.75rem;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.jct-assignment-link:hover {
+	text-decoration: underline;
+	color: #1d4ed8;
+}
+
+.jct-assignments-more {
+	text-align: center;
+	color: #6b7280;
+	font-size: 0.75rem;
+	margin-top: 4px;
+	font-style: italic;
+}
+
+/* RTL support for assignments */
+.jct-rtl .jct-assignment-item {
+	border-right: none;
+	border-left: 3px solid #e5e7eb;
+}
+
+.jct-rtl .jct-assignment-item:hover {
+	transform: translateX(2px);
+}
+
+.jct-rtl .jct-assignment-item.jct-assignment-urgent {
+	border-left-color: #f59e0b;
+}
+
+.jct-rtl .jct-assignment-item.jct-assignment-overdue {
+	border-left-color: #ef4444;
+}
+
+.jct-rtl .jct-assignment-item.jct-assignment-submitted {
+	border-left-color: #10b981;
+}
+
+/* Settings button */
+.jct-settings-button {
+	background: #3b82f6 !important;
+	color: white !important;
+	border: none !important;
+	padding: 6px 12px !important;
+	border-radius: 6px !important;
+	font-size: 0.85rem !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	transition: all 0.2s ease !important;
+	display: inline-block !important;
+	vertical-align: middle !important;
+	margin-right: 12px !important;
+	margin-left: 0 !important;
+}
+
+.jct-settings-button:hover {
+	background: #2563eb !important;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Position in page header - on the LEFT side (right visually in RTL) */
+.page-header-headings .jct-settings-button,
+.page-context-header .jct-settings-button,
+#page-header .jct-settings-button,
+.page-header .jct-settings-button {
+	margin-left: 12px !important;
+	margin-right: 0 !important;
+}
+
+.jct-rtl .page-header-headings .jct-settings-button,
+.jct-rtl .page-context-header .jct-settings-button,
+.jct-rtl #page-header .jct-settings-button,
+.jct-rtl .page-header .jct-settings-button {
+	margin-left: 0 !important;
+	margin-right: 12px !important;
+}

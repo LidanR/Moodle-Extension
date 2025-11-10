@@ -23,17 +23,19 @@ function getSettingsFromStorage() {
 		chrome.storage.sync.get({ 
 			paletteByYearHeb: null,
 			columnCount: DEFAULT_COLUMN_COUNT,
-			courseSchedules: {}
+			courseSchedules: {},
+			maxOverdueDays: 30
 		}, res => resolve(res));
 	});
 }
 
-function saveSettingsToStorage(palette, columnCount, courseSchedules) {
+function saveSettingsToStorage(palette, columnCount, courseSchedules, maxOverdueDays) {
 	return new Promise(resolve => {
 		chrome.storage.sync.set({ 
 			paletteByYearHeb: palette,
 			columnCount: columnCount,
-			courseSchedules: courseSchedules || {}
+			courseSchedules: courseSchedules || {},
+			maxOverdueDays: maxOverdueDays || 30
 		}, () => resolve());
 	});
 }
@@ -55,7 +57,7 @@ function saveCourseSchedules(schedules) {
 // === UI rendering ===
 async function render() {
 	const tb = document.getElementById('palette-table');
-	const { paletteByYearHeb, columnCount } = await getSettingsFromStorage();
+	const { paletteByYearHeb, columnCount, maxOverdueDays } = await getSettingsFromStorage();
 	const palette = Array.isArray(paletteByYearHeb) ? paletteByYearHeb : DEFAULT_PALETTE;
 
 	let html = '<tr><th>שנה\\סמסטר</th>';
@@ -72,6 +74,9 @@ async function render() {
 
 	// Set column count input
 	document.getElementById('columnCount').value = columnCount;
+	
+	// Set max overdue days input
+	document.getElementById('maxOverdueDays').value = maxOverdueDays || 30;
 }
 
 // === Read from UI ===
@@ -90,12 +95,13 @@ function readPaletteFromUI() {
 document.getElementById('save').addEventListener('click', async () => {
 	const palette = readPaletteFromUI();
 	const columnCount = Math.max(3, Math.min(6, parseInt(document.getElementById('columnCount').value || 3)));
-	await saveSettingsToStorage(palette, columnCount, null);
+	const maxOverdueDays = Math.max(0, parseInt(document.getElementById('maxOverdueDays').value || 30));
+	await saveSettingsToStorage(palette, columnCount, null, maxOverdueDays);
 	alert('נשמר! רענן את העמוד כדי לראות את השינוי.');
 });
 
 document.getElementById('reset').addEventListener('click', async () => {
-	await saveSettingsToStorage(DEFAULT_PALETTE, DEFAULT_COLUMN_COUNT, {});
+	await saveSettingsToStorage(DEFAULT_PALETTE, DEFAULT_COLUMN_COUNT, {}, 30);
 	await render();
 });
 
