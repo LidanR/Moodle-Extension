@@ -35,14 +35,14 @@
 	padding: 0 20px !important;
 }
 
-/* Robust multi-column grid */
+/* Robust multi-column grid - COMPACT */
 .jct-courses-grid {
 	width: 100% !important;
 	max-width: none !important;
 	display: grid !important;
-	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-	gap: 24px;
-	padding: 20px 0;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 16px;
+	padding: 16px 0;
 }
 
 /* Ensure children in our grid ignore Bootstrap flex sizing */
@@ -62,19 +62,19 @@
 /* Override Bootstrap list-group vertical layout inside our grid */
 .jct-courses-grid.list-group { display: grid !important; }
 
-/* Convert list items to cards */
+/* Convert list items to cards - COMPACT */
 .jct-courses-grid > .list-group-item,
 .jct-courses-grid .list-group > .list-group-item,
 .jct-courses-grid .coursebox,
 .jct-courses-grid .card.course,
 .jct-courses-grid .course-list > li {
-	border-radius: 16px !important;
-	border: 2px solid #e5e7eb !important;
+	border-radius: 12px !important;
+	border: 1.5px solid #e5e7eb !important;
 	background: #ffffff !important;
-	box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 	transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 	margin: 0 !important;
-	padding: 20px !important;
+	padding: 14px !important;
 }
 
 .jct-courses-grid > .list-group-item:hover,
@@ -86,7 +86,7 @@
 	border-color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 65%);
 }
 
-/* Uniform card sizing */
+/* Uniform card sizing - COMPACT */
 .jct-courses-grid > .list-group-item,
 .jct-courses-grid .list-group > .list-group-item,
 .jct-courses-grid .coursebox,
@@ -96,7 +96,7 @@
 	flex-direction: column;
 	align-items: center;
 	text-align: center;
-	min-height: 280px;
+	min-height: 180px;
 	height: auto;
 	overflow: visible;
 }
@@ -147,14 +147,14 @@
 	box-shadow: 0 2px 4px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%, 0.3);
 }
 
-/* Thumbnail area: fixed height for uniformity */
+/* Thumbnail area: fixed height for uniformity - COMPACT */
 .jct-course-thumb,
 .jct-courses-grid img.courseimage,
 .jct-courses-grid .courseimage img,
 .jct-courses-grid .courseimage {
 	width: 100%;
-	height: 140px;
-	max-height: 140px;
+	height: 80px;
+	max-height: 80px;
 	object-fit: cover;
 	border-radius: 12px;
 	margin-bottom: 12px;
@@ -182,11 +182,12 @@
 .jct-courses-grid .course-title a,
 .jct-courses-grid .list-group-item a.course-title,
 .jct-courses-grid .list-group-item .coursename a {
-	font-size: 18px !important;
-	font-weight: 700 !important;
+	font-size: 15px !important;
+	font-weight: 600 !important;
 	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 30%) !important;
 	text-decoration: none !important;
 	transition: color 0.2s ease !important;
+	line-height: 1.3 !important;
 }
 
 .jct-courses-grid .coursename a:hover,
@@ -206,15 +207,15 @@
 	margin-top: 6px;
 }
 
-/* Images/thumbnails alignment if present */
+/* Images/thumbnails alignment if present - COMPACT */
 .jct-courses-grid img.courseimage,
 .jct-courses-grid .courseimage img,
 .jct-courses-grid .courseimage {
-	max-height: 120px;
+	max-height: 80px;
 	width: 100%;
 	object-fit: cover;
-	border-radius: 10px;
-	margin-bottom: 10px;
+	border-radius: 8px;
+	margin-bottom: 8px;
 }
 
 /* Optional status badges if present */
@@ -1704,4 +1705,210 @@
 	.jct-assignments-list-modal {
 		grid-template-columns: 1fr;
 	}
+}
+
+/* List view mode for courses */
+.jct-courses-list-view .jct-courses-grid {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 8px !important;
+}
+
+.jct-courses-list-view .course-listitem {
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center !important;
+	padding: 10px 16px !important;
+	background: white !important;
+	border-radius: 8px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+	transition: all 0.15s ease !important;
+	min-height: auto !important;
+	max-height: 52px !important;
+	gap: 12px !important;
+}
+
+.jct-courses-list-view .course-listitem:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+	transform: translateX(-2px) !important;
+}
+
+.jct-courses-list-view .coursename {
+	flex: 1 !important;
+	margin: 0 !important;
+	font-size: 14px !important;
+	font-weight: 500 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	line-height: 1.4 !important;
+}
+
+.jct-courses-list-view .course-card-body {
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center !important;
+	gap: 12px !important;
+	width: 100% !important;
+	min-height: auto !important;
+}
+
+.jct-courses-list-view .jct-assignments-badge {
+	position: static !important;
+	margin: 0 !important;
+	font-size: 11px !important;
+	padding: 3px 8px !important;
+	min-width: 24px !important;
+	height: 20px !important;
+	line-height: 1 !important;
+	flex-shrink: 0 !important;
+}
+
+.jct-courses-list-view .aalink {
+	flex: 1 !important;
+	display: flex !important;
+	align-items: center !important;
+	min-width: 0 !important;
+}
+
+.jct-courses-list-view .jct-schedule-container {
+	position: static !important;
+	margin: 0 !important;
+	flex-shrink: 0 !important;
+	font-size: 12px !important;
+}
+
+.jct-courses-list-view .jct-session-badge {
+	font-size: 11px !important;
+	padding: 3px 8px !important;
+	height: auto !important;
+	line-height: 1.2 !important;
+}
+
+/* ========== CARD STYLES ========== */
+
+/* Style 1: MINIMAL - Clean and minimal */
+.jct-style-minimal .jct-courses-grid > .list-group-item,
+.jct-style-minimal .jct-courses-grid .list-group > .list-group-item,
+.jct-style-minimal .jct-courses-grid .coursebox,
+.jct-style-minimal .jct-courses-grid .card.course,
+.jct-style-minimal .jct-courses-grid .course-list > li {
+	border-radius: 4px !important;
+	border: 1px solid #e0e0e0 !important;
+	background: #fafafa !important;
+	box-shadow: none !important;
+	padding: 12px !important;
+	min-height: 160px !important;
+}
+
+.jct-style-minimal .jct-courses-grid > .list-group-item:hover,
+.jct-style-minimal .jct-courses-grid .list-group > .list-group-item:hover,
+.jct-style-minimal .jct-courses-grid .coursebox:hover,
+.jct-style-minimal .jct-courses-grid .card.course:hover {
+	background: #ffffff !important;
+	border-color: #999 !important;
+	transform: none !important;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.jct-style-minimal .jct-courses-grid img.courseimage,
+.jct-style-minimal .jct-courses-grid .courseimage img,
+.jct-style-minimal .jct-courses-grid .courseimage {
+	height: 60px !important;
+	max-height: 60px !important;
+	border-radius: 4px !important;
+}
+
+.jct-style-minimal .jct-courses-grid .coursename a {
+	font-size: 14px !important;
+	font-weight: 500 !important;
+}
+
+/* Style 2: CARDS - Rounded card design */
+.jct-style-cards .jct-courses-grid > .list-group-item,
+.jct-style-cards .jct-courses-grid .list-group > .list-group-item,
+.jct-style-cards .jct-courses-grid .coursebox,
+.jct-style-cards .jct-courses-grid .card.course,
+.jct-style-cards .jct-courses-grid .course-list > li {
+	border-radius: 20px !important;
+	border: none !important;
+	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+	padding: 18px !important;
+	min-height: 200px !important;
+}
+
+.jct-style-cards .jct-courses-grid > .list-group-item:hover,
+.jct-style-cards .jct-courses-grid .list-group > .list-group-item:hover,
+.jct-style-cards .jct-courses-grid .coursebox:hover,
+.jct-style-cards .jct-courses-grid .card.course:hover {
+	transform: translateY(-8px) scale(1.02) !important;
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+.jct-style-cards .jct-courses-grid img.courseimage,
+.jct-style-cards .jct-courses-grid .courseimage img,
+.jct-style-cards .jct-courses-grid .courseimage {
+	height: 90px !important;
+	max-height: 90px !important;
+	border-radius: 14px !important;
+}
+
+.jct-style-cards .jct-courses-grid .coursename a {
+	font-size: 16px !important;
+	font-weight: 600 !important;
+}
+
+/* Style 3: MODERN - Modern with highlights */
+.jct-style-modern .jct-courses-grid > .list-group-item,
+.jct-style-modern .jct-courses-grid .list-group > .list-group-item,
+.jct-style-modern .jct-courses-grid .coursebox,
+.jct-style-modern .jct-courses-grid .card.course,
+.jct-style-modern .jct-courses-grid .course-list > li {
+	border-radius: 10px !important;
+	border: 2px solid transparent !important;
+	background: #ffffff !important;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+	padding: 16px !important;
+	min-height: 190px !important;
+	position: relative !important;
+	overflow: hidden !important;
+}
+
+.jct-style-modern .jct-courses-grid > .list-group-item::before,
+.jct-style-modern .jct-courses-grid .list-group > .list-group-item::before,
+.jct-style-modern .jct-courses-grid .coursebox::before,
+.jct-style-modern .jct-courses-grid .card.course::before {
+	content: '' !important;
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
+	width: 4px !important;
+	height: 100% !important;
+	background: linear-gradient(180deg,
+		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 55%),
+		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 70%)) !important;
+}
+
+.jct-style-modern .jct-courses-grid > .list-group-item:hover,
+.jct-style-modern .jct-courses-grid .list-group > .list-group-item:hover,
+.jct-style-modern .jct-courses-grid .coursebox:hover,
+.jct-style-modern .jct-courses-grid .card.course:hover {
+	transform: translateX(4px) !important;
+	border-color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 65%) !important;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.jct-style-modern .jct-courses-grid img.courseimage,
+.jct-style-modern .jct-courses-grid .courseimage img,
+.jct-style-modern .jct-courses-grid .courseimage {
+	height: 75px !important;
+	max-height: 75px !important;
+	border-radius: 8px !important;
+}
+
+.jct-style-modern .jct-courses-grid .coursename a {
+	font-size: 15px !important;
+	font-weight: 600 !important;
+	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 35%) !important;
 }

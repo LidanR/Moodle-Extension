@@ -28,6 +28,44 @@
 	let scheduled = false;
 	let scheduleViewVisible = false;
 	let saveSchedulesTimeout = null;
+	let currentViewMode = 'grid'; // Default view mode
+	let currentCardStyle = 'compact'; // Default card style
+
+	// Function to apply card style
+	function applyCardStyle(style) {
+		currentCardStyle = style;
+
+		// Remove all style classes
+		document.body.classList.remove('jct-style-compact', 'jct-style-minimal', 'jct-style-cards', 'jct-style-modern');
+
+		// Add the selected style class
+		document.body.classList.add(`jct-style-${style}`);
+	}
+
+	// Function to apply view mode
+	function applyViewMode(mode) {
+		currentViewMode = mode;
+
+		// Apply to all possible course containers
+		const containers = document.querySelectorAll('.jct-courses-grid');
+		containers.forEach(coursesContainer => {
+			const parentContainer = coursesContainer.closest('.course-content, #frontpage-course-list, .courses') || coursesContainer.parentElement;
+			if (parentContainer) {
+				if (mode === 'list') {
+					parentContainer.classList.add('jct-courses-list-view');
+				} else {
+					parentContainer.classList.remove('jct-courses-list-view');
+				}
+			}
+		});
+
+		// Also apply to body for global scope
+		if (mode === 'list') {
+			document.body.classList.add('jct-courses-list-view');
+		} else {
+			document.body.classList.remove('jct-courses-list-view');
+		}
+	}
 	let isSavingSchedules = false;
 
 	function scheduleLightUpdate() {
@@ -38,6 +76,7 @@
 			markCoursesContainers();
 			ensureStructureAndColor();
 			refreshFavoritesUI();
+			applyViewMode(currentViewMode);
 			// Don't update schedule view here - it causes event listeners to be lost
 			// Only update if schedule is visible and we need to refresh
 			if (scheduleViewVisible) {
@@ -147,6 +186,20 @@
 				console.error('Error saving assignments:', e);
 				resolve();
 			}
+		});
+	}
+
+	function loadViewMode() {
+		return new Promise((resolve) => {
+			try {
+				chrome.storage.sync.get({ viewMode: 'grid', cardStyle: 'compact' }, (res) => {
+					currentViewMode = res.viewMode || 'grid';
+					currentCardStyle = res.cardStyle || 'compact';
+					applyViewMode(currentViewMode);
+					applyCardStyle(currentCardStyle);
+					resolve({ viewMode: currentViewMode, cardStyle: currentCardStyle });
+				});
+			} catch (_e) { resolve({ viewMode: 'grid', cardStyle: 'compact' }); }
 		});
 	}
 
@@ -2193,12 +2246,12 @@
 
 	function isCacheValid(timestamp) {
 		const now = Date.now();
-		const oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours
-		return (now - timestamp) < oneDayInMs;
+		const oneWeekInMs = 7 * 24 * 60 * 60 * 1000; // 7 days (1 week)
+		return (now - timestamp) < oneWeekInMs;
 	}
 
 	// Function to scan all courses and collect all assignments
-	async function scanAllCoursesForAssignments(forceRefresh = false) {
+	async function scanAllCoursesForAssignments(forceRefresh = false, filterYear = '', filterSemester = '') {
 		// Check if already scanning
 		const { cache, timestamp, scanningInProgress } = await getAssignmentsCache();
 
@@ -2253,15 +2306,6 @@
 		}
 
 		console.log('Using wwwroot:', wwwroot);
-
-		// Get filter settings
-		const filterSettings = await new Promise(resolve => {
-			chrome.storage.sync.get({ assignmentFilterYear: '', assignmentFilterSemester: '' }, res => resolve(res));
-		});
-
-		const filterYear = filterSettings.assignmentFilterYear || '';
-		const filterSemester = filterSettings.assignmentFilterSemester || '';
-
 		console.log('Filter settings:', { filterYear, filterSemester });
 
 		// Find all course links in the main page HTML
@@ -2568,36 +2612,193 @@
 		}
 	}
 
-	// Function to show all assignments in a modal
-	async function showAllAssignmentsModal() {
-		// Get filter settings to show in modal
-		const filterSettings = await new Promise(resolve => {
-			chrome.storage.sync.get({ assignmentFilterYear: '', assignmentFilterSemester: '' }, res => resolve(res));
+	// Function to show settings modal
+	async function showSettingsModal() {
+		// Hebrew years and semesters
+		const HEBREW_YEARS = [
+			{str:"תשפ\"ד", num:5784}, {str:"תשפ\"ה", num:5785}, {str:"תשפ\"ו", num:5786},
+			{str:"תשפ\"ז", num:5787}, {str:"תשפ\"ח", num:5788}, {str:"תשפ\"ט", num:5789}, {str:"תש\"צ", num:5790}
+		];
+		const SEMESTERS = ["אלול","א","ב"];
+		const DEFAULT_PALETTE = [
+			["#3b82f6","#818cf8","#bae6fd"], // 5784
+			["#22c55e","#4ade80","#bbf7d0"], // 5785
+			["#f97316","#fbbf24","#fed7aa"], // 5786
+			["#f43f5e","#fda4af","#fecdd3"], // 5787
+			["#a21caf","#f472b6","#f3e8ff"], // 5788
+			["#2563eb","#60a5fa","#dbeafe"], // 5789
+			["#b45309","#f59e42","#fde68a"]  // 5790
+		];
+		const DEFAULT_COLUMN_COUNT = 3;
+
+		// Get current settings
+		const settings = await new Promise(resolve => {
+			chrome.storage.sync.get({
+				paletteByYearHeb: null,
+				columnCount: DEFAULT_COLUMN_COUNT,
+				viewMode: 'grid',
+				cardStyle: 'compact'
+			}, res => resolve(res));
 		});
 
-		const filterYear = filterSettings.assignmentFilterYear || '';
-		const filterSemester = filterSettings.assignmentFilterSemester || '';
+		const palette = Array.isArray(settings.paletteByYearHeb) ? settings.paletteByYearHeb : DEFAULT_PALETTE;
+		const columnCount = settings.columnCount || DEFAULT_COLUMN_COUNT;
+		const viewMode = settings.viewMode || 'grid';
+		const cardStyle = settings.cardStyle || 'compact';
 
-		// Build filter info text
-		let filterInfo = '';
-		if (filterYear || filterSemester) {
-			const yearNames = {
-				'5784': 'תשפ"ד',
-				'5785': 'תשפ"ה',
-				'5786': 'תשפ"ו',
-				'5787': 'תשפ"ז',
-				'5788': 'תשפ"ח',
-				'5789': 'תשפ"ט',
-				'5790': 'תש"צ'
-			};
-			const semesterNames = { '0': 'אלול', '1': 'א\'', '2': 'ב\'' };
-
-			let parts = [];
-			if (filterYear) parts.push(`שנה: ${yearNames[filterYear] || filterYear}`);
-			if (filterSemester) parts.push(`סמסטר: ${semesterNames[filterSemester] || filterSemester}`);
-
-			filterInfo = `<div class="jct-filter-info">🔍 מסנן: ${parts.join(', ')}</div>`;
+		// Build color table HTML
+		let tableHtml = '<tr><th>שנה\\סמסטר</th>';
+		for (let sem of SEMESTERS) tableHtml += `<th>${sem}</th>`;
+		tableHtml += '</tr>';
+		for (let r = 0; r < HEBREW_YEARS.length; ++r) {
+			tableHtml += `<tr><td><b>${HEBREW_YEARS[r].str}</b></td>`;
+			for (let c = 0; c < SEMESTERS.length; ++c) {
+				tableHtml += `<td><input type="color" id="jct-color-${r}-${c}" value="${palette[r][c]}" style="border:none;width:42px;height:32px;background:none;cursor:pointer;"></td>`;
+			}
+			tableHtml += '</tr>';
 		}
+
+		// Create modal
+		const modal = document.createElement('div');
+		modal.className = 'jct-assignments-modal';
+		modal.innerHTML = `
+			<div class="jct-assignments-modal-content" style="max-width: 700px;">
+				<div class="jct-assignments-modal-header">
+					<h3>⚙️ הגדרות</h3>
+					<button class="jct-assignments-modal-close">✕</button>
+				</div>
+				<div class="jct-assignments-modal-body" style="padding: 24px;">
+					<h4 style="margin: 0 0 16px; font-size: 16px;">צבעים לכל שנה ולכל סמסטר</h4>
+					<table style="border-collapse:collapse;background:#fff;width:100%;border-radius:12px;box-shadow:0 4px 16px #0001;margin-bottom:24px;">
+						${tableHtml}
+					</table>
+					<div style="margin: 24px 0 16px;">
+						<label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+							<span>מספר עמודות (3–6):</span>
+							<input id="jct-column-count" type="number" min="3" max="6" step="1" value="${columnCount}" style="width:60px;padding:6px;border:1px solid #cbd5e1;border-radius:6px;">
+						</label>
+					</div>
+					<div style="margin: 16px 0;">
+						<label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+							<span>תצוגת קורסים:</span>
+							<select id="jct-view-mode" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
+								<option value="grid" ${viewMode === 'grid' ? 'selected' : ''}>בלוקים (ברירת מחדל)</option>
+								<option value="list" ${viewMode === 'list' ? 'selected' : ''}>שורות</option>
+							</select>
+						</label>
+					</div>
+					<div style="margin: 16px 0;">
+						<label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+							<span>עיצוב כרטיסים:</span>
+							<select id="jct-card-style" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
+								<option value="compact" ${cardStyle === 'compact' ? 'selected' : ''}>קומפקטי (ברירת מחדל)</option>
+								<option value="minimal" ${cardStyle === 'minimal' ? 'selected' : ''}>מינימליסטי</option>
+								<option value="cards" ${cardStyle === 'cards' ? 'selected' : ''}>כרטיסים מעוגלים</option>
+								<option value="modern" ${cardStyle === 'modern' ? 'selected' : ''}>מודרני</option>
+							</select>
+						</label>
+					</div>
+					<div style="margin-top: 24px; display: flex; gap: 12px;">
+						<button id="jct-settings-save" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px;">שמירה</button>
+						<button id="jct-settings-reset" style="padding: 10px 20px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-size: 14px;">איפוס לברירת מחדל</button>
+					</div>
+					<p style="color: #64748b; font-size: 12px; margin-top: 16px;">שנה = שורה. סמסטר = עמודה. שמור ורענן את העמוד כדי לראות את השינוי.</p>
+				</div>
+			</div>
+		`;
+		document.body.appendChild(modal);
+
+		// Close button
+		modal.querySelector('.jct-assignments-modal-close').addEventListener('click', () => {
+			modal.remove();
+		});
+
+		// Click outside to close
+		modal.addEventListener('click', (e) => {
+			if (e.target === modal) {
+				modal.remove();
+			}
+		});
+
+		// Save button
+		document.getElementById('jct-settings-save').addEventListener('click', async () => {
+			// Read palette from UI
+			const newPalette = [];
+			for (let r = 0; r < HEBREW_YEARS.length; ++r) {
+				newPalette[r] = [];
+				for (let c = 0; c < SEMESTERS.length; ++c) {
+					newPalette[r][c] = document.getElementById(`jct-color-${r}-${c}`).value || "#cccccc";
+				}
+			}
+
+			// Read column count, view mode, and card style
+			const newColumnCount = Math.max(3, Math.min(6, parseInt(document.getElementById('jct-column-count').value || 3)));
+			const newViewMode = document.getElementById('jct-view-mode').value || 'grid';
+			const newCardStyle = document.getElementById('jct-card-style').value || 'compact';
+
+			// Save to storage
+			await new Promise(resolve => {
+				chrome.storage.sync.set({
+					paletteByYearHeb: newPalette,
+					columnCount: newColumnCount,
+					viewMode: newViewMode,
+					cardStyle: newCardStyle
+				}, () => resolve());
+			});
+
+			// Apply view mode and card style immediately
+			applyViewMode(newViewMode);
+			applyCardStyle(newCardStyle);
+
+			// Show success message
+			const saveBtn = document.getElementById('jct-settings-save');
+			const originalText = saveBtn.textContent;
+			saveBtn.textContent = '✓ נשמר!';
+			saveBtn.style.background = '#22c55e';
+			setTimeout(() => {
+				saveBtn.textContent = originalText;
+				saveBtn.style.background = '#2563eb';
+			}, 2000);
+		});
+
+		// Reset button
+		document.getElementById('jct-settings-reset').addEventListener('click', async () => {
+			await new Promise(resolve => {
+				chrome.storage.sync.set({
+					paletteByYearHeb: DEFAULT_PALETTE,
+					columnCount: DEFAULT_COLUMN_COUNT,
+					viewMode: 'grid',
+					cardStyle: 'compact'
+				}, () => resolve());
+			});
+
+			// Update UI
+			for (let r = 0; r < HEBREW_YEARS.length; ++r) {
+				for (let c = 0; c < SEMESTERS.length; ++c) {
+					document.getElementById(`jct-color-${r}-${c}`).value = DEFAULT_PALETTE[r][c];
+				}
+			}
+			document.getElementById('jct-column-count').value = DEFAULT_COLUMN_COUNT;
+			document.getElementById('jct-view-mode').value = 'grid';
+			document.getElementById('jct-card-style').value = 'compact';
+			applyViewMode('grid');
+			applyCardStyle('compact');
+		});
+	}
+
+	// Function to show all assignments in a modal
+	async function showAllAssignmentsModal() {
+		// Get settings including filter preferences
+		const settings = await new Promise(resolve => {
+			chrome.storage.sync.get({
+				maxOverdueDays: 30,
+				assignmentFilterYear: '',
+				assignmentFilterSemester: ''
+			}, res => resolve(res));
+		});
+		const maxOverdueDays = settings.maxOverdueDays || 30;
+		const savedFilterYear = settings.assignmentFilterYear || '';
+		const savedFilterSemester = settings.assignmentFilterSemester || '';
 
 		// Create modal with live results
 		const modal = document.createElement('div');
@@ -2608,7 +2809,38 @@
 					<h3 id="jct-modal-title">טוען קורסים...</h3>
 					<button class="jct-assignments-modal-close">✕</button>
 				</div>
-				${filterInfo}
+				<div class="jct-filter-controls" style="padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+					<label style="display: flex; align-items: center; gap: 8px;">
+						<span style="font-weight: 500;">שנה:</span>
+						<select id="jct-filter-year" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">
+							<option value="" ${savedFilterYear === '' ? 'selected' : ''}>הכל</option>
+							<option value="5784" ${savedFilterYear === '5784' ? 'selected' : ''}>תשפ"ד</option>
+							<option value="5785" ${savedFilterYear === '5785' ? 'selected' : ''}>תשפ"ה</option>
+							<option value="5786" ${savedFilterYear === '5786' ? 'selected' : ''}>תשפ"ו</option>
+							<option value="5787" ${savedFilterYear === '5787' ? 'selected' : ''}>תשפ"ז</option>
+							<option value="5788" ${savedFilterYear === '5788' ? 'selected' : ''}>תשפ"ח</option>
+							<option value="5789" ${savedFilterYear === '5789' ? 'selected' : ''}>תשפ"ט</option>
+							<option value="5790" ${savedFilterYear === '5790' ? 'selected' : ''}>תש"צ</option>
+						</select>
+					</label>
+					<label style="display: flex; align-items: center; gap: 8px;">
+						<span style="font-weight: 500;">סמסטר:</span>
+						<select id="jct-filter-semester" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">
+							<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>הכל</option>
+							<option value="0" ${savedFilterSemester === '0' ? 'selected' : ''}>אלול</option>
+							<option value="1" ${savedFilterSemester === '1' ? 'selected' : ''}>א'</option>
+							<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
+						</select>
+					</label>
+					<label style="display: flex; align-items: center; gap: 8px;">
+						<span style="font-weight: 500;">הסתר מטלות באיחור (ימים):</span>
+						<input id="jct-max-overdue-days" type="number" min="0" step="1" value="${maxOverdueDays}" style="width: 70px; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white;">
+						<span style="font-size: 0.75rem; color: #64748b;">(0 = הצג תמיד)</span>
+					</label>
+					<button id="jct-refresh-assignments" style="padding: 6px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+						🔄 רענן
+					</button>
+				</div>
 				<div class="jct-modal-status" style="padding: 12px 24px; background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
 					<div id="jct-loading-status" style="font-size: 0.875rem; color: #64748b;">
 						<span class="jct-loading-spinner-small"></span> מתחיל סריקה...
@@ -2760,15 +2992,14 @@
 				}
 			}
 
-			// Get maxOverdueDays setting
-			const settings = await new Promise(resolve => {
-				chrome.storage.sync.get({ maxOverdueDays: 30 }, res => resolve(res));
-			});
-			const maxOverdueDays = settings.maxOverdueDays || 30;
+			// Get filter values from the UI
+			const filterYear = document.getElementById('jct-filter-year')?.value || '';
+			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
+			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
 
 			// Scan all courses
 			window.jctStopScanning = false;
-			const result = await scanAllCoursesForAssignments(forceRefresh);
+			const result = await scanAllCoursesForAssignments(forceRefresh, filterYear, filterSemester);
 
 			// Display results (either from cache or fresh scan)
 			if (result) {
@@ -2822,16 +3053,32 @@
 			}
 		}
 
-		// Add refresh button to header (combines refresh + clear cache)
-		const headerEl = modal.querySelector('.jct-assignments-modal-header');
-		const titleEl = headerEl.querySelector('h3');
+		// Add event listeners for filters and refresh button
+		const filterYearSelect = document.getElementById('jct-filter-year');
+		const filterSemesterSelect = document.getElementById('jct-filter-semester');
+		const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
+		const refreshBtn = document.getElementById('jct-refresh-assignments');
 
-		const refreshBtn = document.createElement('button');
-		refreshBtn.className = 'jct-settings-button';
-		refreshBtn.style.cssText = 'padding: 6px 12px; font-size: 0.875rem; margin-right: auto; margin-left: 12px;';
-		refreshBtn.innerHTML = '🔄 רענן';
-		refreshBtn.title = 'רענן את רשימת המטלות (Shift+Click למחיקת מטמון)';
-		refreshBtn.addEventListener('click', async (e) => {
+		// When filter changes, reload assignments
+		filterYearSelect?.addEventListener('change', () => {
+			loadAndDisplayAssignments(false);
+		});
+
+		filterSemesterSelect?.addEventListener('change', () => {
+			loadAndDisplayAssignments(false);
+		});
+
+		// When maxOverdueDays changes, save to storage and reload
+		maxOverdueDaysInput?.addEventListener('change', async () => {
+			const newValue = Math.max(0, parseInt(maxOverdueDaysInput.value || '30'));
+			await new Promise(resolve => {
+				chrome.storage.sync.set({ maxOverdueDays: newValue }, () => resolve());
+			});
+			loadAndDisplayAssignments(false);
+		});
+
+		// Refresh button click handler
+		refreshBtn?.addEventListener('click', async (e) => {
 			const clearCache = e.shiftKey;
 
 			refreshBtn.disabled = true;
@@ -2848,13 +3095,6 @@
 			refreshBtn.disabled = false;
 			refreshBtn.innerHTML = '🔄 רענן';
 		});
-
-		// Insert after the title
-		if (titleEl && titleEl.nextSibling) {
-			headerEl.insertBefore(refreshBtn, titleEl.nextSibling);
-		} else if (titleEl) {
-			headerEl.appendChild(refreshBtn);
-		}
 
 		// Load assignments (use cache if available)
 		await loadAndDisplayAssignments(false);
@@ -2879,17 +3119,7 @@
 		settingsBtn.addEventListener('click', (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			// Try to open options page via background script
-			chrome.runtime.sendMessage({action: 'openOptions'}, (response) => {
-				if (chrome.runtime.lastError) {
-					// Fallback: try direct method
-					try {
-						chrome.runtime.openOptionsPage();
-					} catch (err) {
-						console.error('Failed to open options:', err);
-					}
-				}
-			});
+			showSettingsModal();
 		});
 
 		// Add "Show All Assignments" button
@@ -3001,7 +3231,7 @@
 		document.documentElement.classList.add('jct-moodle-redesign');
 		const html = document.documentElement;
 		if (html.dir === 'rtl') html.classList.add('jct-rtl');
-		await Promise.all([loadPaletteHeb(), loadFavorites(), loadCourseSchedules(), loadCourseAssignments()]);
+		await Promise.all([loadPaletteHeb(), loadFavorites(), loadCourseSchedules(), loadCourseAssignments(), loadViewMode()]);
 		markCoursesContainers();
 		ensureStructureAndColor();
 		relocateTopBlocksAfterCourses();
@@ -3042,6 +3272,14 @@
 				if (area === 'sync' && changes.courseSchedules) {
 					courseSchedules = changes.courseSchedules.newValue || {};
 					updateWeeklyScheduleView();
+				}
+				if (area === 'sync' && changes.viewMode) {
+					currentViewMode = changes.viewMode.newValue || 'grid';
+					applyViewMode(currentViewMode);
+				}
+				if (area === 'sync' && changes.cardStyle) {
+					currentCardStyle = changes.cardStyle.newValue || 'compact';
+					applyCardStyle(currentCardStyle);
 				}
 			});
 		}
