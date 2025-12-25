@@ -1171,3 +1171,271 @@
 .jct-course-page-themed #page-header .page-header-headings h1 {
 	color: hsl(var(--jct-course-h,230), calc(var(--jct-course-s,75%)), 25%) !important;
 }
+
+/* ==============================================
+   All Assignments Modal Styles
+   ============================================== */
+
+/* Modal overlay */
+.jct-assignments-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
+	z-index: 99999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+/* Modal content */
+.jct-assignments-modal-content {
+	background: white;
+	border-radius: 16px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	max-width: 600px;
+	width: 100%;
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	animation: slideUp 0.3s ease;
+}
+
+.jct-assignments-modal-large {
+	max-width: 900px;
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(40px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+/* Modal header */
+.jct-assignments-modal-header {
+	padding: 24px;
+	border-bottom: 2px solid #e5e7eb;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.jct-assignments-modal-header h3 {
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #1e293b;
+}
+
+/* Filter info banner */
+.jct-filter-info {
+	padding: 12px 24px;
+	background: #eff6ff;
+	border-bottom: 1px solid #bfdbfe;
+	color: #1e40af;
+	font-size: 0.875rem;
+	font-weight: 500;
+	text-align: center;
+}
+
+.jct-assignments-modal-close {
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+	cursor: pointer;
+	color: #64748b;
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.jct-assignments-modal-close:hover {
+	background: #f1f5f9;
+	color: #1e293b;
+}
+
+/* Modal body */
+.jct-assignments-modal-body {
+	padding: 24px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+/* Course groups */
+.jct-course-assignments-group {
+	margin-bottom: 32px;
+	border-bottom: 1px solid #e5e7eb;
+	padding-bottom: 24px;
+}
+
+.jct-course-assignments-group:last-child {
+	border-bottom: none;
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+.jct-course-group-title {
+	font-size: 1.25rem;
+	font-weight: 600;
+	margin-bottom: 16px;
+	color: #1e293b;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.jct-course-group-title a {
+	color: #2563eb;
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+
+.jct-course-group-title a:hover {
+	color: #1d4ed8;
+	text-decoration: underline;
+}
+
+.jct-assignment-count {
+	font-size: 0.875rem;
+	color: #64748b;
+	font-weight: 500;
+}
+
+/* Assignments list in modal */
+.jct-assignments-list-modal {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: 12px;
+}
+
+/* Assignment box */
+.jct-assignment-box {
+	background: #f8fafc;
+	border: 2px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 16px;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.jct-assignment-box:hover {
+	background: white;
+	border-color: #3b82f6;
+	box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+	transform: translateY(-2px);
+}
+
+.jct-assignment-box-name {
+	font-weight: 600;
+	color: #1e293b;
+	font-size: 0.95rem;
+	line-height: 1.4;
+	flex: 1;
+}
+
+.jct-assignment-box-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px 16px;
+	background: #3b82f6;
+	color: white;
+	border-radius: 8px;
+	text-decoration: none;
+	font-weight: 500;
+	font-size: 0.875rem;
+	transition: all 0.2s ease;
+}
+
+.jct-assignment-box-link:hover {
+	background: #2563eb;
+	transform: translateX(-2px);
+	text-decoration: none;
+}
+
+.jct-rtl .jct-assignment-box-link:hover {
+	transform: translateX(2px);
+}
+
+/* Loading spinner */
+.jct-loading-spinner {
+	width: 48px;
+	height: 48px;
+	border: 4px solid #e5e7eb;
+	border-top-color: #3b82f6;
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+	margin: 0 auto 16px;
+}
+
+/* Small inline spinner */
+.jct-loading-spinner-small {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid #cbd5e1;
+	border-top-color: #3b82f6;
+	border-radius: 50%;
+	animation: spin 0.6s linear infinite;
+	vertical-align: middle;
+	margin-left: 6px;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+/* No assignments message */
+.jct-no-assignments {
+	padding: 20px;
+	text-align: center;
+	color: #64748b;
+	font-style: italic;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-top: 8px;
+}
+
+/* Show All Assignments button */
+.jct-assignments-button {
+	margin-left: 12px;
+}
+
+.jct-rtl .jct-assignments-button {
+	margin-left: 0;
+	margin-right: 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.jct-assignments-modal-content {
+		max-width: 100%;
+		max-height: 100vh;
+		border-radius: 0;
+	}
+
+	.jct-assignments-list-modal {
+		grid-template-columns: 1fr;
+	}
+}

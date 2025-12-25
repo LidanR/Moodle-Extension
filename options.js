@@ -20,22 +20,26 @@ const DEFAULT_COLUMN_COUNT = 3;
 // === Storage helpers ===
 function getSettingsFromStorage() {
 	return new Promise(resolve => {
-		chrome.storage.sync.get({ 
+		chrome.storage.sync.get({
 			paletteByYearHeb: null,
 			columnCount: DEFAULT_COLUMN_COUNT,
 			courseSchedules: {},
-			maxOverdueDays: 30
+			maxOverdueDays: 30,
+			assignmentFilterYear: '',
+			assignmentFilterSemester: ''
 		}, res => resolve(res));
 	});
 }
 
-function saveSettingsToStorage(palette, columnCount, courseSchedules, maxOverdueDays) {
+function saveSettingsToStorage(palette, columnCount, courseSchedules, maxOverdueDays, assignmentFilterYear, assignmentFilterSemester) {
 	return new Promise(resolve => {
-		chrome.storage.sync.set({ 
+		chrome.storage.sync.set({
 			paletteByYearHeb: palette,
 			columnCount: columnCount,
 			courseSchedules: courseSchedules || {},
-			maxOverdueDays: maxOverdueDays || 30
+			maxOverdueDays: maxOverdueDays || 30,
+			assignmentFilterYear: assignmentFilterYear || '',
+			assignmentFilterSemester: assignmentFilterSemester || ''
 		}, () => resolve());
 	});
 }
@@ -57,7 +61,7 @@ function saveCourseSchedules(schedules) {
 // === UI rendering ===
 async function render() {
 	const tb = document.getElementById('palette-table');
-	const { paletteByYearHeb, columnCount, maxOverdueDays } = await getSettingsFromStorage();
+	const { paletteByYearHeb, columnCount, maxOverdueDays, assignmentFilterYear, assignmentFilterSemester } = await getSettingsFromStorage();
 	const palette = Array.isArray(paletteByYearHeb) ? paletteByYearHeb : DEFAULT_PALETTE;
 
 	let html = '<tr><th>שנה\\סמסטר</th>';
@@ -74,9 +78,15 @@ async function render() {
 
 	// Set column count input
 	document.getElementById('columnCount').value = columnCount;
-	
+
 	// Set max overdue days input
 	document.getElementById('maxOverdueDays').value = maxOverdueDays || 30;
+
+	// Set assignment filter year
+	document.getElementById('assignmentFilterYear').value = assignmentFilterYear || '';
+
+	// Set assignment filter semester
+	document.getElementById('assignmentFilterSemester').value = assignmentFilterSemester || '';
 }
 
 // === Read from UI ===
@@ -96,12 +106,14 @@ document.getElementById('save').addEventListener('click', async () => {
 	const palette = readPaletteFromUI();
 	const columnCount = Math.max(3, Math.min(6, parseInt(document.getElementById('columnCount').value || 3)));
 	const maxOverdueDays = Math.max(0, parseInt(document.getElementById('maxOverdueDays').value || 30));
-	await saveSettingsToStorage(palette, columnCount, null, maxOverdueDays);
+	const assignmentFilterYear = document.getElementById('assignmentFilterYear').value || '';
+	const assignmentFilterSemester = document.getElementById('assignmentFilterSemester').value || '';
+	await saveSettingsToStorage(palette, columnCount, null, maxOverdueDays, assignmentFilterYear, assignmentFilterSemester);
 	alert('נשמר! רענן את העמוד כדי לראות את השינוי.');
 });
 
 document.getElementById('reset').addEventListener('click', async () => {
-	await saveSettingsToStorage(DEFAULT_PALETTE, DEFAULT_COLUMN_COUNT, {}, 30);
+	await saveSettingsToStorage(DEFAULT_PALETTE, DEFAULT_COLUMN_COUNT, {}, 30, '', '');
 	await render();
 });
 

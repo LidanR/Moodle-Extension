@@ -1,13 +1,25 @@
 {
   "manifest_version": 3,
-  "name": "Moodle JCT Redesign-Test",
+  "name": "Moodle JCT Redesign",
   "description": "Improves the design and usability of moodle.jct.ac.il with modern styles and small layout tweaks.",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "permissions": [
     "storage"
   ],
+  "icons": {
+    "16": "assets/icon-removebg-preview.png",
+    "32": "assets/icon-removebg-preview.png",
+    "48": "assets/icon-removebg-preview.png",
+    "128": "assets/icon-removebg-preview.png"
+  },
   "action": {
-    "default_title": "JCT Moodle Extension"
+    "default_title": "JCT Moodle Extension",
+    "default_icon": {
+      "16": "assets/icon-removebg-preview.png",
+      "32": "assets/icon-removebg-preview.png",
+      "48": "assets/icon-removebg-preview.png",
+      "128": "assets/icon-removebg-preview.png"
+    }
   },
   "host_permissions": [
     "https://moodle.jct.ac.il/*"

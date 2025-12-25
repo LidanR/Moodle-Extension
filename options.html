@@ -32,6 +32,32 @@
 	<input id="maxOverdueDays" type="number" min="0" step="1" style="width:60px;" value="30">
 	<span class="small">(0 = הצג תמיד)</span>
 	</div>
+
+	<h1 style="margin-top:32px;">סינון מטלות לפי שנה וסמסטר</h1>
+	<div style="margin:16px 0;">
+		<label for="assignmentFilterYear">שנה עברית: </label>
+		<select id="assignmentFilterYear" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
+			<option value="">הכל</option>
+			<option value="5784">תשפ"ד (5784)</option>
+			<option value="5785">תשפ"ה (5785)</option>
+			<option value="5786">תשפ"ו (5786)</option>
+			<option value="5787">תשפ"ז (5787)</option>
+			<option value="5788">תשפ"ח (5788)</option>
+			<option value="5789">תשפ"ט (5789)</option>
+			<option value="5790">תש"צ (5790)</option>
+		</select>
+	</div>
+
+	<div style="margin:16px 0;">
+		<label for="assignmentFilterSemester">סמסטר: </label>
+		<select id="assignmentFilterSemester" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
+			<option value="">הכל</option>
+			<option value="0">אלול</option>
+			<option value="1">א' (1)</option>
+			<option value="2">ב' (2)</option>
+		</select>
+	</div>
+
 	<div class="actions">
 		<button id="save" class="primary">שמירה</button>
 		<button id="reset">איפוס לברירת מחדל</button>
