@@ -3059,12 +3059,20 @@
 		const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 		const refreshBtn = document.getElementById('jct-refresh-assignments');
 
-		// When filter changes, reload assignments
-		filterYearSelect?.addEventListener('change', () => {
+		// When filter changes, save to storage and reload assignments
+		filterYearSelect?.addEventListener('change', async () => {
+			const newYear = filterYearSelect.value;
+			await new Promise(resolve => {
+				chrome.storage.sync.set({ assignmentFilterYear: newYear }, () => resolve());
+			});
 			loadAndDisplayAssignments(false);
 		});
 
-		filterSemesterSelect?.addEventListener('change', () => {
+		filterSemesterSelect?.addEventListener('change', async () => {
+			const newSemester = filterSemesterSelect.value;
+			await new Promise(resolve => {
+				chrome.storage.sync.set({ assignmentFilterSemester: newSemester }, () => resolve());
+			});
 			loadAndDisplayAssignments(false);
 		});
 
@@ -3096,8 +3104,23 @@
 			refreshBtn.innerHTML = '🔄 רענן';
 		});
 
-		// Load assignments (use cache if available)
-		await loadAndDisplayAssignments(false);
+		// Check if we have cached data to display
+		const { cache, timestamp } = await getAssignmentsCache();
+		if (cache && isCacheValid(timestamp)) {
+			// Display cached data
+			await loadAndDisplayAssignments(false);
+		} else {
+			// No valid cache - show message to click refresh
+			const statusEl = document.getElementById('jct-loading-status');
+			if (statusEl) {
+				statusEl.innerHTML = `
+					<div style="text-align: center; padding: 20px;">
+						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">לחץ על כפתור "רענן" כדי לסרוק מטלות</p>
+						<p style="font-size: 0.875rem; color: #94a3b8;">הסריקה תימשך גם אם תסגור את החלון</p>
+					</div>
+				`;
+			}
+		}
 	}
 
 	function addSettingsButton() {
@@ -3240,21 +3263,7 @@
 		addSettingsButton();
 		applyCoursePageColors();
 
-		// Auto-update assignments cache if needed (runs in background)
-		setTimeout(async () => {
-			const { cache, timestamp } = await getAssignmentsCache();
-			if (!cache || !isCacheValid(timestamp)) {
-				console.log('Assignment cache expired or missing, updating in background...');
-				try {
-					await scanAllCoursesForAssignments(true);
-					console.log('Assignment cache updated successfully');
-				} catch (error) {
-					console.error('Error updating assignment cache:', error);
-				}
-			} else {
-				console.log('Assignment cache is still valid');
-			}
-		}, 2000); // Wait 2 seconds after page load to avoid slowing down initial render
+		// Don't auto-scan - user must click refresh button manually
 
 	const obs = new MutationObserver(() => { scheduleLightUpdate(); });
 		obs.observe(document.body, { childList: true, subtree: true });
