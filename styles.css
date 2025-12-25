@@ -563,6 +563,272 @@
 	transform: scale(1.1);
 }
 
+/* Session time display */
+.jct-session-time {
+	font-size: 11px;
+	color: #64748b;
+	margin-top: 4px;
+	font-weight: 400;
+}
+
+/* Session content wrapper */
+.jct-session-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Edit button in schedule */
+.jct-schedule-edit-course {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	border: none;
+	background: #dbeafe;
+	color: #2563eb;
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	opacity: 0.7;
+	flex-shrink: 0;
+	margin-right: 8px;
+}
+
+.jct-schedule-course-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px;
+}
+
+.jct-schedule-edit-course:hover {
+	background: #2563eb;
+	color: #fff;
+	opacity: 1;
+	transform: scale(1.1);
+}
+
+/* Session item in modal */
+.jct-session-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-bottom: 8px;
+}
+
+.jct-session-day {
+	padding: 8px 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	font-size: 14px;
+	background: white;
+	cursor: pointer;
+}
+
+.jct-session-time {
+	padding: 8px 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	font-size: 14px;
+	background: white;
+}
+
+.jct-remove-session {
+	background: #fee2e2;
+	color: #dc2626;
+	border: none;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	cursor: pointer;
+	font-size: 16px;
+	transition: all 0.2s ease;
+}
+
+.jct-remove-session:hover {
+	background: #dc2626;
+	color: white;
+	transform: scale(1.1);
+}
+
+.jct-add-session {
+	width: 100%;
+	padding: 12px;
+	background: #2563eb;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	margin-top: 12px;
+}
+
+.jct-add-session:hover {
+	background: #1d4ed8;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.jct-sessions-container {
+	max-height: 400px;
+	overflow-y: auto;
+	margin-bottom: 12px;
+}
+
+/* Time picker dialog */
+.jct-time-picker-dialog {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10001;
+	animation: fadeIn 0.2s ease;
+}
+
+.jct-time-picker-content {
+	background: white;
+	border-radius: 16px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	max-width: 400px;
+	width: 90%;
+	animation: slideUp 0.3s ease;
+}
+
+.jct-time-picker-header {
+	padding: 20px 24px;
+	border-bottom: 1px solid #e2e8f0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.jct-time-picker-header h3 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: #1e293b;
+}
+
+.jct-time-picker-close {
+	background: none;
+	border: none;
+	font-size: 24px;
+	color: #64748b;
+	cursor: pointer;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	transition: all 0.2s ease;
+}
+
+.jct-time-picker-close:hover {
+	background: #f1f5f9;
+	color: #1e293b;
+}
+
+.jct-time-picker-body {
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.jct-time-picker-body label {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.jct-time-picker-body label span {
+	font-size: 14px;
+	font-weight: 500;
+	color: #475569;
+}
+
+.jct-time-picker-body input[type="time"] {
+	padding: 12px 16px;
+	border: 2px solid #e2e8f0;
+	border-radius: 8px;
+	font-size: 16px;
+	transition: all 0.2s ease;
+}
+
+.jct-time-picker-body input[type="time"]:focus {
+	outline: none;
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.jct-time-picker-footer {
+	padding: 16px 24px;
+	border-top: 1px solid #e2e8f0;
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+}
+
+.jct-time-picker-save,
+.jct-time-picker-skip {
+	padding: 10px 20px;
+	border: none;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.jct-time-picker-save {
+	background: #2563eb;
+	color: white;
+}
+
+.jct-time-picker-save:hover {
+	background: #1d4ed8;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.jct-time-picker-skip {
+	background: #f1f5f9;
+	color: #64748b;
+}
+
+.jct-time-picker-skip:hover {
+	background: #e2e8f0;
+	color: #475569;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes slideUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 .jct-schedule-day-courses.jct-schedule-drag-over {
 	background: #dbeafe;
 	border: 2px dashed #2563eb;

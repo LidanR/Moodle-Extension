@@ -535,11 +535,25 @@
 				const days = courseSchedules[courseId];
 				courseSchedules[courseId] = { days: days, name: `קורס ${courseId}` };
 			}
-			// Remove saturday from all courses
-			if (courseSchedules[courseId].days) {
-				courseSchedules[courseId].days = courseSchedules[courseId].days.filter(day => day !== 'saturday');
-				// Remove course if no days left
-				if (courseSchedules[courseId].days.length === 0) {
+
+			// Migrate from days array to sessions array
+			if (courseSchedules[courseId].days && !courseSchedules[courseId].sessions) {
+				const days = courseSchedules[courseId].days.filter(day => day !== 'saturday');
+				courseSchedules[courseId].sessions = days.map(day => ({
+					day: day,
+					startTime: '',
+					endTime: ''
+				}));
+				delete courseSchedules[courseId].days;
+			}
+
+			// Remove saturday from sessions
+			if (courseSchedules[courseId].sessions) {
+				courseSchedules[courseId].sessions = courseSchedules[courseId].sessions.filter(
+					session => session.day !== 'saturday'
+				);
+				// Remove course if no sessions left
+				if (courseSchedules[courseId].sessions.length === 0) {
 					delete courseSchedules[courseId];
 				}
 			}
@@ -1409,100 +1423,155 @@
 	function showScheduleDayPicker(courseId, card) {
 		const courseName = getCourseNameFromCard(card);
 		const courseUrl = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a')?.href || '#';
-		const currentSchedule = courseSchedules[courseId] || { name: courseName, days: [] };
-		
+		const currentSchedule = courseSchedules[courseId] || { name: courseName, sessions: [], url: courseUrl };
+
 		// Create modal
 		const modal = document.createElement('div');
 		modal.className = 'jct-schedule-modal';
-		modal.innerHTML = `
-			<div class="jct-schedule-modal-content">
-				<div class="jct-schedule-modal-header">
-					<h3>בחר ימים עבור: ${courseName}</h3>
-					<button class="jct-schedule-modal-close">✕</button>
+
+		function renderSessions() {
+			const sessions = currentSchedule.sessions || [];
+			const sessionsHtml = sessions.map((session, idx) => {
+				return `
+					<div class="jct-session-item" data-session-idx="${idx}">
+						<select class="jct-session-day">
+							${DAYS_OF_WEEK.map((day, i) => {
+								const selected = DAYS_OF_WEEK_EN[i] === session.day ? 'selected' : '';
+								return `<option value="${DAYS_OF_WEEK_EN[i]}" ${selected}>${day}</option>`;
+							}).join('')}
+						</select>
+						<input type="time" class="jct-session-time" value="${session.startTime || ''}" placeholder="התחלה">
+						<span>-</span>
+						<input type="time" class="jct-session-time" value="${session.endTime || ''}" placeholder="סיום">
+						<button class="jct-remove-session" data-idx="${idx}">🗑️</button>
+					</div>
+				`;
+			}).join('');
+
+			return `
+				<div class="jct-schedule-modal-content">
+					<div class="jct-schedule-modal-header">
+						<h3>מערכת שעות עבור: ${courseName}</h3>
+						<button class="jct-schedule-modal-close">✕</button>
+					</div>
+					<div class="jct-schedule-modal-body">
+						<div class="jct-sessions-container">
+							${sessionsHtml}
+						</div>
+						<button class="jct-add-session">+ הוסף מופע</button>
+					</div>
+					<div class="jct-schedule-modal-footer">
+						<button class="jct-schedule-modal-save">שמור</button>
+						<button class="jct-schedule-modal-remove">הסר מלוח זמנים</button>
+					</div>
 				</div>
-				<div class="jct-schedule-modal-body">
-					${DAYS_OF_WEEK.map((day, idx) => {
-						const dayKey = DAYS_OF_WEEK_EN[idx];
-						const checked = currentSchedule.days.includes(dayKey) ? 'checked' : '';
-						return `<label class="jct-schedule-day-checkbox">
-							<input type="checkbox" data-day="${dayKey}" ${checked}>
-							<span>${day}</span>
-						</label>`;
-					}).join('')}
-				</div>
-				<div class="jct-schedule-modal-footer">
-					<button class="jct-schedule-modal-save">שמור</button>
-					<button class="jct-schedule-modal-remove">הסר מלוח זמנים</button>
-					<button class="jct-schedule-modal-delete-all">מחק לחלוטין</button>
-				</div>
-			</div>
-		`;
-		
+			`;
+		}
+
+		modal.innerHTML = renderSessions();
 		document.body.appendChild(modal);
 		
 		// Event listeners
 		modal.querySelector('.jct-schedule-modal-close').addEventListener('click', () => {
 			modal.remove();
 		});
-		
-		modal.querySelector('.jct-schedule-modal-save').addEventListener('click', async () => {
-			const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
-			const selectedDays = Array.from(checkboxes)
-				.filter(cb => cb.checked)
-				.map(cb => cb.getAttribute('data-day'));
-			
-			if (selectedDays.length > 0) {
-				courseSchedules[courseId] = { name: courseName, days: selectedDays, url: courseUrl };
-			} else {
-				delete courseSchedules[courseId];
-			}
-			
-			try {
-				await saveCourseSchedules();
-				setTimeout(() => {
-					updateWeeklyScheduleView();
-					modal.remove();
-				}, 300);
-			} catch (err) {
-				console.error('Error saving course schedule:', err);
-				alert('שגיאה בשמירת הלוח זמנים. נסה שוב.');
-				modal.remove();
-			}
+
+		// Add session button
+		modal.querySelector('.jct-add-session').addEventListener('click', () => {
+			currentSchedule.sessions.push({
+				day: 'sunday',
+				startTime: '',
+				endTime: ''
+			});
+			modal.innerHTML = renderSessions();
+			attachSessionListeners();
 		});
-		
-		modal.querySelector('.jct-schedule-modal-remove').addEventListener('click', async () => {
-			delete courseSchedules[courseId];
-			try {
-				await saveCourseSchedules();
-				setTimeout(() => {
-					updateWeeklyScheduleView();
-					modal.remove();
-				}, 300);
-			} catch (err) {
-				console.error('Error removing course:', err);
-				modal.remove();
-			}
-		});
-		
-		const deleteAllBtn = modal.querySelector('.jct-schedule-modal-delete-all');
-		if (deleteAllBtn) {
-			deleteAllBtn.addEventListener('click', async () => {
-				if (confirm('האם אתה בטוח שברצונך למחוק את הקורס לחלוטין מכל הימים?')) {
+
+		function attachSessionListeners() {
+			// Remove session buttons
+			modal.querySelectorAll('.jct-remove-session').forEach(btn => {
+				btn.addEventListener('click', () => {
+					const idx = parseInt(btn.getAttribute('data-idx'));
+					currentSchedule.sessions.splice(idx, 1);
+					modal.innerHTML = renderSessions();
+					attachSessionListeners();
+				});
+			});
+
+			// Update session data on change
+			modal.querySelectorAll('.jct-session-item').forEach((item, idx) => {
+				const daySelect = item.querySelector('.jct-session-day');
+				const timeInputs = item.querySelectorAll('.jct-session-time');
+
+				daySelect.addEventListener('change', () => {
+					currentSchedule.sessions[idx].day = daySelect.value;
+				});
+
+				timeInputs[0].addEventListener('change', () => {
+					currentSchedule.sessions[idx].startTime = timeInputs[0].value;
+				});
+
+				timeInputs[1].addEventListener('change', () => {
+					currentSchedule.sessions[idx].endTime = timeInputs[1].value;
+				});
+			});
+
+			// Re-attach other buttons
+			modal.querySelector('.jct-add-session')?.addEventListener('click', () => {
+				currentSchedule.sessions.push({
+					day: 'sunday',
+					startTime: '',
+					endTime: ''
+				});
+				modal.innerHTML = renderSessions();
+				attachSessionListeners();
+			});
+
+			modal.querySelector('.jct-schedule-modal-save')?.addEventListener('click', async () => {
+				if (currentSchedule.sessions.length > 0) {
+					courseSchedules[courseId] = {
+						name: courseName,
+						sessions: currentSchedule.sessions,
+						url: courseUrl
+					};
+				} else {
 					delete courseSchedules[courseId];
-					try {
-						await saveCourseSchedules();
-						setTimeout(() => {
-							updateWeeklyScheduleView();
-							modal.remove();
-						}, 300);
-					} catch (err) {
-						console.error('Error deleting course:', err);
+				}
+
+				try {
+					await saveCourseSchedules();
+					setTimeout(() => {
+						updateWeeklyScheduleView();
 						modal.remove();
-					}
+					}, 300);
+				} catch (err) {
+					console.error('Error saving course schedule:', err);
+					alert('שגיאה בשמירת הלוח זמנים. נסה שוב.');
+					modal.remove();
 				}
 			});
+
+			modal.querySelector('.jct-schedule-modal-remove')?.addEventListener('click', async () => {
+				delete courseSchedules[courseId];
+				try {
+					await saveCourseSchedules();
+					setTimeout(() => {
+						updateWeeklyScheduleView();
+						modal.remove();
+					}, 300);
+				} catch (err) {
+					console.error('Error removing course:', err);
+					modal.remove();
+				}
+			});
+
+			modal.querySelector('.jct-schedule-modal-close')?.addEventListener('click', () => {
+				modal.remove();
+			});
 		}
-		
+
+		attachSessionListeners();
+
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) modal.remove();
 		});
@@ -1611,49 +1680,67 @@
 			return;
 		}
 
-		// Group courses by day from courseSchedules
-		const coursesByDay = {};
-		DAYS_OF_WEEK_EN.forEach(day => { coursesByDay[day] = []; });
+		// Group sessions by day from courseSchedules
+		const sessionsByDay = {};
+		DAYS_OF_WEEK_EN.forEach(day => { sessionsByDay[day] = []; });
 
 		Object.keys(courseSchedules).forEach(courseId => {
 			const schedule = courseSchedules[courseId];
-			if (!schedule || !schedule.days || schedule.days.length === 0) return;
+			if (!schedule || !schedule.sessions || schedule.sessions.length === 0) return;
 
-			schedule.days.forEach(day => {
-				if (coursesByDay[day]) {
-					coursesByDay[day].push({
+			schedule.sessions.forEach(session => {
+				if (sessionsByDay[session.day]) {
+					sessionsByDay[session.day].push({
 						id: courseId,
 						name: schedule.name || `קורס ${courseId}`,
-						url: schedule.url || '#'
+						url: schedule.url || '#',
+						startTime: session.startTime || '',
+						endTime: session.endTime || '',
+						session: session
 					});
 				}
 			});
 		});
 
+		// Sort sessions by start time
+		Object.keys(sessionsByDay).forEach(day => {
+			sessionsByDay[day].sort((a, b) => {
+				if (!a.startTime) return 1;
+				if (!b.startTime) return -1;
+				return a.startTime.localeCompare(b.startTime);
+			});
+		});
+
 		// Build HTML
-		let html = '<div class="jct-schedule-header"><h2>לוח זמנים שבועי</h2><p class="jct-schedule-hint">גרור 📅 לימים או לחץ עליו לעריכה  </p>';
+		let html = '<div class="jct-schedule-header"><h2>לוח זמנים שבועי</h2><p class="jct-schedule-hint">גרור 📅 קורסים לימים או לחץ על ✏️ לעריכה</p>';
 		html += '<button class="jct-schedule-delete-all-btn" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button></div>';
 		html += '<div class="jct-schedule-grid">';
-		
+
 		DAYS_OF_WEEK.forEach((dayName, idx) => {
 			const dayKey = DAYS_OF_WEEK_EN[idx];
-			const courses = coursesByDay[dayKey] || [];
-			
+			const sessions = sessionsByDay[dayKey] || [];
+
 			html += `<div class="jct-schedule-day" data-day="${dayKey}">
 				<div class="jct-schedule-day-header">${dayName}</div>
 				<div class="jct-schedule-day-courses" data-day="${dayKey}">`;
-			
-			if (courses.length === 0) {
-				html += '<div class="jct-schedule-empty">גרור קורס לכאן</div>';
+
+			if (sessions.length === 0) {
+				html += '<div class="jct-schedule-empty">אין שיעורים</div>';
 			} else {
-				courses.forEach(course => {
-					html += `<div class="jct-schedule-course-item" data-course-id="${course.id}" draggable="true">
-						<a href="${course.url}" class="jct-schedule-course-link">${course.name}</a>
-						<button class="jct-schedule-remove-course" data-course-id="${course.id}" data-day="${dayKey}" title="הסר מיום זה">✕</button>
+				sessions.forEach(sessionData => {
+					const timeDisplay = sessionData.startTime && sessionData.endTime
+						? `<div class="jct-session-time">${sessionData.startTime} - ${sessionData.endTime}</div>`
+						: '';
+					html += `<div class="jct-schedule-course-item" data-course-id="${sessionData.id}">
+						<div class="jct-session-content">
+							<a href="${sessionData.url}" class="jct-schedule-course-link">${sessionData.name}</a>
+							${timeDisplay}
+						</div>
+						<button class="jct-schedule-edit-course" data-course-id="${sessionData.id}" title="ערוך מערכת">✏️</button>
 					</div>`;
 				});
 			}
-			
+
 			html += '</div></div>';
 		});
 		
@@ -1712,199 +1799,198 @@
 		}
 	}
 
-	function setupScheduleDragAndDrop() {
-		// Remove old listeners by using a unique class or data attribute
-		const dayColumns = document.querySelectorAll('.jct-schedule-day-courses');
-		
-		// Remove all old event listeners by cloning
-		dayColumns.forEach(column => {
-			// Clone to remove old listeners
-			const newColumn = column.cloneNode(true);
-			column.parentNode.replaceChild(newColumn, column);
+	function showTimePickerDialog(courseName) {
+		return new Promise((resolve) => {
+			const dialog = document.createElement('div');
+			dialog.className = 'jct-time-picker-dialog';
+			dialog.innerHTML = `
+				<div class="jct-time-picker-content">
+					<div class="jct-time-picker-header">
+						<h3>בחר שעות עבור: ${courseName}</h3>
+						<button class="jct-time-picker-close">✕</button>
+					</div>
+					<div class="jct-time-picker-body">
+						<label>
+							<span>שעת התחלה:</span>
+							<input type="time" class="jct-time-start" placeholder="08:00">
+						</label>
+						<label>
+							<span>שעת סיום:</span>
+							<input type="time" class="jct-time-end" placeholder="10:00">
+						</label>
+					</div>
+					<div class="jct-time-picker-footer">
+						<button class="jct-time-picker-save">שמור</button>
+						<button class="jct-time-picker-skip">דלג (ללא שעות)</button>
+					</div>
+				</div>
+			`;
+
+			document.body.appendChild(dialog);
+
+			const closeDialog = () => {
+				dialog.remove();
+			};
+
+			dialog.querySelector('.jct-time-picker-close').addEventListener('click', () => {
+				closeDialog();
+				resolve(null);
+			});
+
+			dialog.querySelector('.jct-time-picker-skip').addEventListener('click', () => {
+				closeDialog();
+				resolve({ startTime: '', endTime: '' });
+			});
+
+			dialog.querySelector('.jct-time-picker-save').addEventListener('click', () => {
+				const startTime = dialog.querySelector('.jct-time-start').value;
+				const endTime = dialog.querySelector('.jct-time-end').value;
+				closeDialog();
+				resolve({ startTime, endTime });
+			});
+
+			dialog.addEventListener('click', (e) => {
+				if (e.target === dialog) {
+					closeDialog();
+					resolve(null);
+				}
+			});
 		});
-		
-		// Now setup new listeners
-		const newDayColumns = document.querySelectorAll('.jct-schedule-day-courses');
-		newDayColumns.forEach(column => {
-			// Allow dropping
+	}
+
+	function setupScheduleDragAndDrop() {
+		// Setup click handler for edit buttons using event delegation
+		// Remove old handler if exists
+		if (document._scheduleEditClickHandler) {
+			document.removeEventListener('click', document._scheduleEditClickHandler, true);
+		}
+
+		document._scheduleEditClickHandler = (e) => {
+			const editBtn = e.target.closest('.jct-schedule-edit-course');
+			if (!editBtn) return;
+
+			e.preventDefault();
+			e.stopPropagation();
+
+			const courseId = editBtn.getAttribute('data-course-id');
+			if (!courseId) return;
+
+			// Find the course card to pass to the picker
+			const courseCards = document.querySelectorAll('.jct-course-card');
+			let courseCard = null;
+			courseCards.forEach(card => {
+				const cardId = card.getAttribute('data-course-id');
+				if (cardId === courseId) {
+					courseCard = card;
+				}
+			});
+
+			// If card not found, create a dummy one
+			if (!courseCard) {
+				const schedule = courseSchedules[courseId];
+				if (schedule) {
+					courseCard = document.createElement('div');
+					courseCard.setAttribute('data-course-id', courseId);
+					const link = document.createElement('a');
+					link.href = schedule.url || '#';
+					link.textContent = schedule.name || `קורס ${courseId}`;
+					courseCard.appendChild(link);
+				}
+			}
+
+			if (courseCard) {
+				showScheduleDayPicker(courseId, courseCard);
+			}
+		};
+		document.addEventListener('click', document._scheduleEditClickHandler, true);
+
+		// Setup drag & drop for day columns
+		const dayColumns = document.querySelectorAll('.jct-schedule-day-courses');
+		dayColumns.forEach(column => {
 			column.addEventListener('dragenter', (e) => {
 				e.preventDefault();
 				column.classList.add('jct-schedule-drag-over');
-				// Scroll to top when dragging over
-				const scheduleContainer = document.getElementById('jct-weekly-schedule');
-				if (scheduleContainer) {
-					scheduleContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-				}
 			});
-			
+
 			column.addEventListener('dragover', (e) => {
 				e.preventDefault();
 				e.dataTransfer.dropEffect = 'move';
-				column.classList.add('jct-schedule-drag-over');
 			});
-			
+
 			column.addEventListener('dragleave', (e) => {
-				// Only remove if we're actually leaving the column
 				if (!column.contains(e.relatedTarget)) {
 					column.classList.remove('jct-schedule-drag-over');
 				}
 			});
-			
-				column.addEventListener('drop', async (e) => {
+
+			column.addEventListener('drop', async (e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				column.classList.remove('jct-schedule-drag-over');
-				
+
 				try {
 					const dataStr = e.dataTransfer.getData('text/plain');
-					if (!dataStr || dataStr === 'null') {
-						console.log('No data in drop event');
-						return;
-					}
-					
+					if (!dataStr || dataStr === 'null') return;
+
 					const data = JSON.parse(dataStr);
 					const dayKey = column.getAttribute('data-day');
-					
-					if (data.courseId && dayKey) {
-						// If moving from schedule, remove from old day first
-						if (data.fromSchedule) {
-							const oldItem = document.querySelector(`.jct-schedule-course-item[data-course-id="${data.courseId}"]`);
-							if (oldItem) {
-								const oldDayKey = oldItem.closest('.jct-schedule-day-courses')?.getAttribute('data-day');
-								if (oldDayKey && oldDayKey !== dayKey && courseSchedules[data.courseId]) {
-									courseSchedules[data.courseId].days = courseSchedules[data.courseId].days.filter(d => d !== oldDayKey);
-								}
-							}
-						}
-						
-						// Add course to this day
-						if (!courseSchedules[data.courseId]) {
-							courseSchedules[data.courseId] = {
-								name: data.courseName || `קורס ${data.courseId}`,
-								days: [],
-								url: data.courseUrl || '#'
-							};
-						}
-						
-						if (!courseSchedules[data.courseId].days.includes(dayKey)) {
-							courseSchedules[data.courseId].days.push(dayKey);
-							try {
-								await saveCourseSchedules();
-								setTimeout(() => updateWeeklyScheduleView(), 300);
-							} catch (err) {
-								console.error('Error adding course to day:', err);
-							}
-						}
+
+					if (!data.courseId || !dayKey) return;
+
+					// Ask for time
+					const timeData = await showTimePickerDialog(
+						data.courseName || `קורס ${data.courseId}`
+					);
+
+					if (timeData === null) return; // User cancelled
+
+					// Add session
+					if (!courseSchedules[data.courseId]) {
+						courseSchedules[data.courseId] = {
+							name: data.courseName || `קורס ${data.courseId}`,
+							sessions: [],
+							url: data.courseUrl || '#'
+						};
 					}
+
+					courseSchedules[data.courseId].sessions.push({
+						day: dayKey,
+						startTime: timeData.startTime || '',
+						endTime: timeData.endTime || ''
+					});
+
+					await saveCourseSchedules();
+					setTimeout(() => updateWeeklyScheduleView(), 300);
 				} catch (err) {
-					console.error('Error handling drop:', err, e.dataTransfer.getData('text/plain'));
+					console.error('Error handling drop:', err);
 				}
 			});
 		});
 
-		// Make course items in schedule draggable - use event delegation for click handlers
-		// Setup click handler on document for course items
-		if (!document._scheduleCourseClickHandler) {
-			document._scheduleCourseClickHandler = (e) => {
-				const courseItem = e.target.closest('.jct-schedule-course-item');
-				if (!courseItem) return;
-				
-				// Don't navigate if clicking on remove button
-				if (e.target.closest('.jct-schedule-remove-course')) {
-					return;
-				}
-				
-				const link = courseItem.querySelector('a.jct-schedule-course-link');
-				if (link && link.href && link.href !== '#') {
-					// Don't navigate if item is semi-transparent (being dragged)
-					if (courseItem.style.opacity === '0.5') {
-						return;
-					}
-					// Navigate to course
-					e.preventDefault();
-					e.stopPropagation();
-					window.location.href = link.href;
-				}
-			};
-			document.addEventListener('click', document._scheduleCourseClickHandler, true);
-		}
-		
-		// Make course items draggable
-		const courseItems = document.querySelectorAll('.jct-schedule-course-item');
-		courseItems.forEach(item => {
-			item.addEventListener('dragstart', (e) => {
-				// Don't drag if clicking on remove button
-				if (e.target.closest('.jct-schedule-remove-course')) {
-					e.preventDefault();
-					return;
-				}
-				// Don't drag if clicking directly on link
-				if (e.target.tagName === 'A' || e.target.closest('a')) {
-					e.preventDefault();
-					return;
-				}
-				const courseId = item.getAttribute('data-course-id');
-				const course = courseSchedules[courseId];
-				if (course) {
-					e.dataTransfer.setData('text/plain', JSON.stringify({
-						courseId: courseId,
-						courseName: course.name,
-						courseUrl: course.url,
-						fromSchedule: true
-					}));
-					e.dataTransfer.effectAllowed = 'move';
-					item.style.opacity = '0.5';
-					// Scroll to top when starting to drag
-					const scheduleContainer = document.getElementById('jct-weekly-schedule');
-					if (scheduleContainer) {
-						scheduleContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-					}
-				}
-			});
-			
-			item.addEventListener('dragend', (e) => {
-				item.style.opacity = '1';
+		// Make course cards draggable
+		const courseCards = document.querySelectorAll('.jct-course-card');
+		courseCards.forEach(card => {
+			card.setAttribute('draggable', 'true');
+
+			card.addEventListener('dragstart', (e) => {
+				const courseId = card.getAttribute('data-course-id');
+				const courseName = getCourseNameFromCard(card);
+				const courseUrl = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a')?.href || '#';
+
+				e.dataTransfer.setData('text/plain', JSON.stringify({
+					courseId: courseId,
+					courseName: courseName,
+					courseUrl: courseUrl,
+					fromCourseList: true
+				}));
+				e.dataTransfer.effectAllowed = 'copy';
+				card.style.opacity = '0.5';
 			});
 
-			// Remove button - remove from specific day
-			const removeBtn = item.querySelector('.jct-schedule-remove-course');
-			if (removeBtn) {
-				// Get dayKey from button's data attribute or parent
-				const dayKey = removeBtn.getAttribute('data-day') || item.closest('.jct-schedule-day-courses')?.getAttribute('data-day');
-				if (dayKey) {
-					removeBtn.setAttribute('data-day', dayKey);
-				}
-				
-				removeBtn.addEventListener('click', async (e) => {
-					e.stopPropagation();
-					e.preventDefault();
-					const courseId = removeBtn.getAttribute('data-course-id');
-					const dayKeyFromBtn = removeBtn.getAttribute('data-day') || item.closest('.jct-schedule-day-courses')?.getAttribute('data-day');
-					
-					if (courseId && dayKeyFromBtn && courseSchedules[courseId]) {
-						courseSchedules[courseId].days = courseSchedules[courseId].days.filter(d => d !== dayKeyFromBtn);
-						if (courseSchedules[courseId].days.length === 0) {
-							delete courseSchedules[courseId];
-						}
-						try {
-							await saveCourseSchedules();
-							setTimeout(() => updateWeeklyScheduleView(), 300);
-						} catch (err) {
-							console.error('Error removing course:', err);
-						}
-					}
-				});
-			}
-			
-			// Style item as clickable - click handling is done via event delegation above
-			const link = item.querySelector('a.jct-schedule-course-link');
-			if (link && link.href && link.href !== '#') {
-				item.style.cursor = 'pointer';
-				link.style.cursor = 'pointer';
-			}
+			card.addEventListener('dragend', () => {
+				card.style.opacity = '1';
+			});
 		});
-		
-		// The drop handler above already handles both new courses and moving between days
 	}
 
 	function hideFrontClutter() {
