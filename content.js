@@ -1274,14 +1274,13 @@
 				}
 			}
 
-			// Add assignments display (async, don't block) - only once per card
-			if (courseId && !card.hasAttribute('data-jct-assignments-loaded')) {
-				card.setAttribute('data-jct-assignments-loaded', 'true');
-				// Delay a bit to avoid blocking initial render
-				setTimeout(() => {
-					updateAssignmentsDisplay(card, courseId).catch(() => {});
-				}, 100);
-			}
+			// Assignments feature disabled
+			// if (courseId && !card.hasAttribute('data-jct-assignments-loaded')) {
+			// 	card.setAttribute('data-jct-assignments-loaded', 'true');
+			// 	setTimeout(() => {
+			// 		updateAssignmentsDisplay(card, courseId).catch(() => {});
+			// 	}, 100);
+			// }
 
 			// Clickable logic preserved...
 			let mainLink = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
@@ -1979,6 +1978,50 @@
 		}
 	}
 
+	function applyCoursePageColors() {
+		// Check if we're on a course page
+		const body = document.body;
+		if (!body.classList.contains('pagelayout-course') && !body.classList.contains('pagelayout-incourse')) {
+			return;
+		}
+
+		// Get course ID from URL
+		const urlParams = new URLSearchParams(window.location.search);
+		const courseId = urlParams.get('id');
+		if (!courseId) return;
+
+		// Try to get course name from page
+		const pageTitle = document.querySelector('.page-header-headings h1, #page-header h1, .page-context-header h1');
+		const courseName = pageTitle ? pageTitle.textContent.trim() : '';
+
+		// Parse year and semester from course name or use course ID
+		let { year, semIdx } = parseHebrewYearAndSemester(courseName);
+		if (year == null || semIdx == null) {
+			// Fallback: derive from course ID
+			const cid = String(courseId);
+			let hash = 0;
+			for (let i = 0; i < cid.length; i++) {
+				hash = ((hash << 5) - hash) + cid.charCodeAt(i);
+				hash |= 0;
+			}
+			const row = Math.abs(hash) % HEBREW_YEARS.length;
+			year = HEBREW_YEARS[row];
+			const sems = [0, 1, 2];
+			semIdx = sems[Math.abs(hash >> 3) % sems.length];
+		}
+
+		// Get color for this course
+		const { h, s, l } = colorFor(year, semIdx);
+
+		// Apply CSS variables to the document root
+		document.documentElement.style.setProperty('--jct-course-h', String(h));
+		document.documentElement.style.setProperty('--jct-course-s', String(s) + '%');
+		document.documentElement.style.setProperty('--jct-course-l', String(l) + '%');
+
+		// Add class to indicate course page has colors applied
+		document.documentElement.classList.add('jct-course-page-themed');
+	}
+
 	docReady(async () => {
 		document.documentElement.classList.add('jct-moodle-redesign');
 		const html = document.documentElement;
@@ -1990,6 +2033,7 @@
 		hideFrontClutter();
 		createWeeklyScheduleView();
 		addSettingsButton();
+		applyCoursePageColors();
 	const obs = new MutationObserver(() => { scheduleLightUpdate(); });
 		obs.observe(document.body, { childList: true, subtree: true });
 		if (chrome?.storage?.onChanged) {
