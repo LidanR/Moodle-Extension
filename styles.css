@@ -43,6 +43,7 @@
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 16px;
 	padding: 16px 0;
+	text-align: right !important;
 }
 
 /* Ensure children in our grid ignore Bootstrap flex sizing */
@@ -372,25 +373,48 @@
 	}
 }
 
+/* Course list header container */
+#frontpage-course-list {
+	text-align: center !important;
+}
+
+/* Course list title styling */
+#frontpage-course-list h2 {
+	font-size: 1.75rem !important;
+	font-weight: 700 !important;
+	color: #1f2937 !important;
+	margin: 32px auto 24px auto !important;
+	padding-bottom: 12px !important;
+	border-bottom: 3px solid transparent !important;
+	border-image: linear-gradient(90deg, #667eea 0%, #764ba2 100%) 1 !important;
+	display: inline-block !important;
+	text-align: center !important;
+}
+
 /* Weekly Schedule View */
 .jct-schedule-toggle {
-	margin: 20px 0;
-	padding: 12px 20px;
-	border-radius: 10px;
-	border: 2px solid #2563eb;
-	background: #eff6ff;
-	color: #1e40af;
-	font-size: 15px;
+	margin: 20px auto !important;
+	padding: 14px 28px;
+	border-radius: 14px;
+	border: none;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	font-size: 1rem;
 	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.2s ease;
-	box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+	display: block;
 }
 
 .jct-schedule-toggle:hover {
-	background: #dbeafe;
-	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-	transform: translateY(-1px);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.jct-schedule-toggle:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .jct-weekly-schedule {
@@ -1288,44 +1312,103 @@
 	border-left-color: #10b981;
 }
 
-/* Settings button */
+/* Modern page header styling */
+.jct-moodle-redesign #page-header {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	padding: 24px 32px !important;
+	border-radius: 0 0 24px 24px !important;
+	box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25) !important;
+	margin-bottom: 0 !important;
+	position: relative !important;
+}
+
+/* Center all containers */
+.jct-moodle-redesign #page-header .w-100 {
+	width: 100% !important;
+}
+
+.jct-moodle-redesign #page-header .d-flex {
+	justify-content: center !important;
+	align-items: center !important;
+}
+
+.jct-moodle-redesign #page-header .mr-auto,
+.jct-moodle-redesign #page-header .ml-auto {
+	margin: 0 !important;
+	flex: 1 !important;
+	display: flex !important;
+	justify-content: center !important;
+}
+
+.jct-moodle-redesign #page-header .header-actions-container {
+	display: none !important;
+}
+
+.jct-moodle-redesign #page-header .page-context-header {
+	background: transparent !important;
+	width: 100% !important;
+	text-align: center !important;
+}
+
+.jct-moodle-redesign #page-header .page-header-headings {
+	width: 100% !important;
+	text-align: center !important;
+	margin: 0 auto !important;
+	display: block !important;
+}
+
+.jct-moodle-redesign #page-header .page-context-header h1,
+.jct-moodle-redesign #page-header .page-header-headings h1 {
+	color: white !important;
+	font-size: 2rem !important;
+	font-weight: 700 !important;
+	margin: 0 auto !important;
+	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+	text-align: center !important;
+	display: block !important;
+	width: 100% !important;
+}
+
+/* Action buttons container - separate from header */
+.jct-action-buttons-container {
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	gap: 16px !important;
+	padding: 24px 32px !important;
+	background: #f8fafc !important;
+	margin-bottom: 24px !important;
+	flex-wrap: wrap !important;
+}
+
+/* Settings buttons - modern solid design for separate container */
 .jct-settings-button {
-	background: #3b82f6 !important;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 	color: white !important;
 	border: none !important;
-	padding: 6px 12px !important;
-	border-radius: 6px !important;
-	font-size: 0.85rem !important;
-	font-weight: 500 !important;
+	padding: 10px 18px !important;
+	border-radius: 12px !important;
+	font-size: 0.9rem !important;
+	font-weight: 600 !important;
 	cursor: pointer !important;
-	transition: all 0.2s ease !important;
-	display: inline-block !important;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
 	vertical-align: middle !important;
-	margin-right: 12px !important;
-	margin-left: 0 !important;
+	margin: 0 !important;
+	box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
+	text-shadow: none !important;
 }
 
 .jct-settings-button:hover {
-	background: #2563eb !important;
-	transform: translateY(-1px);
-	box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+	transform: translateY(-2px) !important;
+	box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4) !important;
 }
 
-/* Position in page header - on the LEFT side (right visually in RTL) */
-.page-header-headings .jct-settings-button,
-.page-context-header .jct-settings-button,
-#page-header .jct-settings-button,
-.page-header .jct-settings-button {
-	margin-left: 12px !important;
-	margin-right: 0 !important;
-}
-
-.jct-rtl .page-header-headings .jct-settings-button,
-.jct-rtl .page-context-header .jct-settings-button,
-.jct-rtl #page-header .jct-settings-button,
-.jct-rtl .page-header .jct-settings-button {
-	margin-left: 0 !important;
-	margin-right: 12px !important;
+.jct-settings-button:active {
+	transform: translateY(0) !important;
+	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2) !important;
 }
 
 /* Course page improvements */

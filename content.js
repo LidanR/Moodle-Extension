@@ -1688,13 +1688,13 @@
 		const toggleBtn = document.createElement('button');
 		toggleBtn.id = 'jct-schedule-toggle';
 		toggleBtn.className = 'jct-schedule-toggle';
-		toggleBtn.textContent = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 הצג לוח זמנים שבועי';
+		toggleBtn.innerHTML = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 לוח זמנים שבועי';
 		toggleBtn.addEventListener('click', () => {
 			scheduleViewVisible = !scheduleViewVisible;
 			const container = document.getElementById('jct-weekly-schedule');
 			if (container) {
 				container.style.display = scheduleViewVisible ? 'block' : 'none';
-				toggleBtn.textContent = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 הצג לוח זמנים שבועי';
+				toggleBtn.innerHTML = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 לוח זמנים שבועי';
 				saveScheduleViewState();
 				// Scroll to schedule if opening
 				if (scheduleViewVisible) {
@@ -1711,14 +1711,22 @@
 		scheduleContainer.className = 'jct-weekly-schedule';
 		scheduleContainer.style.display = scheduleViewVisible ? 'block' : 'none';
 
-		// Insert before courses grid
-		const coursesGrid = region.querySelector('.jct-courses-grid');
-		if (coursesGrid && coursesGrid.parentElement) {
-			coursesGrid.parentElement.insertBefore(toggleBtn, coursesGrid);
-			coursesGrid.parentElement.insertBefore(scheduleContainer, coursesGrid);
+		// Insert toggle button and schedule before "My Courses" heading
+		const coursesHeading = region.querySelector('#frontpage-course-list h2');
+		if (coursesHeading && coursesHeading.parentElement) {
+			// Insert button first, then schedule after it (so schedule is after button but both before heading)
+			coursesHeading.parentElement.insertBefore(scheduleContainer, coursesHeading);
+			coursesHeading.parentElement.insertBefore(toggleBtn, scheduleContainer);
 		} else {
-			region.insertBefore(toggleBtn, region.firstChild);
-			region.insertBefore(scheduleContainer, region.firstChild);
+			// Fallback: Insert before courses grid
+			const coursesGrid = region.querySelector('.jct-courses-grid');
+			if (coursesGrid && coursesGrid.parentElement) {
+				coursesGrid.parentElement.insertBefore(scheduleContainer, coursesGrid);
+				coursesGrid.parentElement.insertBefore(toggleBtn, scheduleContainer);
+			} else {
+				region.insertBefore(scheduleContainer, region.firstChild);
+				region.insertBefore(toggleBtn, region.firstChild);
+			}
 		}
 
 		updateWeeklyScheduleView();
@@ -2208,8 +2216,8 @@
 		return daysOverdue <= maxOverdueDays;
 	}
 
-	// Function to get assignment submission status
-	async function getAssignmentSubmissionStatus(assignmentUrl, assignmentId) {
+	// Function to get assignment submission status (cache only, no fetch)
+	async function getAssignmentSubmissionStatus(assignmentUrl, assignmentId, forceRefresh = false) {
 		if (!assignmentUrl) return null;
 
 		// Check cache first
@@ -2231,6 +2239,11 @@
 			}
 		} catch (e) {
 			console.error('Error reading submission status cache:', e);
+		}
+
+		// Only fetch if explicitly requested (forceRefresh = true)
+		if (!forceRefresh) {
+			return null;
 		}
 
 		// Fetch the assignment page
@@ -3895,28 +3908,18 @@
 			}
 		});
 
-		// Add to page header on the LEFT side (in RTL this is visually on the RIGHT side of screen)
-		if (pageTitleContainer) {
-			// Add at the END of the title container (will be on the left/right side in RTL)
-			pageTitleContainer.appendChild(calendarBtn);
-			pageTitleContainer.appendChild(assignmentsBtn);
-			pageTitleContainer.appendChild(settingsBtn);
-		} else if (mainTitle && mainTitle.parentElement) {
-			// Add after the title
-			if (mainTitle.nextSibling) {
-				mainTitle.parentElement.insertBefore(calendarBtn, mainTitle.nextSibling);
-				mainTitle.parentElement.insertBefore(assignmentsBtn, mainTitle.nextSibling);
-				mainTitle.parentElement.insertBefore(settingsBtn, mainTitle.nextSibling);
-			} else {
-				mainTitle.parentElement.appendChild(calendarBtn);
-				mainTitle.parentElement.appendChild(assignmentsBtn);
-				mainTitle.parentElement.appendChild(settingsBtn);
-			}
-		} else if (pageHeader) {
-			// Add to page header at the end
-			pageHeader.appendChild(calendarBtn);
-			pageHeader.appendChild(assignmentsBtn);
-			pageHeader.appendChild(settingsBtn);
+		// Create a separate button container below the header
+		const buttonContainer = document.createElement('div');
+		buttonContainer.className = 'jct-action-buttons-container';
+		buttonContainer.appendChild(calendarBtn);
+		buttonContainer.appendChild(assignmentsBtn);
+		buttonContainer.appendChild(settingsBtn);
+
+		// Insert the button container after the page header
+		if (pageHeader) {
+			pageHeader.parentElement.insertBefore(buttonContainer, pageHeader.nextSibling);
+		} else if (pageTitleContainer) {
+			pageTitleContainer.parentElement.insertBefore(buttonContainer, pageTitleContainer.nextSibling);
 		} else {
 			// Fallback: fixed position top left (right in RTL)
 			calendarBtn.style.position = 'fixed';
