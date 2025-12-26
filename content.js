@@ -8,16 +8,16 @@
 		}
 	};
 
-	const HEBREW_YEARS = [5784,5785,5786,5787,5788,5789,5790];
-	const SEM_TO_IDX = {'אלול':0, '1':0, 'א':1, '2':1, 'ב':2, '3':2};
+	const HEBREW_YEARS = [5784, 5785, 5786, 5787, 5788, 5789, 5790];
+	const SEM_TO_IDX = { 'אלול': 0, '1': 0, 'א': 1, '2': 1, 'ב': 2, '3': 2 };
 	const DEFAULT_PALETTE = [
-		["#3b82f6","#818cf8","#bae6fd"], // 5784
-		["#22c55e","#4ade80","#bbf7d0"], // 5785
-		["#f97316","#fbbf24","#fed7aa"], // 5786
-		["#f43f5e","#fda4af","#fecdd3"], // 5787
-		["#a21caf","#f472b6","#f3e8ff"], // 5788
-		["#2563eb","#60a5fa","#dbeafe"], // 5789
-		["#b45309","#f59e42","#fde68a"]  // 5790
+		["#3b82f6", "#818cf8", "#bae6fd"], // 5784
+		["#22c55e", "#4ade80", "#bbf7d0"], // 5785
+		["#f97316", "#fbbf24", "#fed7aa"], // 5786
+		["#f43f5e", "#fda4af", "#fecdd3"], // 5787
+		["#a21caf", "#f472b6", "#f3e8ff"], // 5788
+		["#2563eb", "#60a5fa", "#dbeafe"], // 5789
+		["#b45309", "#f59e42", "#fde68a"]  // 5790
 	];
 	let paletteByYearHeb = null;
 	let favoriteCourseIds = new Set();
@@ -92,7 +92,7 @@
 			}
 		});
 	}
-	
+
 	let scheduleUpdateTimeout = null;
 
 	function loadFavorites() {
@@ -207,7 +207,7 @@
 		if (!courseId) {
 			return [];
 		}
-		
+
 		try {
 			// Check if we have cached data that's less than 5 minutes old
 			if (courseAssignments[courseId] && courseAssignments[courseId]._timestamp) {
@@ -219,7 +219,7 @@
 
 			// Get Moodle config from window - wait longer if not ready
 			let moodleCfg = window.M?.cfg;
-			
+
 			// Try multiple times to get the config
 			if (!moodleCfg) {
 				for (let i = 0; i < 10; i++) {
@@ -230,7 +230,7 @@
 					}
 				}
 			}
-			
+
 			// If still not found, try to get wwwroot from current URL
 			if (!moodleCfg || !moodleCfg.wwwroot) {
 				const currentUrl = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
@@ -239,7 +239,7 @@
 					moodleCfg.wwwroot = currentUrl;
 				}
 			}
-			
+
 			// Try to get sesskey from the page
 			if (!moodleCfg || !moodleCfg.sesskey) {
 				const sesskeyInput = document.querySelector('input[name="sesskey"]');
@@ -248,7 +248,7 @@
 					moodleCfg.sesskey = sesskeyInput.value;
 				}
 			}
-			
+
 			if (!moodleCfg || !moodleCfg.wwwroot) {
 				if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
 					return courseAssignments[courseId].assignments;
@@ -257,7 +257,7 @@
 			}
 
 			// Try multiple approaches to get assignments
-			
+
 			// Approach 1: Try Moodle AJAX API
 			try {
 				const apiUrl = `${moodleCfg.wwwroot}/lib/ajax/service.php`;
@@ -269,7 +269,7 @@
 					}
 				}];
 
-				const requestBody = moodleCfg.sesskey 
+				const requestBody = moodleCfg.sesskey
 					? { sesskey: moodleCfg.sesskey, info: requestData }
 					: { info: requestData };
 
@@ -284,11 +284,11 @@
 
 				if (response.ok) {
 					const data = await response.json();
-					
+
 					if (data && data[0] && !data[0].error && data[0].data) {
 						const sections = Array.isArray(data[0].data) ? data[0].data : [];
 						const assignments = [];
-						
+
 						// Parse sections to find assignments
 						sections.forEach(section => {
 							if (section.modules && Array.isArray(section.modules)) {
@@ -298,10 +298,10 @@
 										let dueDate = null;
 										if (module.dates && Array.isArray(module.dates)) {
 											// Look for due date (could be labeled in Hebrew or English)
-											const dueDateObj = module.dates.find(d => 
+											const dueDateObj = module.dates.find(d =>
 												d && d.label && (
-													d.label.includes('תאריך') || 
-													d.label.includes('Due') || 
+													d.label.includes('תאריך') ||
+													d.label.includes('Due') ||
 													d.label.includes('due') ||
 													d.label.includes('תאריך הגשה') ||
 													d.label.includes('תאריך סיום')
@@ -313,18 +313,18 @@
 												dueDate = Math.floor(module.dates[0].timestamp);
 											}
 										}
-										
+
 										// Also check module.duedate if available
 										if (!dueDate && module.duedate) {
 											dueDate = Math.floor(module.duedate);
 										}
-										
+
 										// Ensure URL points to assignment view
 										let moduleUrl = module.url || `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
 										if (!moduleUrl.includes('/mod/assign/view.php')) {
 											moduleUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
 										}
-										
+
 										// Check if assignment is submitted
 										let isSubmitted = false;
 										if (module.completiondata && module.completiondata.state === 1) {
@@ -332,7 +332,7 @@
 										} else if (module.completion && module.completion === 1) {
 											isSubmitted = true;
 										}
-										
+
 										assignments.push({
 											id: String(module.id),
 											name: module.name || 'מטלה ללא שם',
@@ -344,21 +344,21 @@
 								});
 							}
 						});
-						
+
 						if (assignments.length > 0) {
 							courseAssignments[courseId] = {
 								assignments: assignments,
 								_timestamp: Date.now()
 							};
-						saveCourseAssignments().catch(() => {});
-						return assignments;
+							saveCourseAssignments().catch(() => { });
+							return assignments;
 						}
 					}
 				}
 			} catch (apiError) {
 				// API failed, try page fetch
 			}
-			
+
 			// Approach 2: Try to fetch course page (may fail due to CORS)
 			try {
 				const courseUrl = `${moodleCfg.wwwroot}/course/view.php?id=${courseId}`;
@@ -366,32 +366,32 @@
 					method: 'GET',
 					credentials: 'include'
 				});
-				
+
 				if (response.ok) {
 					const html = await response.text();
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, 'text/html');
-					
+
 					// Find assignment links
 					const assignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
 					const assignments = [];
-					
+
 					assignmentLinks.forEach(link => {
 						const href = link.getAttribute('href');
 						const match = href.match(/[?&]id=(\d+)/);
 						if (match) {
 							const assignId = match[1];
 							const name = link.textContent.trim() || link.innerText.trim();
-							
+
 							// Try to find due date - multiple approaches
 							let dueDate = null;
-							
+
 							// Approach 1: Look in parent elements
 							const parent = link.closest('.activity, .modtype_assign, li, .course-content, .activityinstance, .activity-item');
 							if (parent) {
 								// Try to find date in various formats
 								const dateText = parent.textContent || parent.innerText || '';
-								
+
 								// Hebrew date format: DD/MM/YYYY
 								let dateMatch = dateText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
 								if (dateMatch) {
@@ -405,7 +405,7 @@
 										dueDate = Math.floor(new Date(`${year}-${month}-${day}`).getTime() / 1000);
 									} else {
 										// Try to find data attributes
-										const dateAttr = parent.getAttribute('data-duedate') || 
+										const dateAttr = parent.getAttribute('data-duedate') ||
 											parent.querySelector('[data-duedate]')?.getAttribute('data-duedate');
 										if (dateAttr) {
 											dueDate = parseInt(dateAttr);
@@ -413,7 +413,7 @@
 									}
 								}
 							}
-							
+
 							// Approach 2: Look for date in nearby text elements
 							if (!dueDate) {
 								// Check siblings and nearby elements
@@ -436,7 +436,7 @@
 									current = current.parentElement;
 								}
 							}
-							
+
 							// Approach 3: Try to fetch assignment page (async, don't block) to check submission status
 							// This will be done in background and cached for next time
 							if (assignId) {
@@ -452,16 +452,16 @@
 									if (html) {
 										const parser = new DOMParser();
 										const doc = parser.parseFromString(html, 'text/html');
-										
+
 										// Check if assignment is submitted
 										let isSubmitted = false;
 										const pageText = doc.body.textContent || doc.body.innerText || '';
-										if (pageText.includes('הוגש') || pageText.includes('הושלם') || 
+										if (pageText.includes('הוגש') || pageText.includes('הושלם') ||
 											pageText.includes('Submitted') || pageText.includes('Complete') ||
 											doc.querySelector('.submissionstatussubmitted, .submission-status-submitted, [class*="submitted"], [id*="submitted"]')) {
 											isSubmitted = true;
 										}
-										
+
 										// Look for due date in various places
 										const dueDateEl = doc.querySelector('[data-duedate], .duedate, .assignment-due-date, [class*="due"], [id*="duedate"]');
 										if (dueDateEl) {
@@ -469,7 +469,7 @@
 											if (!dateText) {
 												dateText = dueDateEl.getAttribute('title') || dueDateEl.getAttribute('aria-label');
 											}
-											
+
 											if (dateText) {
 												let dateMatch = dateText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
 												if (dateMatch) {
@@ -483,7 +483,7 @@
 															if (isSubmitted) {
 																assign.submission = { status: 'submitted' };
 															}
-															saveCourseAssignments().catch(() => {});
+															saveCourseAssignments().catch(() => { });
 														}
 													}
 												}
@@ -494,14 +494,14 @@
 												const assign = courseAssignments[courseId].assignments.find(a => a.id === assignId);
 												if (assign) {
 													assign.submission = { status: 'submitted' };
-													saveCourseAssignments().catch(() => {});
+													saveCourseAssignments().catch(() => { });
 												}
 											}
 										}
 									}
-								}).catch(() => {});
+								}).catch(() => { });
 							}
-							
+
 							// Fix URL - make sure it's absolute and points to the assignment
 							let finalUrl = href;
 							if (!href.startsWith('http')) {
@@ -511,26 +511,26 @@
 									finalUrl = `${moodleCfg.wwwroot}/${href}`;
 								}
 							}
-							
+
 							// Ensure URL points to assignment view, not course
 							if (!finalUrl.includes('/mod/assign/view.php')) {
 								finalUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`;
 							}
-							
+
 							// Check if assignment is submitted by looking at the link or parent element
 							let isSubmitted = false;
 							const parentEl = link.closest('.activity, .modtype_assign, li, .course-content, .activityinstance, .activity-item');
 							if (parentEl) {
 								const parentText = parentEl.textContent || parentEl.innerText || '';
 								// Look for Hebrew indicators of submission
-								if (parentText.includes('הוגש') || parentText.includes('הושלם') || 
+								if (parentText.includes('הוגש') || parentText.includes('הושלם') ||
 									parentText.includes('Submitted') || parentText.includes('Complete') ||
 									parentEl.classList.contains('completed') || parentEl.classList.contains('submitted') ||
 									parentEl.querySelector('.submissionstatussubmitted, .submission-status-submitted, [class*="submitted"]')) {
 									isSubmitted = true;
 								}
 							}
-							
+
 							assignments.push({
 								id: assignId,
 								name: name,
@@ -540,20 +540,20 @@
 							});
 						}
 					});
-					
+
 					if (assignments.length > 0) {
 						courseAssignments[courseId] = {
 							assignments: assignments,
 							_timestamp: Date.now()
 						};
-						saveCourseAssignments().catch(() => {});
+						saveCourseAssignments().catch(() => { });
 						return assignments;
 					}
 				}
 			} catch (fetchError) {
 				// Page fetch failed
 			}
-			
+
 			// Return cached data if available
 			if (courseAssignments[courseId] && courseAssignments[courseId].assignments) {
 				return courseAssignments[courseId].assignments;
@@ -567,7 +567,7 @@
 			return [];
 		}
 	}
-	
+
 	function saveScheduleViewState() {
 		try {
 			chrome.storage.local.set({ scheduleViewVisible: scheduleViewVisible }, () => {
@@ -579,7 +579,7 @@
 			// Ignore
 		}
 	}
-	
+
 	function migrateSchedules() {
 		// Migrate old format if needed and remove saturday
 		Object.keys(courseSchedules).forEach(courseId => {
@@ -664,13 +664,13 @@
 	}
 
 	function hexToHsl(hex) {
-		hex = (hex || '').replace('#','');
+		hex = (hex || '').replace('#', '');
 		if (!hex) return { h: 220, s: 60, l: 60 };
-		if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
-		const r = parseInt(hex.substring(0,2),16) / 255;
-		const g = parseInt(hex.substring(2,4),16) / 255;
-		const b = parseInt(hex.substring(4,6),16) / 255;
-		const max = Math.max(r,g,b), min = Math.min(r,g,b);
+		if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+		const r = parseInt(hex.substring(0, 2), 16) / 255;
+		const g = parseInt(hex.substring(2, 4), 16) / 255;
+		const b = parseInt(hex.substring(4, 6), 16) / 255;
+		const max = Math.max(r, g, b), min = Math.min(r, g, b);
 		let h, s, l = (max + min) / 2;
 		if (max === min) { h = 0; s = 0; }
 		else {
@@ -702,20 +702,20 @@
 		// Detect Hebrew year
 		const yMatch = txt.match(/תש[פצ]["']?[דוהזחטצ]/);
 		if (yMatch) {
-			const lookup = {'תשפ"ד':5784,'תשפ"ה':5785,'תשפ"ו':5786,'תשפ"ז':5787,'תשפ"ח':5788,'תשפ"ט':5789,'תש"צ':5790};
-			const cy = yMatch[0].replace("'",'"');
+			const lookup = { 'תשפ"ד': 5784, 'תשפ"ה': 5785, 'תשפ"ו': 5786, 'תשפ"ז': 5787, 'תשפ"ח': 5788, 'תשפ"ט': 5789, 'תש"צ': 5790 };
+			const cy = yMatch[0].replace("'", '"');
 			y = lookup[cy];
 		}
 		if (!y) {
 			const nMatch = txt.match(/57[8-9][0-9]/);
-			y = nMatch ? parseInt(nMatch[0],10) : null;
+			y = nMatch ? parseInt(nMatch[0], 10) : null;
 		}
 		// Detect semester
 		let sMatch = null;
 		if (txt.includes('אלול')) s = 0;
 		else if ((sMatch = txt.match(/(?<=^|\W)(א|ב|1|2|3)(?=\W|$)/))) s = SEM_TO_IDX[sMatch[1]];
 		else s = null;
-		return {year: y, semIdx: s};
+		return { year: y, semIdx: s };
 	}
 
 	function colorFor(year, semIdx) {
@@ -740,13 +740,13 @@
 		if (!courseId) {
 			return;
 		}
-		
+
 		// Skip if already processed
 		if (card.hasAttribute('data-jct-assignments-processed')) {
 			return;
 		}
 		card.setAttribute('data-jct-assignments-processed', 'true');
-		
+
 		try {
 			let assignmentsContainer = card.querySelector('.jct-assignments-container');
 			if (!assignmentsContainer) {
@@ -765,7 +765,7 @@
 
 			// Try to fetch assignments
 			const assignments = await fetchAssignmentsForCourse(courseId);
-			
+
 			if (!assignments || assignments.length === 0) {
 				assignmentsContainer.innerHTML = '';
 				assignmentsContainer.style.display = 'none';
@@ -775,7 +775,7 @@
 			// Filter assignments: only show relevant ones (not submitted, with due date or recent)
 			const now = Math.floor(Date.now() / 1000);
 			const sevenDaysFromNow = now + (7 * 24 * 60 * 60); // Show only next 7 days
-			
+
 			// Get max days for overdue assignments from settings
 			let maxOverdueDays = 30; // Default: 30 days
 			try {
@@ -787,7 +787,7 @@
 				// Use default
 			}
 			const maxOverdueTimestamp = now - (maxOverdueDays * 24 * 60 * 60);
-			
+
 			// Filter out submitted assignments and very old overdue assignments
 			const activeAssignments = assignments.filter(a => {
 				if (!a) return false;
@@ -799,17 +799,17 @@
 				}
 				return true;
 			});
-			
+
 			// Separate by due date
 			const assignmentsWithDueDates = activeAssignments
 				.filter(a => a.duedate && a.duedate > 0)
 				.sort((a, b) => a.duedate - b.duedate);
-			
+
 			// Show only urgent assignments (next 7 days) or overdue
-			const urgentAssignments = assignmentsWithDueDates.filter(a => 
+			const urgentAssignments = assignmentsWithDueDates.filter(a =>
 				a.duedate <= sevenDaysFromNow // Includes overdue and upcoming within 7 days
 			);
-			
+
 			// Always show only 1 assignment initially (unless user clicks "Show All")
 			let assignmentsToShow = [];
 			if (urgentAssignments.length > 0) {
@@ -834,7 +834,7 @@
 			const assignmentsToShowRef = assignmentsToShow;
 			const nowRef = now;
 			const hasMore = allActiveAssignmentsRef.length > assignmentsToShowRef.length;
-			
+
 			let html = '<div class="jct-assignments-header">';
 			html += '<span class="jct-assignments-title">📝 מטלות קרובות</span>';
 			if (hasMore) {
@@ -842,34 +842,34 @@
 			}
 			html += '</div>';
 			html += '<div class="jct-assignments-list">';
-			
+
 			// Show all assignments when expanded
 			const assignmentsToRender = assignmentsToShow;
-			
+
 			assignmentsToRender.forEach(assign => {
 				if (!assign || !assign.name) return;
-				
+
 				try {
 					let dueDate = null;
 					let daysUntilDue = null;
 					let isOverdue = false;
 					let isUrgent = false;
 					let dateStr = '';
-					
+
 					if (assign.duedate && assign.duedate > 0) {
 						dueDate = new Date(assign.duedate * 1000);
 						daysUntilDue = Math.ceil((assign.duedate - now) / (24 * 60 * 60));
 						isOverdue = assign.duedate < now;
 						isUrgent = daysUntilDue <= 3 && !isOverdue;
-						dateStr = dueDate.toLocaleDateString('he-IL', { 
-							day: 'numeric', 
+						dateStr = dueDate.toLocaleDateString('he-IL', {
+							day: 'numeric',
 							month: 'numeric',
 							year: 'numeric'
 						});
 					}
-					
+
 					const isSubmitted = assign.submission && assign.submission.status === 'submitted';
-					
+
 					let statusClass = '';
 					let statusText = '';
 					if (isSubmitted) {
@@ -918,7 +918,7 @@
 			html += '</div>';
 			assignmentsContainer.innerHTML = html;
 			assignmentsContainer.style.display = 'block';
-			
+
 			// Add click handlers to all links in initial HTML
 			const allLinks = assignmentsContainer.querySelectorAll('.jct-assignment-link');
 			allLinks.forEach(link => {
@@ -938,34 +938,34 @@
 					}
 				});
 			});
-			
+
 			// Helper function to create assignment element
 			const createAssignmentElement = (assign, now) => {
 				if (!assign) {
 					return null;
 				}
 				const div = document.createElement('div');
-				
+
 				let dueDate = null;
 				let daysUntilDue = null;
 				let isOverdue = false;
 				let isUrgent = false;
 				let dateStr = '';
-				
+
 				if (assign.duedate && assign.duedate > 0) {
 					dueDate = new Date(assign.duedate * 1000);
 					daysUntilDue = Math.ceil((assign.duedate - now) / (24 * 60 * 60));
 					isOverdue = assign.duedate < now;
 					isUrgent = daysUntilDue <= 3 && !isOverdue;
-					dateStr = dueDate.toLocaleDateString('he-IL', { 
-						day: 'numeric', 
+					dateStr = dueDate.toLocaleDateString('he-IL', {
+						day: 'numeric',
 						month: 'numeric',
 						year: 'numeric'
 					});
 				}
-				
+
 				const isSubmitted = assign.submission && assign.submission.status === 'submitted';
-				
+
 				let statusClass = '';
 				let statusText = '';
 				if (isSubmitted) {
@@ -986,7 +986,7 @@
 				}
 
 				const safeName = (assign.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-				
+
 				// Fix URL - ensure it points to assignment view
 				let safeUrl = assign.url || '';
 				if (safeUrl && !safeUrl.includes('/mod/assign/view.php')) {
@@ -1002,29 +1002,29 @@
 				}
 
 				div.className = `jct-assignment-item ${statusClass}`;
-				
+
 				const nameDiv = document.createElement('div');
 				nameDiv.className = 'jct-assignment-name';
 				nameDiv.textContent = safeName;
-				
+
 				const metaDiv = document.createElement('div');
 				metaDiv.className = 'jct-assignment-meta';
-				
+
 				if (dateStr) {
 					const dateSpan = document.createElement('span');
 					dateSpan.className = 'jct-assignment-date';
 					dateSpan.textContent = dateStr;
 					metaDiv.appendChild(dateSpan);
 				}
-				
+
 				const statusSpan = document.createElement('span');
 				statusSpan.className = 'jct-assignment-status';
 				statusSpan.textContent = statusText;
 				metaDiv.appendChild(statusSpan);
-				
+
 				div.appendChild(nameDiv);
 				div.appendChild(metaDiv);
-				
+
 				// Make the entire card clickable, but stop propagation to course card
 				div.style.cursor = 'pointer';
 				div.addEventListener('click', (e) => {
@@ -1044,7 +1044,7 @@
 					e.stopPropagation();
 					e.stopImmediatePropagation();
 				});
-				
+
 				if (safeUrl) {
 					const link = document.createElement('a');
 					link.href = safeUrl;
@@ -1069,18 +1069,18 @@
 				}
 				return div;
 			};
-			
+
 			// Add carousel functionality
 			const toggleBtn = assignmentsContainer.querySelector('.jct-assignments-toggle');
 			if (toggleBtn) {
 				let currentIndex = 0;
-				
+
 				toggleBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					e.preventDefault();
 					const isExpanded = toggleBtn.getAttribute('data-expanded') === 'true';
 					const list = assignmentsContainer.querySelector('.jct-assignments-list');
-					
+
 					if (isExpanded) {
 						// Collapse - show only urgent
 						toggleBtn.setAttribute('data-expanded', 'false');
@@ -1110,16 +1110,16 @@
 						toggleBtn.setAttribute('data-expanded', 'true');
 						toggleBtn.textContent = 'הסתר';
 						currentIndex = 0;
-						
+
 						// Create carousel container
 						list.innerHTML = '';
 						const carouselWrapper = document.createElement('div');
 						carouselWrapper.className = 'jct-assignments-carousel-wrapper';
-						
+
 						// Create carousel items container
 						const carouselItems = document.createElement('div');
 						carouselItems.className = 'jct-assignments-carousel-items';
-						
+
 						// Create all assignment elements
 						allActiveAssignmentsRef.forEach((assign, index) => {
 							const element = createAssignmentElement(assign, nowRef);
@@ -1129,13 +1129,13 @@
 								carouselItems.appendChild(element);
 							}
 						});
-						
+
 						carouselWrapper.appendChild(carouselItems);
-						
+
 						// Create carousel controls
 						const carouselControls = document.createElement('div');
 						carouselControls.className = 'jct-assignments-carousel-controls';
-						
+
 						const prevBtn = document.createElement('button');
 						prevBtn.className = 'jct-carousel-btn jct-carousel-prev';
 						prevBtn.textContent = '←';
@@ -1153,7 +1153,7 @@
 							e.stopPropagation();
 							e.stopImmediatePropagation();
 						});
-						
+
 						const nextBtn = document.createElement('button');
 						nextBtn.className = 'jct-carousel-btn jct-carousel-next';
 						nextBtn.textContent = '→';
@@ -1171,18 +1171,18 @@
 							e.stopPropagation();
 							e.stopImmediatePropagation();
 						});
-						
+
 						const counter = document.createElement('span');
 						counter.className = 'jct-carousel-counter';
 						counter.textContent = `1 / ${allActiveAssignmentsRef.length}`;
-						
+
 						carouselControls.appendChild(prevBtn);
 						carouselControls.appendChild(counter);
 						carouselControls.appendChild(nextBtn);
-						
+
 						carouselWrapper.appendChild(carouselControls);
 						list.appendChild(carouselWrapper);
-						
+
 						// Update carousel function
 						const updateCarousel = () => {
 							const items = carouselItems.querySelectorAll('.jct-assignment-carousel-item');
@@ -1193,10 +1193,10 @@
 							prevBtn.disabled = currentIndex === 0;
 							nextBtn.disabled = currentIndex === allActiveAssignmentsRef.length - 1;
 						};
-						
+
 						// Initialize
 						updateCarousel();
-						
+
 						// Hide "more" message
 						const moreDiv = assignmentsContainer.querySelector('.jct-assignments-more');
 						if (moreDiv) {
@@ -1251,7 +1251,7 @@
 				let hash = 0; for (let i = 0; i < cid.length; i++) { hash = ((hash << 5) - hash) + cid.charCodeAt(i); hash |= 0; }
 				const row = Math.abs(hash) % HEBREW_YEARS.length;
 				year = HEBREW_YEARS[row];
-				const sems = [0,1,2];
+				const sems = [0, 1, 2];
 				semIdx = sems[Math.abs(hash >> 3) % sems.length];
 			}
 			const { h, s, l } = colorFor(year, semIdx);
@@ -1330,7 +1330,7 @@
 				});
 				card.appendChild(scheduleBtn);
 			}
-			
+
 			// Make the card draggable when dragging from schedule button
 			// The schedule button itself is draggable, so we don't need to make the whole card draggable
 			if (!card.hasAttribute('data-jct-idx')) {
@@ -1357,20 +1357,20 @@
 				let isDragging = false;
 				let dragStartX = 0;
 				let dragStartY = 0;
-				
+
 				card.addEventListener('mousedown', (e) => {
 					if (e.target.closest('.jct-fav-toggle') || e.target.closest('.jct-schedule-btn')) return;
 					dragStartX = e.clientX;
 					dragStartY = e.clientY;
 					isDragging = false;
 				});
-				
+
 				card.addEventListener('mousemove', (e) => {
 					if (Math.abs(e.clientX - dragStartX) > 5 || Math.abs(e.clientY - dragStartY) > 5) {
 						isDragging = true;
 					}
 				});
-				
+
 				card.addEventListener('click', (event) => {
 					if (event.target.closest('.jct-fav-toggle')) return;
 					if (event.target.closest('.jct-schedule-btn')) return;
@@ -1386,8 +1386,8 @@
 		});
 		// colums amount
 		chrome.storage.sync.get({ columnCount: 3 }, ({ columnCount }) => {
-		document.documentElement.style.setProperty('--jct-columns', columnCount);
-});
+			document.documentElement.style.setProperty('--jct-columns', columnCount);
+		});
 
 
 		// After ensuring cards, reorder each grid container in a guarded way
@@ -1489,9 +1489,9 @@
 					<div class="jct-session-item" data-session-idx="${idx}">
 						<select class="jct-session-day">
 							${DAYS_OF_WEEK.map((day, i) => {
-								const selected = DAYS_OF_WEEK_EN[i] === session.day ? 'selected' : '';
-								return `<option value="${DAYS_OF_WEEK_EN[i]}" ${selected}>${day}</option>`;
-							}).join('')}
+					const selected = DAYS_OF_WEEK_EN[i] === session.day ? 'selected' : '';
+					return `<option value="${DAYS_OF_WEEK_EN[i]}" ${selected}>${day}</option>`;
+				}).join('')}
 						</select>
 						<input type="time" class="jct-session-time" value="${session.startTime || ''}" placeholder="התחלה">
 						<span>-</span>
@@ -1523,7 +1523,7 @@
 
 		modal.innerHTML = renderSessions();
 		document.body.appendChild(modal);
-		
+
 		// Event listeners
 		modal.querySelector('.jct-schedule-modal-close').addEventListener('click', () => {
 			modal.remove();
@@ -1636,7 +1636,7 @@
 			if (saveSchedulesTimeout) {
 				clearTimeout(saveSchedulesTimeout);
 			}
-			
+
 			// If already saving, wait a bit
 			if (isSavingSchedules) {
 				saveSchedulesTimeout = setTimeout(() => {
@@ -1644,9 +1644,9 @@
 				}, 200);
 				return;
 			}
-			
+
 			isSavingSchedules = true;
-			
+
 			try {
 				const schedulesToSave = JSON.parse(JSON.stringify(courseSchedules));
 				chrome.storage.local.set({ courseSchedules: schedulesToSave }, () => {
@@ -1782,7 +1782,7 @@
 			} else {
 				sessions.forEach(sessionData => {
 					const timeDisplay = sessionData.startTime && sessionData.endTime
-						? `<div class="jct-session-time">${sessionData.startTime} - ${sessionData.endTime}</div>`
+						? `<div class="jct-session-time">${sessionData.endTime} - ${sessionData.startTime}</div>`
 						: '';
 					html += `<div class="jct-schedule-course-item" data-course-id="${sessionData.id}">
 						<div class="jct-session-content">
@@ -1796,16 +1796,16 @@
 
 			html += '</div></div>';
 		});
-		
+
 		html += '</div>';
 		scheduleContainer.innerHTML = html;
-		
+
 		// Setup delete all button - use event delegation on document to ensure it always works
 		// Remove old listener if exists
 		if (scheduleContainer._deleteAllHandler) {
 			document.removeEventListener('click', scheduleContainer._deleteAllHandler);
 		}
-		
+
 		// Create new handler
 		scheduleContainer._deleteAllHandler = async (e) => {
 			const deleteBtn = e.target.closest('.jct-schedule-delete-all-btn');
@@ -1818,7 +1818,7 @@
 					alert('אין קורסים במערכת למחיקה');
 					return;
 				}
-				
+
 				if (confirm('⚠️ האם אתה בטוח שברצונך למחוק את כל הקורסים מהלוח זמנים?\n\nפעולה זו לא ניתנת לביטול!')) {
 					if (confirm('האם אתה בטוח לחלוטין? כל הקורסים יימחקו מהלוח זמנים.')) {
 						courseSchedules = {};
@@ -1837,13 +1837,13 @@
 				}
 			}
 		};
-		
+
 		// Use event delegation on document - this way it always works even if HTML is replaced
 		document.addEventListener('click', scheduleContainer._deleteAllHandler);
 
 		// Setup drag and drop
 		setupScheduleDragAndDrop();
-		
+
 		// Make sure the container visibility matches saved state
 		const toggleBtn = document.getElementById('jct-schedule-toggle');
 		if (toggleBtn) {
@@ -2208,6 +2208,89 @@
 		return daysOverdue <= maxOverdueDays;
 	}
 
+	// Function to get assignment submission status
+	async function getAssignmentSubmissionStatus(assignmentUrl, assignmentId) {
+		if (!assignmentUrl) return null;
+
+		// Check cache first
+		const cacheKey = `submission_status_${assignmentId}`;
+		try {
+			const cached = await new Promise(resolve => {
+				chrome.storage.local.get({ submissionStatusCache: {} }, res => {
+					const cache = res.submissionStatusCache || {};
+					resolve(cache[cacheKey]);
+				});
+			});
+
+			if (cached && cached.timestamp) {
+				const age = Date.now() - cached.timestamp;
+				const oneWeek = 7 * 24 * 60 * 60 * 1000;
+				if (age < oneWeek) {
+					return cached.status;
+				}
+			}
+		} catch (e) {
+			console.error('Error reading submission status cache:', e);
+		}
+
+		// Fetch the assignment page
+		try {
+			const response = await fetch(assignmentUrl, {
+				method: 'GET',
+				credentials: 'include'
+			});
+
+			if (!response.ok) return null;
+
+			const html = await response.text();
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+
+			// Find the submission status in the table
+			const statusRow = Array.from(doc.querySelectorAll('table.generaltable tr')).find(row => {
+				const th = row.querySelector('th');
+				return th && th.textContent.includes('מצב ההגשה');
+			});
+
+			if (statusRow) {
+				const statusCell = statusRow.querySelector('td');
+				if (statusCell) {
+					const statusText = statusCell.textContent.trim();
+
+					let status = 'not_submitted';
+					if (statusText.includes('הוגש למתן ציון') || statusText.includes('הוגש')) {
+						status = 'submitted';
+					} else if (statusText.includes('אין עדיין הגשות')) {
+						status = 'not_submitted';
+					}
+
+					// Cache the result
+					try {
+						await new Promise(resolve => {
+							chrome.storage.local.get({ submissionStatusCache: {} }, res => {
+								const cache = res.submissionStatusCache || {};
+								cache[cacheKey] = {
+									status: status,
+									timestamp: Date.now()
+								};
+								chrome.storage.local.set({ submissionStatusCache: cache }, () => resolve());
+							});
+						});
+					} catch (e) {
+						console.error('Error saving submission status cache:', e);
+					}
+
+					return status;
+				}
+			}
+
+			return null;
+		} catch (error) {
+			console.error('Error fetching submission status:', error);
+			return null;
+		}
+	}
+
 	// Cache helper functions
 	async function getAssignmentsCache() {
 		return new Promise(resolve => {
@@ -2290,319 +2373,319 @@
 
 		try {
 
-		// Get wwwroot from current URL or Moodle config
-		let wwwroot = window.location.origin;
+			// Get wwwroot from current URL or Moodle config
+			let wwwroot = window.location.origin;
 
-		// Try to get Moodle config, but don't fail if not available
-		let moodleCfg = window.M?.cfg;
-		if (!moodleCfg || !moodleCfg.wwwroot) {
-			// Wait a bit for Moodle to initialize
-			await new Promise(resolve => setTimeout(resolve, 500));
-			moodleCfg = window.M?.cfg;
-		}
-
-		if (moodleCfg && moodleCfg.wwwroot) {
-			wwwroot = moodleCfg.wwwroot;
-		}
-
-		console.log('Using wwwroot:', wwwroot);
-		console.log('Filter settings:', { filterYear, filterSemester });
-
-		// Find all course links in the main page HTML
-		// Look for links like: <a class="aalink" href="https://moodle.jct.ac.il/course/view.php?id=73247">
-		const allCourseLinks = document.querySelectorAll('a[href*="/course/view.php"]');
-
-		console.log(`Found ${allCourseLinks.length} total course links`);
-
-		// Use a Map to store unique courses by ID (to avoid duplicates)
-		const uniqueCoursesMap = new Map();
-
-		for (const link of allCourseLinks) {
-			const href = link.getAttribute('href');
-			const match = href.match(/[?&]id=(\d+)/);
-
-			if (!match) continue;
-
-			const courseId = match[1];
-			const courseName = link.textContent.trim() || link.innerText.trim();
-
-			// Only store the first occurrence of each course
-			if (!uniqueCoursesMap.has(courseId)) {
-				uniqueCoursesMap.set(courseId, { href, courseName, link });
-			}
-		}
-
-		console.log(`Found ${uniqueCoursesMap.size} unique courses`);
-
-		// Filter courses by year and semester BEFORE processing
-		const filteredCourses = Array.from(uniqueCoursesMap.values()).filter(({ courseName }) => {
-			// If no filter, include all
-			if (!filterYear && !filterSemester) return true;
-
-			// Parse year and semester from course name
-			const { year, semIdx } = parseHebrewYearAndSemester(courseName);
-
-			// Check year filter
-			if (filterYear && year !== parseInt(filterYear)) {
-				return false;
+			// Try to get Moodle config, but don't fail if not available
+			let moodleCfg = window.M?.cfg;
+			if (!moodleCfg || !moodleCfg.wwwroot) {
+				// Wait a bit for Moodle to initialize
+				await new Promise(resolve => setTimeout(resolve, 500));
+				moodleCfg = window.M?.cfg;
 			}
 
-			// Check semester filter
-			if (filterSemester !== '' && semIdx !== parseInt(filterSemester)) {
-				return false;
+			if (moodleCfg && moodleCfg.wwwroot) {
+				wwwroot = moodleCfg.wwwroot;
 			}
 
-			return true;
-		});
+			console.log('Using wwwroot:', wwwroot);
+			console.log('Filter settings:', { filterYear, filterSemester });
 
-		console.log(`After filtering: ${filteredCourses.length} courses match the filter`);
+			// Find all course links in the main page HTML
+			// Look for links like: <a class="aalink" href="https://moodle.jct.ac.il/course/view.php?id=73247">
+			const allCourseLinks = document.querySelectorAll('a[href*="/course/view.php"]');
 
-		const totalCourses = filteredCourses.length;
-		let currentCourseIndex = 0;
+			console.log(`Found ${allCourseLinks.length} total course links`);
 
-		for (const { href, courseName: courseNameFromLink } of filteredCourses) {
-			const match = href.match(/[?&]id=(\d+)/);
+			// Use a Map to store unique courses by ID (to avoid duplicates)
+			const uniqueCoursesMap = new Map();
 
-			if (!match) continue;
+			for (const link of allCourseLinks) {
+				const href = link.getAttribute('href');
+				const match = href.match(/[?&]id=(\d+)/);
 
-			const courseId = match[1];
-			const courseName = courseNameFromLink || `קורס ${courseId}`;
+				if (!match) continue;
 
-			currentCourseIndex++;
+				const courseId = match[1];
+				const courseName = link.textContent.trim() || link.innerText.trim();
 
-			try {
-				// Build absolute URL
-				let courseUrl = href;
-				if (!href.startsWith('http')) {
-					if (href.startsWith('/')) {
-						courseUrl = `${wwwroot}${href}`;
-					} else {
-						courseUrl = `${wwwroot}/${href}`;
-					}
+				// Only store the first occurrence of each course
+				if (!uniqueCoursesMap.has(courseId)) {
+					uniqueCoursesMap.set(courseId, { href, courseName, link });
+				}
+			}
+
+			console.log(`Found ${uniqueCoursesMap.size} unique courses`);
+
+			// Filter courses by year and semester BEFORE processing
+			const filteredCourses = Array.from(uniqueCoursesMap.values()).filter(({ courseName }) => {
+				// If no filter, include all
+				if (!filterYear && !filterSemester) return true;
+
+				// Parse year and semester from course name
+				const { year, semIdx } = parseHebrewYearAndSemester(courseName);
+
+				// Check year filter
+				if (filterYear && year !== parseInt(filterYear)) {
+					return false;
 				}
 
-				console.log(`Fetching course: ${courseName} (${courseId})`);
-
-				// Update progress
-				if (window.jctUpdateProgress) {
-					window.jctUpdateProgress(currentCourseIndex, totalCourses, courseName);
+				// Check semester filter
+				if (filterSemester !== '' && semIdx !== parseInt(filterSemester)) {
+					return false;
 				}
 
-				// Track this course
-				allCourses.set(courseId, { courseId, courseName, courseUrl });
+				return true;
+			});
 
-				const response = await fetch(courseUrl, {
-					method: 'GET',
-					credentials: 'include'
-				});
+			console.log(`After filtering: ${filteredCourses.length} courses match the filter`);
 
-				if (response.ok) {
-					const html = await response.text();
-					const parser = new DOMParser();
-					const doc = parser.parseFromString(html, 'text/html');
+			const totalCourses = filteredCourses.length;
+			let currentCourseIndex = 0;
 
-					// Use a Set to track unique assignment IDs and avoid duplicates
-					const seenAssignmentIds = new Set();
+			for (const { href, courseName: courseNameFromLink } of filteredCourses) {
+				const match = href.match(/[?&]id=(\d+)/);
 
-					// Track assignments for THIS course only
-					const courseAssignments = [];
+				if (!match) continue;
 
-					// Step 1: Find section links (course sections with images/topics)
-					// Look for: <a href="https://moodle.jct.ac.il/course/section.php?id=327980">
-					const sectionLinks = doc.querySelectorAll('a[href*="/course/section.php"]');
+				const courseId = match[1];
+				const courseName = courseNameFromLink || `קורס ${courseId}`;
 
-					console.log(`Found ${sectionLinks.length} section links in ${courseName}`);
+				currentCourseIndex++;
 
-					// Step 2: Fetch each section and look for assignments inside
-					for (const sectionLink of sectionLinks) {
-						const sectionHref = sectionLink.getAttribute('href');
-						if (!sectionHref || sectionHref === '#') continue;
-
-						const sectionMatch = sectionHref.match(/[?&]id=(\d+)/);
-						if (!sectionMatch) continue;
-
-						const sectionId = sectionMatch[1];
-
-						try {
-							// Build absolute URL for section
-							let sectionUrl = sectionHref;
-							if (!sectionHref.startsWith('http')) {
-								if (sectionHref.startsWith('/')) {
-									sectionUrl = `${wwwroot}${sectionHref}`;
-								} else {
-									sectionUrl = `${wwwroot}/${sectionHref}`;
-								}
-							}
-
-							console.log(`  Fetching section ${sectionId} from ${courseName}`);
-
-							const sectionResponse = await fetch(sectionUrl, {
-								method: 'GET',
-								credentials: 'include'
-							});
-
-							if (sectionResponse.ok) {
-								const sectionHtml = await sectionResponse.text();
-								const sectionParser = new DOMParser();
-								const sectionDoc = sectionParser.parseFromString(sectionHtml, 'text/html');
-
-								// Find assignment links in this section
-								const assignmentLinks = sectionDoc.querySelectorAll('a[href*="/mod/assign/view.php"]');
-
-								assignmentLinks.forEach(link => {
-									const assignHref = link.getAttribute('href');
-
-									// Skip if href is not valid
-									if (!assignHref || assignHref === '#') {
-										return;
-									}
-
-									const assignMatch = assignHref.match(/[?&]id=(\d+)/);
-									if (assignMatch) {
-										const assignId = assignMatch[1];
-
-										// Skip if we've already seen this assignment ID
-										if (seenAssignmentIds.has(assignId)) {
-											return;
-										}
-
-										seenAssignmentIds.add(assignId);
-
-										// Get assignment name from instancename span or link text
-										const instanceNameEl = link.querySelector('.instancename');
-										let name = instanceNameEl
-											? instanceNameEl.textContent.trim()
-											: link.textContent.trim() || '';
-
-										// Skip if name is empty or too short
-										if (!name || name.length < 3) {
-											seenAssignmentIds.delete(assignId);
-											return;
-										}
-
-										// Clean up name - remove extra whitespace
-										name = name.replace(/\s+/g, ' ').trim();
-
-										// Make sure URL is absolute
-										let finalUrl = assignHref;
-										if (!assignHref.startsWith('http')) {
-											if (assignHref.startsWith('/')) {
-												finalUrl = `${wwwroot}${assignHref}`;
-											} else {
-												finalUrl = `${wwwroot}/${assignHref}`;
-											}
-										}
-
-										const assignment = {
-											courseId: courseId,
-											courseName: courseName,
-											assignmentId: assignId,
-											assignmentName: name,
-											assignmentUrl: finalUrl,
-											courseUrl: courseUrl
-										};
-										allAssignments.push(assignment);
-										courseAssignments.push(assignment);
-									}
-								});
-							}
-						} catch (sectionError) {
-							console.error(`Error fetching section ${sectionId}:`, sectionError);
+				try {
+					// Build absolute URL
+					let courseUrl = href;
+					if (!href.startsWith('http')) {
+						if (href.startsWith('/')) {
+							courseUrl = `${wwwroot}${href}`;
+						} else {
+							courseUrl = `${wwwroot}/${href}`;
 						}
 					}
 
-					// Step 3: Also look for assignments directly in the course page
-					// (some courses have assignments both in sections and on the main page)
-					const directAssignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+					console.log(`Fetching course: ${courseName} (${courseId})`);
 
-					directAssignmentLinks.forEach(link => {
-						const assignHref = link.getAttribute('href');
+					// Update progress
+					if (window.jctUpdateProgress) {
+						window.jctUpdateProgress(currentCourseIndex, totalCourses, courseName);
+					}
 
-						// Skip if href is not valid
-						if (!assignHref || assignHref === '#') {
-							return;
-						}
+					// Track this course
+					allCourses.set(courseId, { courseId, courseName, courseUrl });
 
-						const assignMatch = assignHref.match(/[?&]id=(\d+)/);
-						if (assignMatch) {
-							const assignId = assignMatch[1];
-
-							// Skip if we've already seen this assignment ID
-							if (seenAssignmentIds.has(assignId)) {
-								return;
-							}
-
-							seenAssignmentIds.add(assignId);
-
-							// Get assignment name from instancename span or link text
-							const instanceNameEl = link.querySelector('.instancename');
-							let name = instanceNameEl
-								? instanceNameEl.textContent.trim()
-								: link.textContent.trim() || '';
-
-							// Skip if name is empty or too short
-							if (!name || name.length < 3) {
-								seenAssignmentIds.delete(assignId);
-								return;
-							}
-
-							// Clean up name - remove extra whitespace
-							name = name.replace(/\s+/g, ' ').trim();
-
-							// Make sure URL is absolute
-							let finalUrl = assignHref;
-							if (!assignHref.startsWith('http')) {
-								if (assignHref.startsWith('/')) {
-									finalUrl = `${wwwroot}${assignHref}`;
-								} else {
-									finalUrl = `${wwwroot}/${assignHref}`;
-								}
-							}
-
-							const assignment = {
-								courseId: courseId,
-								courseName: courseName,
-								assignmentId: assignId,
-								assignmentName: name,
-								assignmentUrl: finalUrl,
-								courseUrl: courseUrl
-							};
-							allAssignments.push(assignment);
-							courseAssignments.push(assignment);
-						}
+					const response = await fetch(courseUrl, {
+						method: 'GET',
+						credentials: 'include'
 					});
 
-					console.log(`Added ${seenAssignmentIds.size} unique assignments from ${courseName}`);
+					if (response.ok) {
+						const html = await response.text();
+						const parser = new DOMParser();
+						const doc = parser.parseFromString(html, 'text/html');
 
-					// Add course results to modal in real-time
+						// Use a Set to track unique assignment IDs and avoid duplicates
+						const seenAssignmentIds = new Set();
+
+						// Track assignments for THIS course only
+						const courseAssignments = [];
+
+						// Step 1: Find section links (course sections with images/topics)
+						// Look for: <a href="https://moodle.jct.ac.il/course/section.php?id=327980">
+						const sectionLinks = doc.querySelectorAll('a[href*="/course/section.php"]');
+
+						console.log(`Found ${sectionLinks.length} section links in ${courseName}`);
+
+						// Step 2: Fetch each section and look for assignments inside
+						for (const sectionLink of sectionLinks) {
+							const sectionHref = sectionLink.getAttribute('href');
+							if (!sectionHref || sectionHref === '#') continue;
+
+							const sectionMatch = sectionHref.match(/[?&]id=(\d+)/);
+							if (!sectionMatch) continue;
+
+							const sectionId = sectionMatch[1];
+
+							try {
+								// Build absolute URL for section
+								let sectionUrl = sectionHref;
+								if (!sectionHref.startsWith('http')) {
+									if (sectionHref.startsWith('/')) {
+										sectionUrl = `${wwwroot}${sectionHref}`;
+									} else {
+										sectionUrl = `${wwwroot}/${sectionHref}`;
+									}
+								}
+
+								console.log(`  Fetching section ${sectionId} from ${courseName}`);
+
+								const sectionResponse = await fetch(sectionUrl, {
+									method: 'GET',
+									credentials: 'include'
+								});
+
+								if (sectionResponse.ok) {
+									const sectionHtml = await sectionResponse.text();
+									const sectionParser = new DOMParser();
+									const sectionDoc = sectionParser.parseFromString(sectionHtml, 'text/html');
+
+									// Find assignment links in this section
+									const assignmentLinks = sectionDoc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+
+									assignmentLinks.forEach(link => {
+										const assignHref = link.getAttribute('href');
+
+										// Skip if href is not valid
+										if (!assignHref || assignHref === '#') {
+											return;
+										}
+
+										const assignMatch = assignHref.match(/[?&]id=(\d+)/);
+										if (assignMatch) {
+											const assignId = assignMatch[1];
+
+											// Skip if we've already seen this assignment ID
+											if (seenAssignmentIds.has(assignId)) {
+												return;
+											}
+
+											seenAssignmentIds.add(assignId);
+
+											// Get assignment name from instancename span or link text
+											const instanceNameEl = link.querySelector('.instancename');
+											let name = instanceNameEl
+												? instanceNameEl.textContent.trim()
+												: link.textContent.trim() || '';
+
+											// Skip if name is empty or too short
+											if (!name || name.length < 3) {
+												seenAssignmentIds.delete(assignId);
+												return;
+											}
+
+											// Clean up name - remove extra whitespace
+											name = name.replace(/\s+/g, ' ').trim();
+
+											// Make sure URL is absolute
+											let finalUrl = assignHref;
+											if (!assignHref.startsWith('http')) {
+												if (assignHref.startsWith('/')) {
+													finalUrl = `${wwwroot}${assignHref}`;
+												} else {
+													finalUrl = `${wwwroot}/${assignHref}`;
+												}
+											}
+
+											const assignment = {
+												courseId: courseId,
+												courseName: courseName,
+												assignmentId: assignId,
+												assignmentName: name,
+												assignmentUrl: finalUrl,
+												courseUrl: courseUrl
+											};
+											allAssignments.push(assignment);
+											courseAssignments.push(assignment);
+										}
+									});
+								}
+							} catch (sectionError) {
+								console.error(`Error fetching section ${sectionId}:`, sectionError);
+							}
+						}
+
+						// Step 3: Also look for assignments directly in the course page
+						// (some courses have assignments both in sections and on the main page)
+						const directAssignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+
+						directAssignmentLinks.forEach(link => {
+							const assignHref = link.getAttribute('href');
+
+							// Skip if href is not valid
+							if (!assignHref || assignHref === '#') {
+								return;
+							}
+
+							const assignMatch = assignHref.match(/[?&]id=(\d+)/);
+							if (assignMatch) {
+								const assignId = assignMatch[1];
+
+								// Skip if we've already seen this assignment ID
+								if (seenAssignmentIds.has(assignId)) {
+									return;
+								}
+
+								seenAssignmentIds.add(assignId);
+
+								// Get assignment name from instancename span or link text
+								const instanceNameEl = link.querySelector('.instancename');
+								let name = instanceNameEl
+									? instanceNameEl.textContent.trim()
+									: link.textContent.trim() || '';
+
+								// Skip if name is empty or too short
+								if (!name || name.length < 3) {
+									seenAssignmentIds.delete(assignId);
+									return;
+								}
+
+								// Clean up name - remove extra whitespace
+								name = name.replace(/\s+/g, ' ').trim();
+
+								// Make sure URL is absolute
+								let finalUrl = assignHref;
+								if (!assignHref.startsWith('http')) {
+									if (assignHref.startsWith('/')) {
+										finalUrl = `${wwwroot}${assignHref}`;
+									} else {
+										finalUrl = `${wwwroot}/${assignHref}`;
+									}
+								}
+
+								const assignment = {
+									courseId: courseId,
+									courseName: courseName,
+									assignmentId: assignId,
+									assignmentName: name,
+									assignmentUrl: finalUrl,
+									courseUrl: courseUrl
+								};
+								allAssignments.push(assignment);
+								courseAssignments.push(assignment);
+							}
+						});
+
+						console.log(`Added ${seenAssignmentIds.size} unique assignments from ${courseName}`);
+
+						// Add course results to modal in real-time
+						if (window.jctAddCourseResult) {
+							window.jctAddCourseResult(
+								{ courseId, courseName, courseUrl },
+								courseAssignments
+							);
+						}
+					}
+				} catch (error) {
+					console.error(`Error fetching assignments for course ${courseId}:`, error);
+
+					// Still show the course even if there was an error
 					if (window.jctAddCourseResult) {
 						window.jctAddCourseResult(
 							{ courseId, courseName, courseUrl },
-							courseAssignments
+							[]
 						);
 					}
 				}
-			} catch (error) {
-				console.error(`Error fetching assignments for course ${courseId}:`, error);
-
-				// Still show the course even if there was an error
-				if (window.jctAddCourseResult) {
-					window.jctAddCourseResult(
-						{ courseId, courseName, courseUrl },
-						[]
-					);
-				}
 			}
-		}
 
-		console.log(`Total assignments found: ${allAssignments.length}`);
-		console.log(`Total courses scanned: ${allCourses.size}`);
+			console.log(`Total assignments found: ${allAssignments.length}`);
+			console.log(`Total courses scanned: ${allCourses.size}`);
 
-		// Save to cache
-		await saveAssignmentsCache(allAssignments, allCourses);
-		console.log('Assignments cached successfully');
+			// Save to cache
+			await saveAssignmentsCache(allAssignments, allCourses);
+			console.log('Assignments cached successfully');
 
-		return { assignments: allAssignments, courses: allCourses };
+			return { assignments: allAssignments, courses: allCourses };
 
 		} catch (error) {
 			console.error('Error during assignments scan:', error);
@@ -2616,18 +2699,18 @@
 	async function showSettingsModal() {
 		// Hebrew years and semesters
 		const HEBREW_YEARS = [
-			{str:"תשפ\"ד", num:5784}, {str:"תשפ\"ה", num:5785}, {str:"תשפ\"ו", num:5786},
-			{str:"תשפ\"ז", num:5787}, {str:"תשפ\"ח", num:5788}, {str:"תשפ\"ט", num:5789}, {str:"תש\"צ", num:5790}
+			{ str: "תשפ\"ד", num: 5784 }, { str: "תשפ\"ה", num: 5785 }, { str: "תשפ\"ו", num: 5786 },
+			{ str: "תשפ\"ז", num: 5787 }, { str: "תשפ\"ח", num: 5788 }, { str: "תשפ\"ט", num: 5789 }, { str: "תש\"צ", num: 5790 }
 		];
-		const SEMESTERS = ["אלול","א","ב"];
+		const SEMESTERS = ["אלול", "א", "ב"];
 		const DEFAULT_PALETTE = [
-			["#3b82f6","#818cf8","#bae6fd"], // 5784
-			["#22c55e","#4ade80","#bbf7d0"], // 5785
-			["#f97316","#fbbf24","#fed7aa"], // 5786
-			["#f43f5e","#fda4af","#fecdd3"], // 5787
-			["#a21caf","#f472b6","#f3e8ff"], // 5788
-			["#2563eb","#60a5fa","#dbeafe"], // 5789
-			["#b45309","#f59e42","#fde68a"]  // 5790
+			["#3b82f6", "#818cf8", "#bae6fd"], // 5784
+			["#22c55e", "#4ade80", "#bbf7d0"], // 5785
+			["#f97316", "#fbbf24", "#fed7aa"], // 5786
+			["#f43f5e", "#fda4af", "#fecdd3"], // 5787
+			["#a21caf", "#f472b6", "#f3e8ff"], // 5788
+			["#2563eb", "#60a5fa", "#dbeafe"], // 5789
+			["#b45309", "#f59e42", "#fde68a"]  // 5790
 		];
 		const DEFAULT_COLUMN_COUNT = 3;
 
@@ -2784,6 +2867,597 @@
 			applyViewMode('grid');
 			applyCardStyle('compact');
 		});
+	}
+
+	// Function to show calendar view with assignments and custom events
+	async function showCalendarModal() {
+		// Get custom events from storage
+		const customEvents = await new Promise(resolve => {
+			chrome.storage.local.get({ customEvents: [] }, res => {
+				resolve(res.customEvents || []);
+			});
+		});
+
+		// Get current month/year
+		let currentDate = new Date();
+		let currentMonth = currentDate.getMonth();
+		let currentYear = currentDate.getFullYear();
+
+		// Hebrew month names
+		const hebrewMonths = [
+			'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+			'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+		];
+
+		// Create modal
+		const modal = document.createElement('div');
+		modal.className = 'jct-calendar-modal';
+		modal.innerHTML = `
+			<div class="jct-calendar-modal-content" style="max-width: 95vw; max-height: 95vh; width: 1100px; display: flex; flex-direction: column;">
+				<div class="jct-calendar-modal-header">
+					<h3>לוח שנה - מטלות ואירועים</h3>
+					<button class="jct-calendar-modal-close">✕</button>
+				</div>
+				<div class="jct-calendar-controls" style="padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+					<button id="jct-cal-prev" style="padding: 4px 10px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.8rem;">→ קודם</button>
+					<h4 id="jct-cal-month-year" style="margin: 0; font-size: 0.95rem;"></h4>
+					<button id="jct-cal-next" style="padding: 4px 10px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.8rem;">הבא ←</button>
+				</div>
+				<div class="jct-calendar-body" id="jct-calendar-grid" style="padding: 8px; overflow-y: auto; flex: 1;">
+					<!-- Calendar grid will be inserted here -->
+				</div>
+				<div style="padding: 8px 12px; background: #f8fafc; border-top: 1px solid #e5e7eb;">
+					<button id="jct-add-event-btn" style="padding: 6px 14px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.8rem;">
+						➕ הוסף אירוע חדש
+					</button>
+				</div>
+			</div>
+		`;
+		document.body.appendChild(modal);
+
+		// Close button
+		modal.querySelector('.jct-calendar-modal-close').addEventListener('click', () => {
+			modal.remove();
+		});
+
+		// Click outside to close
+		modal.addEventListener('click', (e) => {
+			if (e.target === modal) {
+				modal.remove();
+			}
+		});
+
+		// Function to render calendar
+		async function renderCalendar() {
+			const grid = document.getElementById('jct-calendar-grid');
+			const monthYearLabel = document.getElementById('jct-cal-month-year');
+
+			monthYearLabel.textContent = `${hebrewMonths[currentMonth]} ${currentYear}`;
+
+			// Get first day of month and number of days
+			const firstDay = new Date(currentYear, currentMonth, 1);
+			const lastDay = new Date(currentYear, currentMonth + 1, 0);
+			const numDays = lastDay.getDate();
+			const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
+
+			// Get assignments from cache
+			const { cache } = await getAssignmentsCache();
+			const allAssignments = [];
+
+			// Get due date cache and submission status cache
+			const dueDateCacheData = await new Promise(resolve => {
+				chrome.storage.local.get({ dueDateCache: {} }, res => {
+					resolve(res.dueDateCache || {});
+				});
+			});
+
+			const submissionStatusCache = await new Promise(resolve => {
+				chrome.storage.local.get({ submissionStatusCache: {} }, res => {
+					resolve(res.submissionStatusCache || {});
+				});
+			});
+
+			console.log('[JCT Calendar] Cache data:', cache);
+			console.log('[JCT Calendar] Due date cache:', dueDateCacheData);
+			console.log('[JCT Calendar] Submission status cache:', submissionStatusCache);
+
+			// Check if cache has the new format with assignments array
+			if (cache && cache.assignments && Array.isArray(cache.assignments)) {
+				console.log('[JCT Calendar] Processing', cache.assignments.length, 'assignments from cache');
+				cache.assignments.forEach(assignment => {
+					// Get due date from due date cache (key is just the assignmentId)
+					const dueDateTimestamp = dueDateCacheData[assignment.assignmentId];
+
+					if (dueDateTimestamp) {
+						const dueDate = new Date(dueDateTimestamp);
+
+						// Skip invalid dates
+						if (isNaN(dueDate.getTime())) {
+							console.log('[JCT Calendar] Invalid date for assignment:', assignment);
+							return;
+						}
+
+						// Get submission status
+						const statusCacheKey = `submission_status_${assignment.assignmentId}`;
+						const cachedStatus = submissionStatusCache[statusCacheKey];
+						const submissionStatus = cachedStatus ? cachedStatus.status : null;
+
+						allAssignments.push({
+							...assignment,
+							dueDate,
+							submissionStatus,
+							type: 'assignment'
+						});
+					}
+				});
+			}
+			// Fallback for old format (array of courses)
+			else if (cache && Array.isArray(cache)) {
+				for (const courseData of cache) {
+					if (courseData && courseData.assignments && Array.isArray(courseData.assignments)) {
+						courseData.assignments.forEach(assignment => {
+							// Get due date from due date cache (key is just the assignmentId)
+							const dueDateTimestamp = dueDateCacheData[assignment.assignmentId];
+
+							if (dueDateTimestamp) {
+								const dueDate = new Date(dueDateTimestamp);
+
+								// Skip invalid dates
+								if (isNaN(dueDate.getTime())) {
+									console.log('[JCT Calendar] Invalid date for assignment:', assignment);
+									return;
+								}
+
+								// Get submission status
+								const statusCacheKey = `submission_status_${assignment.assignmentId}`;
+								const cachedStatus = submissionStatusCache[statusCacheKey];
+								const submissionStatus = cachedStatus ? cachedStatus.status : null;
+
+								allAssignments.push({
+									...assignment,
+									dueDate,
+									submissionStatus,
+									courseName: courseData.courseName,
+									type: 'assignment'
+								});
+							}
+						});
+					}
+				}
+			}
+
+			console.log('[JCT Calendar] Found assignments:', allAssignments.length, allAssignments);
+
+			// Combine with custom events
+			const allEvents = [...allAssignments];
+			customEvents.forEach(event => {
+				allEvents.push({
+					...event,
+					dueDate: new Date(event.date),
+					type: 'custom'
+				});
+			});
+
+			console.log('[JCT Calendar] Total events (assignments + custom):', allEvents.length);
+
+			// Create calendar grid
+			let html = `
+				<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px;">
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">ראשון</div>
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">שני</div>
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">שלישי</div>
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">רביעי</div>
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">חמישי</div>
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">שישי</div>
+					<div style="text-align: center; font-weight: 600; padding: 4px; background: #e0e7ff; border-radius: 4px; font-size: 0.75rem;">שבת</div>
+				</div>
+				<div style="display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; gap: 4px;">
+			`;
+
+			// Add empty cells for days before the 1st
+			for (let i = 0; i < startingDayOfWeek; i++) {
+				html += `<div style="aspect-ratio: 1/1; background: #f8fafc; border-radius: 3px; border: 1px solid #e5e7eb;"></div>`;
+			}
+
+			// Add days of the month
+			for (let day = 1; day <= numDays; day++) {
+				const currentDateObj = new Date(currentYear, currentMonth, day);
+				const isToday = currentDateObj.toDateString() === new Date().toDateString();
+
+				// Find events for this day
+				const dayEvents = allEvents.filter(event => {
+					const eventDate = event.dueDate;
+					return eventDate.getDate() === day &&
+						eventDate.getMonth() === currentMonth &&
+						eventDate.getFullYear() === currentYear;
+				});
+
+				if (dayEvents.length > 0) {
+					console.log(`[JCT Calendar] Day ${day}: ${dayEvents.length} events`, dayEvents);
+				}
+
+				const bgColor = isToday ? '#dbeafe' : '#ffffff';
+				const borderColor = isToday ? '#3b82f6' : '#e5e7eb';
+				const hasEvents = dayEvents.length > 0;
+
+				html += `
+					<div class="jct-calendar-day ${hasEvents ? 'has-events' : ''}" data-day="${day}" data-month="${currentMonth}" data-year="${currentYear}" style="aspect-ratio: 1/1; background: ${bgColor}; border-radius: 4px; border: 1px solid ${borderColor}; padding: 4px; position: relative; cursor: ${hasEvents ? 'pointer' : 'default'}; overflow: hidden; display: flex; flex-direction: column;">
+						<div style="font-weight: 600; margin-bottom: 2px; color: ${isToday ? '#1e40af' : '#1f2937'}; flex-shrink: 0; font-size: 0.7rem;">${day}</div>
+						<div style="font-size: 0.5rem; overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 1px;">
+				`;
+
+				// Show only count of events (limit to 3 badges)
+				const displayEvents = dayEvents.slice(0, 3);
+				displayEvents.forEach(event => {
+					if (event.type === 'assignment') {
+						const now = new Date();
+						const isOverdue = event.dueDate < now;
+						const isSubmitted = event.submissionStatus === 'submitted';
+
+						// Color logic:
+						// - הוגש (submitted) = ירוק (green) - לא משנה אם באיחור
+						// - לא הוגש + באיחור = צהוב (yellow)
+						// - לא הוגש + לא באיחור = כחול (blue)
+						let color;
+						let statusIcon = '';
+						if (isSubmitted) {
+							color = '#16a34a'; // green
+							statusIcon = '✓';
+						} else if (isOverdue) {
+							color = '#eab308'; // yellow
+							statusIcon = '✗';
+						} else {
+							color = '#2563eb'; // blue
+							statusIcon = event.submissionStatus === 'not_submitted' ? '✗' : '';
+						}
+
+						html += `
+							<div style="background: ${color}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; line-height: 1.3;">
+								${statusIcon} ${event.assignmentName.substring(0, 12)}${event.assignmentName.length > 12 ? '..' : ''}
+							</div>
+						`;
+					} else {
+						html += `
+							<div style="background: #22c55e; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; line-height: 1.3;">
+								${event.title.substring(0, 12)}${event.title.length > 12 ? '..' : ''}
+							</div>
+						`;
+					}
+				});
+
+				// Show "+X more" if there are more events
+				if (dayEvents.length > 3) {
+					html += `
+						<div style="font-size: 0.48rem; color: #64748b; text-align: center; margin-top: 1px; flex-shrink: 0;">
+							+${dayEvents.length - 3}
+						</div>
+					`;
+				}
+
+				html += `
+						</div>
+					</div>
+				`;
+			}
+
+			html += `</div>`;
+			grid.innerHTML = html;
+
+			// Add click listeners to calendar days with events
+			grid.querySelectorAll('.jct-calendar-day.has-events').forEach(dayEl => {
+				dayEl.addEventListener('click', (e) => {
+					// Don't trigger if clicking on a delete button
+					if (e.target.classList.contains('jct-delete-event')) return;
+
+					const day = parseInt(dayEl.dataset.day);
+					const month = parseInt(dayEl.dataset.month);
+					const year = parseInt(dayEl.dataset.year);
+
+					// Get events for this day
+					const dayEvents = allEvents.filter(event => {
+						const eventDate = event.dueDate;
+						return eventDate.getDate() === day &&
+							eventDate.getMonth() === month &&
+							eventDate.getFullYear() === year;
+					});
+
+					showDayDetailsModal(day, month, year, dayEvents);
+				});
+			});
+		}
+
+		// Function to show day details modal
+		function showDayDetailsModal(day, month, year, dayEvents) {
+			const hebrewMonths = [
+				'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+				'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+			];
+
+			const detailsModal = document.createElement('div');
+			detailsModal.className = 'jct-day-details-modal';
+			detailsModal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100002;';
+
+			let eventsHtml = '';
+			dayEvents.forEach(event => {
+				if (event.type === 'assignment') {
+					const now = new Date();
+					const isOverdue = event.dueDate < now;
+					const isSubmitted = event.submissionStatus === 'submitted';
+
+					let statusBadge;
+					if (isSubmitted) {
+						statusBadge = '<span style="background: #16a34a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 8px;">✓ הוגש</span>';
+					} else if (isOverdue) {
+						statusBadge = '<span style="background: #eab308; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 8px;">✗ לא הוגש (באיחור)</span>';
+					} else {
+						statusBadge = event.submissionStatus === 'not_submitted'
+							? '<span style="background: #2563eb; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 8px;">✗ לא הוגש</span>'
+							: '';
+					}
+
+					const overdueText = isOverdue && !isSubmitted ? '<span style="color: #eab308; font-weight: 600;">(באיחור)</span>' : '';
+
+					eventsHtml += `
+						<div style="background: #f8fafc; padding: 16px; border-radius: 8px; border-right: 4px solid ${event.submissionStatus === 'submitted' ? '#16a34a' : (isOverdue ? '#eab308' : '#2563eb')}; margin-bottom: 12px;">
+							<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+								<h4 style="margin: 0; font-size: 1rem; color: #1f2937;">📝 ${event.assignmentName}</h4>
+								${statusBadge}
+							</div>
+							<div style="font-size: 0.875rem; color: #64748b; margin-bottom: 4px;">
+								<strong>קורס:</strong> ${event.courseName}
+							</div>
+							<div style="font-size: 0.875rem; color: #64748b; margin-bottom: 8px;">
+								<strong>תאריך יעד:</strong> ${event.dueDate.toLocaleDateString('he-IL')} ${event.dueDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} ${overdueText}
+							</div>
+							<a href="${event.assignmentUrl}" target="_blank" style="display: inline-block; background: #2563eb; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">
+								פתח מטלה
+							</a>
+						</div>
+					`;
+				} else {
+					eventsHtml += `
+						<div style="background: #f0fdf4; padding: 16px; border-radius: 8px; border-right: 4px solid #22c55e; margin-bottom: 12px;">
+							<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+								<h4 style="margin: 0; font-size: 1rem; color: #1f2937;">${event.title}</h4>
+								<div>
+									<button class="jct-edit-event-btn" data-event-id="${event.id}" style="background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 4px; font-size: 0.75rem;">ערוך</button>
+									<button class="jct-delete-event-btn" data-event-id="${event.id}" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">מחק</button>
+								</div>
+							</div>
+							${event.description ? `<div style="font-size: 0.875rem; color: #64748b; margin-bottom: 4px;">${event.description}</div>` : ''}
+							<div style="font-size: 0.875rem; color: #64748b;">
+								<strong>תאריך:</strong> ${new Date(event.date).toLocaleDateString('he-IL')}
+							</div>
+						</div>
+					`;
+				}
+			});
+
+			detailsModal.innerHTML = `
+				<div style="background: white; padding: 24px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+						<h3 style="margin: 0; font-size: 1.5rem; color: #1f2937;">${day} ${hebrewMonths[month]} ${year}</h3>
+						<button class="jct-close-details" style="background: #ef4444; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.25rem;">✕</button>
+					</div>
+					<div style="font-size: 0.875rem; color: #64748b; margin-bottom: 16px;">
+						סה"כ ${dayEvents.length} ${dayEvents.length === 1 ? 'אירוע' : 'אירועים'}
+					</div>
+					${eventsHtml}
+				</div>
+			`;
+
+			document.body.appendChild(detailsModal);
+
+			// Close button
+			detailsModal.querySelector('.jct-close-details').addEventListener('click', () => {
+				detailsModal.remove();
+			});
+
+			// Click outside to close
+			detailsModal.addEventListener('click', (e) => {
+				if (e.target === detailsModal) {
+					detailsModal.remove();
+				}
+			});
+
+			// Edit custom event buttons
+			detailsModal.querySelectorAll('.jct-edit-event-btn').forEach(btn => {
+				btn.addEventListener('click', () => {
+					const eventId = btn.dataset.eventId;
+					detailsModal.remove();
+					editCustomEvent(eventId);
+				});
+			});
+
+			// Delete custom event buttons
+			detailsModal.querySelectorAll('.jct-delete-event-btn').forEach(btn => {
+				btn.addEventListener('click', async () => {
+					const eventId = btn.dataset.eventId;
+					if (confirm('האם אתה בטוח שברצונך למחוק אירוע זה?')) {
+						const index = customEvents.findIndex(ev => ev.id === eventId);
+						if (index !== -1) {
+							customEvents.splice(index, 1);
+							await new Promise(resolve => {
+								chrome.storage.local.set({ customEvents }, () => resolve());
+							});
+							detailsModal.remove();
+							renderCalendar();
+						}
+					}
+				});
+			});
+		}
+
+		// Function to add custom event
+		function addCustomEvent() {
+			const eventModal = document.createElement('div');
+			eventModal.className = 'jct-event-edit-modal';
+			eventModal.innerHTML = `
+				<div class="jct-event-edit-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%;">
+					<h3 style="margin-top: 0;">הוסף אירוע חדש</h3>
+					<div style="margin-bottom: 16px;">
+						<label style="display: block; margin-bottom: 4px; font-weight: 500;">שם האירוע:</label>
+						<input type="text" id="jct-event-title" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;" placeholder="לדוגמה: פגישה עם מרצה">
+					</div>
+					<div style="margin-bottom: 16px;">
+						<label style="display: block; margin-bottom: 4px; font-weight: 500;">תאריך:</label>
+						<input type="date" id="jct-event-date" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+					</div>
+					<div style="margin-bottom: 16px;">
+						<label style="display: block; margin-bottom: 4px; font-weight: 500;">תיאור (אופציונלי):</label>
+						<textarea id="jct-event-description" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 80px;" placeholder="תיאור האירוע..."></textarea>
+					</div>
+					<div style="display: flex; gap: 12px; justify-content: flex-end;">
+						<button id="jct-event-cancel" style="padding: 8px 16px; background: #94a3b8; color: white; border: none; border-radius: 6px; cursor: pointer;">ביטול</button>
+						<button id="jct-event-save" style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">שמור</button>
+					</div>
+				</div>
+			`;
+			eventModal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100001;';
+			document.body.appendChild(eventModal);
+
+			// Set default date to today
+			const today = new Date().toISOString().split('T')[0];
+			document.getElementById('jct-event-date').value = today;
+
+			// Cancel button
+			document.getElementById('jct-event-cancel').addEventListener('click', () => {
+				eventModal.remove();
+			});
+
+			// Save button
+			document.getElementById('jct-event-save').addEventListener('click', async () => {
+				const title = document.getElementById('jct-event-title').value.trim();
+				const date = document.getElementById('jct-event-date').value;
+				const description = document.getElementById('jct-event-description').value.trim();
+
+				if (!title || !date) {
+					alert('נא למלא שם ותאריך לאירוע');
+					return;
+				}
+
+				// Create new event
+				const newEvent = {
+					id: Date.now().toString(),
+					title,
+					date,
+					description
+				};
+
+				customEvents.push(newEvent);
+
+				// Save to storage
+				await new Promise(resolve => {
+					chrome.storage.local.set({ customEvents }, () => resolve());
+				});
+
+				eventModal.remove();
+				renderCalendar();
+			});
+
+			// Click outside to close
+			eventModal.addEventListener('click', (e) => {
+				if (e.target === eventModal) {
+					eventModal.remove();
+				}
+			});
+		}
+
+		// Function to edit custom event
+		function editCustomEvent(eventId) {
+			const event = customEvents.find(ev => ev.id === eventId);
+			if (!event) return;
+
+			const eventModal = document.createElement('div');
+			eventModal.className = 'jct-event-edit-modal';
+			eventModal.innerHTML = `
+				<div class="jct-event-edit-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%;">
+					<h3 style="margin-top: 0;">ערוך אירוע</h3>
+					<div style="margin-bottom: 16px;">
+						<label style="display: block; margin-bottom: 4px; font-weight: 500;">שם האירוע:</label>
+						<input type="text" id="jct-event-title" value="${event.title}" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+					</div>
+					<div style="margin-bottom: 16px;">
+						<label style="display: block; margin-bottom: 4px; font-weight: 500;">תאריך:</label>
+						<input type="date" id="jct-event-date" value="${event.date}" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+					</div>
+					<div style="margin-bottom: 16px;">
+						<label style="display: block; margin-bottom: 4px; font-weight: 500;">תיאור (אופציונלי):</label>
+						<textarea id="jct-event-description" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 80px;">${event.description || ''}</textarea>
+					</div>
+					<div style="display: flex; gap: 12px; justify-content: flex-end;">
+						<button id="jct-event-cancel" style="padding: 8px 16px; background: #94a3b8; color: white; border: none; border-radius: 6px; cursor: pointer;">ביטול</button>
+						<button id="jct-event-save" style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">שמור</button>
+					</div>
+				</div>
+			`;
+			eventModal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100001;';
+			document.body.appendChild(eventModal);
+
+			// Cancel button
+			document.getElementById('jct-event-cancel').addEventListener('click', () => {
+				eventModal.remove();
+			});
+
+			// Save button
+			document.getElementById('jct-event-save').addEventListener('click', async () => {
+				const title = document.getElementById('jct-event-title').value.trim();
+				const date = document.getElementById('jct-event-date').value;
+				const description = document.getElementById('jct-event-description').value.trim();
+
+				if (!title || !date) {
+					alert('נא למלא שם ותאריך לאירוע');
+					return;
+				}
+
+				// Update event
+				event.title = title;
+				event.date = date;
+				event.description = description;
+
+				// Save to storage
+				await new Promise(resolve => {
+					chrome.storage.local.set({ customEvents }, () => resolve());
+				});
+
+				eventModal.remove();
+				renderCalendar();
+			});
+
+			// Click outside to close
+			eventModal.addEventListener('click', (e) => {
+				if (e.target === eventModal) {
+					eventModal.remove();
+				}
+			});
+		}
+
+		// Navigation buttons
+		document.getElementById('jct-cal-prev').addEventListener('click', () => {
+			currentMonth--;
+			if (currentMonth < 0) {
+				currentMonth = 11;
+				currentYear--;
+			}
+			renderCalendar();
+		});
+
+		document.getElementById('jct-cal-next').addEventListener('click', () => {
+			currentMonth++;
+			if (currentMonth > 11) {
+				currentMonth = 0;
+				currentYear++;
+			}
+			renderCalendar();
+		});
+
+		// Add event button
+		document.getElementById('jct-add-event-btn').addEventListener('click', () => {
+			addCustomEvent();
+		});
+
+		// Initial render
+		renderCalendar();
 	}
 
 	// Function to show all assignments in a modal
@@ -2950,10 +3624,29 @@
 						`;
 					}
 
+					// Add submission status indicator
+					let statusHtml = '';
+					if (assign.submissionStatus === 'submitted') {
+						statusHtml = `
+							<div class="jct-assignment-status submitted" style="font-size: 0.75rem; color: #16a34a; margin-top: 4px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+								<span>✓</span>
+								<span>הוגש</span>
+							</div>
+						`;
+					} else if (assign.submissionStatus === 'not_submitted') {
+						statusHtml = `
+							<div class="jct-assignment-status not-submitted" style="font-size: 0.75rem; color: #dc2626; margin-top: 4px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+								<span>✗</span>
+								<span>לא הוגש</span>
+							</div>
+						`;
+					}
+
 					html += `
 						<div class="jct-assignment-box">
 							<div class="jct-assignment-box-name">${assign.assignmentName}</div>
 							${dueDateHtml}
+							${statusHtml}
 							<a href="${assign.assignmentUrl}" class="jct-assignment-box-link" target="_blank">פתח מטלה →</a>
 						</div>
 					`;
@@ -3004,19 +3697,20 @@
 			// Display results (either from cache or fresh scan)
 			if (result) {
 				if (statusEl) {
-					statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> בודק תאריכי סיום...`;
+					statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> בודק תאריכי סיום וסטטוס הגשות...`;
 				}
 
-				// Fetch due dates for all assignments and filter
-				const assignmentsWithDates = await Promise.all(
+				// Fetch due dates and submission status for all assignments
+				const assignmentsWithData = await Promise.all(
 					result.assignments.map(async (assign) => {
 						const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId);
-						return { ...assign, dueDate };
+						const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId);
+						return { ...assign, dueDate, submissionStatus };
 					})
 				);
 
 				// Filter assignments by due date
-				const filteredAssignments = assignmentsWithDates.filter(assign =>
+				const filteredAssignments = assignmentsWithData.filter(assign =>
 					shouldShowAssignment(assign.dueDate, maxOverdueDays)
 				);
 
@@ -3173,34 +3867,72 @@
 			}
 		});
 
+		// Add "Calendar View" button
+		const calendarBtn = document.createElement('button');
+		calendarBtn.id = 'jct-calendar-button';
+		calendarBtn.className = 'jct-settings-button jct-calendar-button';
+		calendarBtn.innerHTML = '📅 לוח שנה';
+		calendarBtn.title = 'הצג לוח שנה עם מטלות ואירועים';
+
+		calendarBtn.addEventListener('click', async (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			// Prevent multiple clicks
+			if (calendarBtn.disabled) return;
+
+			// Check if modal already open
+			if (document.querySelector('.jct-calendar-modal')) return;
+
+			calendarBtn.disabled = true;
+			calendarBtn.innerHTML = '⏳ טוען...';
+
+			try {
+				await showCalendarModal();
+			} finally {
+				calendarBtn.disabled = false;
+				calendarBtn.innerHTML = '📅 לוח שנה';
+			}
+		});
+
 		// Add to page header on the LEFT side (in RTL this is visually on the RIGHT side of screen)
 		if (pageTitleContainer) {
 			// Add at the END of the title container (will be on the left/right side in RTL)
+			pageTitleContainer.appendChild(calendarBtn);
 			pageTitleContainer.appendChild(assignmentsBtn);
 			pageTitleContainer.appendChild(settingsBtn);
 		} else if (mainTitle && mainTitle.parentElement) {
 			// Add after the title
 			if (mainTitle.nextSibling) {
+				mainTitle.parentElement.insertBefore(calendarBtn, mainTitle.nextSibling);
 				mainTitle.parentElement.insertBefore(assignmentsBtn, mainTitle.nextSibling);
 				mainTitle.parentElement.insertBefore(settingsBtn, mainTitle.nextSibling);
 			} else {
+				mainTitle.parentElement.appendChild(calendarBtn);
 				mainTitle.parentElement.appendChild(assignmentsBtn);
 				mainTitle.parentElement.appendChild(settingsBtn);
 			}
 		} else if (pageHeader) {
 			// Add to page header at the end
+			pageHeader.appendChild(calendarBtn);
 			pageHeader.appendChild(assignmentsBtn);
 			pageHeader.appendChild(settingsBtn);
 		} else {
 			// Fallback: fixed position top left (right in RTL)
+			calendarBtn.style.position = 'fixed';
+			calendarBtn.style.top = '20px';
+			calendarBtn.style.left = '20px';
+			calendarBtn.style.zIndex = '10000';
+
 			assignmentsBtn.style.position = 'fixed';
 			assignmentsBtn.style.top = '20px';
 			assignmentsBtn.style.left = '80px';
 			assignmentsBtn.style.zIndex = '10000';
 			settingsBtn.style.position = 'fixed';
 			settingsBtn.style.top = '20px';
-			settingsBtn.style.left = '20px';
+			settingsBtn.style.left = '140px';
 			settingsBtn.style.zIndex = '10000';
+			document.body.appendChild(calendarBtn);
 			document.body.appendChild(assignmentsBtn);
 			document.body.appendChild(settingsBtn);
 		}
@@ -3265,7 +3997,7 @@
 
 		// Don't auto-scan - user must click refresh button manually
 
-	const obs = new MutationObserver(() => { scheduleLightUpdate(); });
+		const obs = new MutationObserver(() => { scheduleLightUpdate(); });
 		obs.observe(document.body, { childList: true, subtree: true });
 		if (chrome?.storage?.onChanged) {
 			chrome.storage.onChanged.addListener((changes, area) => {

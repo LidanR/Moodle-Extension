@@ -1912,3 +1912,76 @@
 	font-weight: 600 !important;
 	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 35%) !important;
 }
+
+/* =====================================
+   CALENDAR MODAL STYLES
+   ===================================== */
+
+.jct-calendar-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 100000;
+	backdrop-filter: blur(4px);
+}
+
+.jct-calendar-modal-content {
+	background: white;
+	border-radius: 12px;
+	max-width: 1200px;
+	width: 95%;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.jct-calendar-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20px 24px;
+	border-bottom: 1px solid #e5e7eb;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border-radius: 12px 12px 0 0;
+}
+
+.jct-calendar-modal-header h3 {
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: white;
+}
+
+.jct-calendar-modal-close {
+	background: rgba(255, 255, 255, 0.2);
+	border: none;
+	color: white;
+	font-size: 1.5rem;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s;
+}
+
+.jct-calendar-modal-close:hover {
+	background: rgba(255, 255, 255, 0.3);
+	transform: rotate(90deg);
+}
+
+/* Calendar day hover effects */
+.jct-calendar-day.has-events:hover {
+	transform: scale(1.05);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	transition: all 0.2s ease;
+	z-index: 10;
+}
