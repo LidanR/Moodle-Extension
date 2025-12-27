@@ -782,7 +782,7 @@
 				const settings = await new Promise(resolve => {
 					chrome.storage.sync.get({ maxOverdueDays: 30 }, res => resolve(res));
 				});
-				maxOverdueDays = settings.maxOverdueDays || 30;
+				maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 30;
 			} catch (e) {
 				// Use default
 			}
@@ -2432,19 +2432,16 @@
 
 			// Filter courses by year and semester BEFORE processing
 			const filteredCourses = Array.from(uniqueCoursesMap.values()).filter(({ courseName }) => {
-				// If no filter, include all
-				if (!filterYear && !filterSemester) return true;
-
 				// Parse year and semester from course name
 				const { year, semIdx } = parseHebrewYearAndSemester(courseName);
 
-				// Check year filter
-				if (filterYear && year !== parseInt(filterYear)) {
+				// Check year filter (required)
+				if (year !== parseInt(filterYear)) {
 					return false;
 				}
 
-				// Check semester filter
-				if (filterSemester !== '' && semIdx !== parseInt(filterSemester)) {
+				// Check semester filter (required)
+				if (semIdx !== parseInt(filterSemester)) {
 					return false;
 				}
 
@@ -3483,7 +3480,7 @@
 				assignmentFilterSemester: ''
 			}, res => resolve(res));
 		});
-		const maxOverdueDays = settings.maxOverdueDays || 30;
+		const maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 30;
 		const savedFilterYear = settings.assignmentFilterYear || '';
 		const savedFilterSemester = settings.assignmentFilterSemester || '';
 
@@ -3500,7 +3497,7 @@
 					<label style="display: flex; align-items: center; gap: 8px;">
 						<span style="font-weight: 500;">שנה:</span>
 						<select id="jct-filter-year" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">
-							<option value="" ${savedFilterYear === '' ? 'selected' : ''}>הכל</option>
+							<option value="" ${savedFilterYear === '' ? 'selected' : ''}>בחר שנה...</option>
 							<option value="5784" ${savedFilterYear === '5784' ? 'selected' : ''}>תשפ"ד</option>
 							<option value="5785" ${savedFilterYear === '5785' ? 'selected' : ''}>תשפ"ה</option>
 							<option value="5786" ${savedFilterYear === '5786' ? 'selected' : ''}>תשפ"ו</option>
@@ -3513,7 +3510,7 @@
 					<label style="display: flex; align-items: center; gap: 8px;">
 						<span style="font-weight: 500;">סמסטר:</span>
 						<select id="jct-filter-semester" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">
-							<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>הכל</option>
+							<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>בחר סמסטר...</option>
 							<option value="0" ${savedFilterSemester === '0' ? 'selected' : ''}>אלול</option>
 							<option value="1" ${savedFilterSemester === '1' ? 'selected' : ''}>א'</option>
 							<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
@@ -3703,6 +3700,19 @@
 			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
 			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
 
+			// Check if year and semester are selected (required)
+			if (!filterYear || !filterSemester) {
+				if (statusEl) {
+					statusEl.innerHTML = `
+						<div style="text-align: center; padding: 20px;">
+							<p style="font-size: 1rem; color: #ef4444; margin-bottom: 12px;">⚠️ יש לבחור שנה וסמסטר לפני הסריקה</p>
+							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "רענן"</p>
+						</div>
+					`;
+				}
+				return;
+			}
+
 			// Scan all courses
 			window.jctStopScanning = false;
 			const result = await scanAllCoursesForAssignments(forceRefresh, filterYear, filterSemester);
@@ -3717,7 +3727,7 @@
 				const assignmentsWithData = await Promise.all(
 					result.assignments.map(async (assign) => {
 						const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId);
-						const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId);
+						const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, true);
 						return { ...assign, dueDate, submissionStatus };
 					})
 				);
@@ -3766,13 +3776,12 @@
 		const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 		const refreshBtn = document.getElementById('jct-refresh-assignments');
 
-		// When filter changes, save to storage and reload assignments
+		// When filter changes, save to storage (but don't reload - user must click refresh)
 		filterYearSelect?.addEventListener('change', async () => {
 			const newYear = filterYearSelect.value;
 			await new Promise(resolve => {
 				chrome.storage.sync.set({ assignmentFilterYear: newYear }, () => resolve());
 			});
-			loadAndDisplayAssignments(false);
 		});
 
 		filterSemesterSelect?.addEventListener('change', async () => {
@@ -3780,7 +3789,6 @@
 			await new Promise(resolve => {
 				chrome.storage.sync.set({ assignmentFilterSemester: newSemester }, () => resolve());
 			});
-			loadAndDisplayAssignments(false);
 		});
 
 		// When maxOverdueDays changes, save to storage and reload
@@ -3817,12 +3825,12 @@
 			// Display cached data
 			await loadAndDisplayAssignments(false);
 		} else {
-			// No valid cache - show message to click refresh
+			// No valid cache - show message to select year/semester and click refresh
 			const statusEl = document.getElementById('jct-loading-status');
 			if (statusEl) {
 				statusEl.innerHTML = `
 					<div style="text-align: center; padding: 20px;">
-						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">לחץ על כפתור "רענן" כדי לסרוק מטלות</p>
+						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "רענן" כדי לסרוק מטלות</p>
 						<p style="font-size: 0.875rem; color: #94a3b8;">הסריקה תימשך גם אם תסגור את החלון</p>
 					</div>
 				`;
