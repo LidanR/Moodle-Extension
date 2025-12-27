@@ -1371,36 +1371,61 @@
 	width: 100% !important;
 }
 
-/* Action buttons container - separate from header */
+/* Action buttons container - grid layout */
 .jct-action-buttons-container {
-	display: flex !important;
-	justify-content: center !important;
-	align-items: center !important;
+	display: grid !important;
+	grid-template-columns: 1fr 1fr !important;
+	grid-template-rows: auto auto !important;
 	gap: 16px !important;
 	padding: 24px 32px !important;
 	background: #f8fafc !important;
 	margin-bottom: 24px !important;
-	flex-wrap: wrap !important;
+	max-width: 1200px !important;
+	margin-left: auto !important;
+	margin-right: auto !important;
 }
 
-/* Settings buttons - modern solid design for separate container */
+/* Top row - calendar and assignments buttons */
+.jct-buttons-top-row {
+	display: grid !important;
+	grid-template-columns: 1fr 1fr !important;
+	gap: 16px !important;
+	grid-column: 1 !important;
+	grid-row: 1 !important;
+}
+
+/* Settings row - second row, full width */
+.jct-buttons-settings-row {
+	grid-column: 1 !important;
+	grid-row: 2 !important;
+}
+
+/* Settings buttons - modern block design */
 .jct-settings-button {
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 	color: white !important;
 	border: none !important;
-	padding: 10px 18px !important;
+	padding: 20px !important;
 	border-radius: 12px !important;
-	font-size: 0.9rem !important;
+	font-size: 1.1rem !important;
 	font-weight: 600 !important;
 	cursor: pointer !important;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-	display: inline-flex !important;
+	display: flex !important;
 	align-items: center !important;
-	gap: 8px !important;
-	vertical-align: middle !important;
+	justify-content: center !important;
+	gap: 10px !important;
 	margin: 0 !important;
 	box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
 	text-shadow: none !important;
+	width: 100% !important;
+	min-height: 70px !important;
+}
+
+/* Square buttons only for top row (calendar and assignments) */
+.jct-buttons-top-row .jct-settings-button {
+	aspect-ratio: 1 / 1 !important;
+	min-height: auto !important;
 }
 
 .jct-settings-button:hover {
@@ -2468,12 +2493,13 @@ body.jct-style-glass .jct-courses-grid .content {
 /* Today's Events Block Styles */
 .jct-today-events-block {
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	border-radius: 16px;
-	padding: 24px;
-	margin: 20px auto;
-	max-width: 900px;
-	box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+	border-radius: 12px;
+	padding: 16px;
+	box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
 	animation: slideDown 0.3s ease-out;
+	grid-column: 2;
+	grid-row: 1 / 3;
+	min-height: 200px;
 }
 
 @keyframes slideDown {
@@ -2499,15 +2525,15 @@ body.jct-style-glass .jct-courses-grid .content {
 }
 
 .jct-today-events-header {
-	margin-bottom: 20px;
-	padding-bottom: 16px;
+	margin-bottom: 12px;
+	padding-bottom: 12px;
 	border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .jct-today-events-header h3 {
 	margin: 0;
 	color: white;
-	font-size: 1.5rem;
+	font-size: 1.1rem;
 	font-weight: 700;
 	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -2515,18 +2541,18 @@ body.jct-style-glass .jct-courses-grid .content {
 .jct-today-events-list {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 8px;
 }
 
 .jct-today-event-item {
 	background: white;
-	border-radius: 12px;
-	padding: 16px;
+	border-radius: 8px;
+	padding: 12px;
 	display: flex;
 	align-items: center;
-	gap: 16px;
+	gap: 12px;
 	transition: all 0.2s ease;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .jct-today-event-item:hover {
@@ -2535,21 +2561,21 @@ body.jct-style-glass .jct-courses-grid .content {
 }
 
 .jct-event-icon {
-	font-size: 2rem;
+	font-size: 1.5rem;
 	flex-shrink: 0;
-	width: 50px;
-	height: 50px;
+	width: 40px;
+	height: 40px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 	border-radius: 50%;
-	box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+	box-shadow: 0 3px 8px rgba(245, 87, 108, 0.25);
 }
 
 .jct-today-event-item.assignment .jct-event-icon {
 	background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-	box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+	box-shadow: 0 3px 8px rgba(79, 172, 254, 0.25);
 }
 
 .jct-event-content {
@@ -2558,8 +2584,8 @@ body.jct-style-glass .jct-courses-grid .content {
 }
 
 .jct-event-content h4 {
-	margin: 0 0 8px 0;
-	font-size: 1.1rem;
+	margin: 0 0 6px 0;
+	font-size: 0.95rem;
 	font-weight: 600;
 	color: #1f2937;
 	white-space: nowrap;
@@ -2568,21 +2594,21 @@ body.jct-style-glass .jct-courses-grid .content {
 }
 
 .jct-event-course {
-	margin: 0 0 8px 0;
-	font-size: 0.875rem;
+	margin: 0 0 6px 0;
+	font-size: 0.8rem;
 	color: #6b7280;
 	font-weight: 500;
 }
 
 .jct-event-description {
 	margin: 4px 0 0 0;
-	font-size: 0.875rem;
+	font-size: 0.8rem;
 	color: #6b7280;
 }
 
 .jct-event-time {
 	margin: 4px 0 0 0;
-	font-size: 0.875rem;
+	font-size: 0.8rem;
 	color: #6b7280;
 	font-weight: 500;
 }

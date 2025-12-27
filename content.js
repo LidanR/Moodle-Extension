@@ -3354,8 +3354,11 @@
 		html += `</div>`;
 		eventsBlock.innerHTML = html;
 
-		// Insert the block below the button container
-		if (buttonElement && buttonElement.parentElement) {
+		// Insert the block inside the button container (grid layout)
+		const buttonContainer = document.querySelector('.jct-action-buttons-container');
+		if (buttonContainer) {
+			buttonContainer.appendChild(eventsBlock);
+		} else if (buttonElement && buttonElement.parentElement) {
 			buttonElement.parentElement.insertBefore(eventsBlock, buttonElement.nextSibling);
 		}
 	}
@@ -4451,6 +4454,19 @@
 				statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> ${forceRefreshStatus ? 'בודק תאריכי סיום וסטטוס הגשות...' : 'מסנן מטלות מהמטמון...'}`;
 			}
 
+			// Disable all filter controls during status check
+			const filterYearSelect = document.getElementById('jct-filter-year');
+			const filterSemesterSelect = document.getElementById('jct-filter-semester');
+			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
+			const refreshBtn = document.getElementById('jct-refresh-assignments');
+
+			if (forceRefreshStatus) {
+				if (filterYearSelect) filterYearSelect.disabled = true;
+				if (filterSemesterSelect) filterSemesterSelect.disabled = true;
+				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
+				if (refreshBtn) refreshBtn.disabled = true;
+			}
+
 			// Clear existing results
 			const container = document.getElementById('jct-results-container');
 			if (container) {
@@ -4503,6 +4519,14 @@
 				}
 				statusText += ` | עדכון אחרון: ${cacheTime}`;
 				statusEl.innerHTML = statusText;
+			}
+
+			// Re-enable all controls after status check completes
+			if (forceRefreshStatus) {
+				if (filterYearSelect) filterYearSelect.disabled = false;
+				if (filterSemesterSelect) filterSemesterSelect.disabled = false;
+				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
+				if (refreshBtn) refreshBtn.disabled = false;
 			}
 		}
 
@@ -4598,7 +4622,7 @@
 				statusEl.innerHTML = `
 					<div style="text-align: center; padding: 20px;">
 						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "רענן" כדי לסרוק מטלות</p>
-ז					</div>
+					</div>
 				`;
 			}
 		}
@@ -4686,12 +4710,23 @@
 			}
 		});
 
-		// Create a separate button container below the header
+		// Create a grid container for the new layout
 		const buttonContainer = document.createElement('div');
 		buttonContainer.className = 'jct-action-buttons-container';
-		buttonContainer.appendChild(calendarBtn);
-		buttonContainer.appendChild(assignmentsBtn);
-		buttonContainer.appendChild(settingsBtn);
+
+		// Create top row with calendar and assignments buttons
+		const topRow = document.createElement('div');
+		topRow.className = 'jct-buttons-top-row';
+		topRow.appendChild(calendarBtn);
+		topRow.appendChild(assignmentsBtn);
+
+		// Settings button gets its own row
+		const settingsRow = document.createElement('div');
+		settingsRow.className = 'jct-buttons-settings-row';
+		settingsRow.appendChild(settingsBtn);
+
+		buttonContainer.appendChild(topRow);
+		buttonContainer.appendChild(settingsRow);
 
 		// Insert the button container after the page header
 		if (pageHeader) {
