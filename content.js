@@ -1674,6 +1674,10 @@
 	}
 
 	function createWeeklyScheduleView() {
+		// Only show schedule on main page
+		const body = document.body;
+		if (!body || body.id !== 'page-site-index') return null;
+
 		// Check if schedule view already exists
 		let scheduleContainer = document.getElementById('jct-weekly-schedule');
 		if (scheduleContainer) {
@@ -3593,13 +3597,18 @@
 						const now = new Date();
 						const dueDate = assign.dueDate instanceof Date ? assign.dueDate : new Date(assign.dueDate);
 						const isOverdue = dueDate < now;
+						const isSubmitted = assign.submissionStatus === 'submitted';
 						const msPerDay = 24 * 60 * 60 * 1000;
 						const daysUntilDue = Math.ceil((dueDate - now) / msPerDay);
 
 						let dateColor = '#64748b'; // default gray
 						let dateText = '';
 
-						if (isOverdue) {
+						// If submitted, always show in green regardless of due date
+						if (isSubmitted) {
+							dateColor = '#16a34a'; // green
+							dateText = ''; // No additional text needed when submitted
+						} else if (isOverdue) {
 							const daysOverdue = Math.floor((now - dueDate) / msPerDay);
 							dateColor = '#dc2626'; // red
 							dateText = `באיחור ${daysOverdue} ${daysOverdue === 1 ? 'יום' : 'ימים'}`;
@@ -3622,7 +3631,7 @@
 
 						dueDateHtml = `
 							<div class="jct-assignment-due-date" style="font-size: 0.75rem; color: ${dateColor}; margin-top: 4px; font-weight: 500;">
-								📅 ${formattedDate} (${dateText})
+								📅 ${formattedDate}${dateText ? ` (${dateText})` : ''}
 							</div>
 						`;
 					} else {
@@ -3839,6 +3848,10 @@
 	}
 
 	function addSettingsButton() {
+		// Only show buttons on main page
+		const body = document.body;
+		if (!body || body.id !== 'page-site-index') return;
+
 		// Check if button already exists
 		if (document.getElementById('jct-settings-button')) {
 			return;
