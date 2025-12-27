@@ -36,7 +36,7 @@
 		currentCardStyle = style;
 
 		// Remove all style classes
-		document.body.classList.remove('jct-style-compact', 'jct-style-minimal', 'jct-style-cards', 'jct-style-modern');
+		document.body.classList.remove('jct-style-compact', 'jct-style-minimal', 'jct-style-cards', 'jct-style-modern', 'jct-style-glass');
 
 		// Add the selected style class
 		document.body.classList.add(`jct-style-${style}`);
@@ -46,25 +46,291 @@
 	function applyViewMode(mode) {
 		currentViewMode = mode;
 
+		// Remove all view mode classes
+		document.body.classList.remove('jct-courses-list-view', 'jct-view-original', 'jct-view-carousel');
+
 		// Apply to all possible course containers
 		const containers = document.querySelectorAll('.jct-courses-grid');
 		containers.forEach(coursesContainer => {
 			const parentContainer = coursesContainer.closest('.course-content, #frontpage-course-list, .courses') || coursesContainer.parentElement;
 			if (parentContainer) {
+				parentContainer.classList.remove('jct-courses-list-view', 'jct-view-original', 'jct-view-carousel');
+
 				if (mode === 'list') {
 					parentContainer.classList.add('jct-courses-list-view');
-				} else {
-					parentContainer.classList.remove('jct-courses-list-view');
+				} else if (mode === 'original') {
+					parentContainer.classList.add('jct-view-original');
+				} else if (mode === 'carousel') {
+					parentContainer.classList.add('jct-view-carousel');
 				}
 			}
 		});
 
-		// Also apply to body for global scope
+		// Apply to body for global scope
 		if (mode === 'list') {
 			document.body.classList.add('jct-courses-list-view');
+			restoreOriginalCourses();
+		} else if (mode === 'original') {
+			document.body.classList.add('jct-view-original');
+			restoreOriginalCourses();
+		} else if (mode === 'carousel') {
+			document.body.classList.add('jct-view-carousel');
+			// Only initialize carousel if it doesn't already exist
+			const containers = document.querySelectorAll('.jct-courses-grid');
+			let needsInit = false;
+			containers.forEach(container => {
+				if (!container.querySelector('.jct-semester-group')) {
+					needsInit = true;
+				}
+			});
+			if (needsInit) {
+				initializeCarouselView();
+			}
 		} else {
-			document.body.classList.remove('jct-courses-list-view');
+			// Grid mode (default)
+			restoreOriginalCourses();
 		}
+	}
+
+	// Store original courses before carousel transformation
+	const originalCoursesMap = new WeakMap();
+
+	// Function to initialize carousel view
+	function initializeCarouselView() {
+		const containers = document.querySelectorAll('.jct-courses-grid');
+		containers.forEach(container => {
+			// Check if carousel already exists in this container
+			const existingCarousel = container.querySelector('.jct-semester-group');
+			if (existingCarousel) {
+				// Carousel already exists, don't rebuild
+				return;
+			}
+
+			// Mark container as having carousel to prevent future rebuilds
+			container.setAttribute('data-jct-carousel-initialized', 'true');
+
+			// Get all courses and save original structure (exclude paging buttons)
+			const courses = Array.from(container.children).filter(child =>
+				!child.classList.contains('paging') &&
+				!child.classList.contains('paging-morelink')
+			);
+
+			if (courses.length === 0) return;
+
+			// Save original courses for restoration later
+			if (!originalCoursesMap.has(container)) {
+				originalCoursesMap.set(container, courses.map(course => course.cloneNode(true)));
+			}
+
+			// Clone courses for carousel
+			const clonedCourses = courses.map(course => {
+				const cloned = course.cloneNode(true);
+
+				// Make entire card clickable
+				const mainLink = cloned.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+				if (mainLink && mainLink.href) {
+					cloned.style.cursor = 'pointer';
+					cloned.addEventListener('click', (e) => {
+						// Don't trigger if clicking on buttons or other interactive elements
+						if (e.target.closest('button, .jct-fav-toggle, .jct-schedule-btn')) {
+							return;
+						}
+						// Open the course link
+						window.location.href = mainLink.href;
+					});
+				}
+
+				// Ensure links are clickable in cloned courses
+				const links = cloned.querySelectorAll('a');
+				links.forEach(link => {
+					link.style.pointerEvents = 'auto';
+					link.style.cursor = 'pointer';
+				});
+
+				return cloned;
+			});
+
+			// Group courses by color (year + semester)
+			const coursesByColor = new Map();
+			clonedCourses.forEach(course => {
+				const h = course.style.getPropertyValue('--jct-accent-h') || '230';
+				const s = course.style.getPropertyValue('--jct-accent-s') || '70%';
+				const l = course.style.getPropertyValue('--jct-accent-l') || '55%';
+				const colorKey = `${h}-${s}-${l}`;
+
+				if (!coursesByColor.has(colorKey)) {
+					coursesByColor.set(colorKey, []);
+				}
+				coursesByColor.get(colorKey).push(course);
+			});
+
+			// Clear container
+			container.innerHTML = '';
+
+			// Create a carousel for each color group
+			coursesByColor.forEach((groupCourses, colorKey) => {
+				const semesterDiv = document.createElement('div');
+				semesterDiv.className = 'jct-semester-group';
+
+				// Get semester name from first course in group
+				const firstCourse = groupCourses[0];
+				const text = firstCourse.innerText || firstCourse.textContent || '';
+				const { year, semIdx } = parseHebrewYearAndSemester(text);
+				const semesterName = getSemesterName(year, semIdx);
+
+				const header = document.createElement('div');
+				header.className = 'jct-semester-header';
+				header.textContent = semesterName || 'קורסים';
+				semesterDiv.appendChild(header);
+
+				const carouselWrapper = document.createElement('div');
+				carouselWrapper.className = 'jct-carousel-wrapper';
+
+				const carouselContainer = document.createElement('div');
+				carouselContainer.className = 'jct-carousel-container';
+				carouselContainer.setAttribute('data-carousel-index', '0');
+
+				groupCourses.forEach(course => {
+					carouselContainer.appendChild(course);
+				});
+
+				carouselWrapper.appendChild(carouselContainer);
+
+				// Add navigation buttons if more than 1 course
+				if (groupCourses.length > 1) {
+					const prevBtn = document.createElement('button');
+					prevBtn.className = 'jct-carousel-btn jct-carousel-btn-prev';
+					prevBtn.innerHTML = '◀';
+					prevBtn.disabled = true; // Start disabled (at first item)
+					prevBtn.addEventListener('click', () => moveCarousel(carouselContainer, -1, groupCourses.length));
+
+					const nextBtn = document.createElement('button');
+					nextBtn.className = 'jct-carousel-btn jct-carousel-btn-next';
+					nextBtn.innerHTML = '▶';
+					nextBtn.addEventListener('click', () => moveCarousel(carouselContainer, 1, groupCourses.length));
+
+					carouselWrapper.appendChild(prevBtn);
+					carouselWrapper.appendChild(nextBtn);
+
+					// Add indicators
+					const indicators = document.createElement('div');
+					indicators.className = 'jct-carousel-indicators';
+					for (let i = 0; i < groupCourses.length; i++) {
+						const dot = document.createElement('div');
+						dot.className = 'jct-carousel-dot' + (i === 0 ? ' active' : '');
+						dot.addEventListener('click', () => moveCarouselToIndex(carouselContainer, i, groupCourses.length, indicators));
+						indicators.appendChild(dot);
+					}
+					semesterDiv.appendChild(carouselWrapper);
+					semesterDiv.appendChild(indicators);
+				} else {
+					semesterDiv.appendChild(carouselWrapper);
+				}
+
+				container.appendChild(semesterDiv);
+			});
+		});
+	}
+
+	// Helper function to get semester name
+	function getSemesterName(year, semIdx) {
+		if (!year || semIdx == null) return 'קורסים';
+		const semesterNames = ['סמסטר אלול', 'סמסטר א׳', 'סמסטר ב׳'];
+
+		// Convert Hebrew year to readable format
+		const hebrewYearNames = {
+			5784: 'תשפ״ד',
+			5785: 'תשפ״ה',
+			5786: 'תשפ״ו',
+			5787: 'תשפ״ז',
+			5788: 'תשפ״ח',
+			5789: 'תשפ״ט',
+			5790: 'תש״ץ'
+		};
+
+		const yearName = hebrewYearNames[year] || year;
+		return `${semesterNames[semIdx] || 'סמסטר'} ${yearName}`;
+	}
+
+	// Function to restore original courses when leaving carousel mode
+	function restoreOriginalCourses() {
+		const containers = document.querySelectorAll('.jct-courses-grid');
+		containers.forEach(container => {
+			// Check if this container has carousel structure
+			if (container.querySelector('.jct-semester-group')) {
+				// Get original courses from map
+				const originalCourses = originalCoursesMap.get(container);
+				if (originalCourses) {
+					// Clear container
+					container.innerHTML = '';
+					// Restore original courses
+					originalCourses.forEach(course => {
+						container.appendChild(course.cloneNode(true));
+					});
+					// Remove carousel initialization flag
+					container.removeAttribute('data-jct-carousel-initialized');
+				}
+			}
+		});
+	}
+
+	// Move carousel helper function
+	function moveCarousel(container, direction, totalItems) {
+		const currentIndex = parseInt(container.getAttribute('data-carousel-index') || '0');
+		let newIndex = currentIndex + direction;
+
+		// Don't loop - stop at boundaries
+		if (newIndex < 0) newIndex = 0;
+		if (newIndex >= totalItems) newIndex = totalItems - 1;
+
+		container.setAttribute('data-carousel-index', newIndex);
+		// For RTL, use positive values to move left (showing next cards in RTL)
+		const offset = newIndex * (320 + 20); // card width + gap
+		container.style.transform = `translateX(${offset}px)`;
+
+		// Update button states
+		const wrapper = container.closest('.jct-carousel-wrapper');
+		if (wrapper) {
+			const prevBtn = wrapper.querySelector('.jct-carousel-btn-prev');
+			const nextBtn = wrapper.querySelector('.jct-carousel-btn-next');
+			if (prevBtn) prevBtn.disabled = newIndex === 0;
+			if (nextBtn) nextBtn.disabled = newIndex === totalItems - 1;
+		}
+
+		// Update indicators
+		const semesterGroup = container.closest('.jct-semester-group');
+		if (semesterGroup) {
+			const indicators = semesterGroup.querySelector('.jct-carousel-indicators');
+			if (indicators) {
+				const dots = indicators.querySelectorAll('.jct-carousel-dot');
+				dots.forEach((dot, idx) => {
+					dot.classList.toggle('active', idx === newIndex);
+				});
+			}
+		}
+	}
+
+	// Move carousel to specific index
+	function moveCarouselToIndex(container, index, totalItems, indicatorsEl) {
+		container.setAttribute('data-carousel-index', index);
+		// For RTL, use positive values to move left (showing next cards in RTL)
+		const offset = index * (320 + 20);
+		container.style.transform = `translateX(${offset}px)`;
+
+		// Update button states
+		const wrapper = container.closest('.jct-carousel-wrapper');
+		if (wrapper) {
+			const prevBtn = wrapper.querySelector('.jct-carousel-btn-prev');
+			const nextBtn = wrapper.querySelector('.jct-carousel-btn-next');
+			if (prevBtn) prevBtn.disabled = index === 0;
+			if (nextBtn) nextBtn.disabled = index === totalItems - 1;
+		}
+
+		// Update indicators
+		const dots = indicatorsEl.querySelectorAll('.jct-carousel-dot');
+		dots.forEach((dot, idx) => {
+			dot.classList.toggle('active', idx === index);
+		});
 	}
 	let isSavingSchedules = false;
 
@@ -73,6 +339,16 @@
 		scheduled = true;
 		requestAnimationFrame(() => {
 			scheduled = false;
+
+			// If in carousel mode and carousel already exists, skip heavy updates
+			if (currentViewMode === 'carousel') {
+				const hasCarousel = document.querySelector('.jct-courses-grid .jct-semester-group');
+				if (hasCarousel) {
+					// Carousel already exists, don't rebuild everything
+					return;
+				}
+			}
+
 			markCoursesContainers();
 			ensureStructureAndColor();
 			refreshFavoritesUI();
@@ -651,7 +927,11 @@
 	function refreshFavoritesUI() {
 		// Update star icons and reorder containers
 		isReordering = true;
-		try { document.querySelectorAll('.jct-courses-grid').forEach(reorderContainerByFavorites); }
+		try {
+			// Reorder both regular grids and carousel containers
+			document.querySelectorAll('.jct-courses-grid').forEach(reorderContainerByFavorites);
+			document.querySelectorAll('.jct-carousel-container').forEach(reorderContainerByFavorites);
+		}
 		finally { isReordering = false; }
 		document.querySelectorAll('.jct-fav-toggle').forEach((btn) => {
 			const card = btn.closest('.list-group-item, .coursebox, .card.course, li, .dashboard-card');
@@ -1219,6 +1499,9 @@
 	function ensureStructureAndColor() {
 		const cards = document.querySelectorAll('.jct-courses-grid > .list-group-item, .jct-courses-grid .list-group > .list-group-item, .jct-courses-grid .coursebox, .jct-courses-grid .card.course, .jct-courses-grid .course-list > li, .jct-courses-grid > .dashboard-card');
 		cards.forEach((card) => {
+			// Note: We used to skip carousel cards, but that prevented buttons from working
+			// Now we process all cards including carousel cards
+
 			// Ensure base positioning for overlays
 			if (!card.style.position) card.style.position = 'relative';
 
@@ -1267,14 +1550,18 @@
 				favBtn.type = 'button';
 				favBtn.className = 'jct-fav-toggle';
 				favBtn.title = 'Toggle favorite';
-				favBtn.addEventListener('click', (e) => {
-					e.stopPropagation();
-					e.preventDefault();
-					const cid = getCourseIdFromCard(card);
-					toggleFavorite(cid);
-				});
-				card.appendChild(favBtn);
+				// Insert as first child to be above thumb-wrap in DOM order
+				card.insertBefore(favBtn, card.firstChild);
 			}
+
+			// Always set the click handler - use onclick to override any existing handler
+			favBtn.onclick = (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+				const cid = getCourseIdFromCard(card);
+				toggleFavorite(cid);
+			};
+
 			card.setAttribute('data-jct-fav', isFavorite(courseId) ? '1' : '0');
 			favBtn.classList.toggle('jct-fav-on', isFavorite(courseId));
 			favBtn.setAttribute('aria-pressed', isFavorite(courseId) ? 'true' : 'false');
@@ -1289,47 +1576,53 @@
 				scheduleBtn.title = 'הוסף ללוח זמנים (לחץ לעריכה, גרור להוספה)';
 				scheduleBtn.textContent = '📅';
 				scheduleBtn.setAttribute('draggable', 'true');
-				scheduleBtn.addEventListener('click', (e) => {
-					e.stopPropagation();
-					e.preventDefault();
-					showScheduleDayPicker(courseId, card);
-				});
-				scheduleBtn.addEventListener('dragstart', (e) => {
-					e.stopPropagation();
-					const courseName = getCourseNameFromCard(card);
-					const courseUrlEl = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
-					const courseUrl = courseUrlEl ? courseUrlEl.href : '#';
-					const data = {
-						courseId: courseId,
-						courseName: courseName,
-						courseUrl: courseUrl
-					};
-					e.dataTransfer.setData('text/plain', JSON.stringify(data));
-					e.dataTransfer.effectAllowed = 'move';
-					card.style.opacity = '0.5';
-					// Scroll to schedule when starting to drag
-					const scheduleContainer = document.getElementById('jct-weekly-schedule');
-					if (scheduleContainer) {
-						// Make sure schedule is visible
-						if (!scheduleViewVisible) {
-							scheduleViewVisible = true;
-							scheduleContainer.style.display = 'block';
-							const toggleBtn = document.getElementById('jct-schedule-toggle');
-							if (toggleBtn) {
-								toggleBtn.textContent = '✕ סגור לוח זמנים';
-							}
-							saveScheduleViewState();
-						}
-						setTimeout(() => {
-							scheduleContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-						}, 100);
-					}
-				});
-				scheduleBtn.addEventListener('dragend', (e) => {
-					card.style.opacity = '1';
-				});
-				card.appendChild(scheduleBtn);
+				// Insert as first child to be above thumb-wrap in DOM order
+				card.insertBefore(scheduleBtn, card.firstChild);
 			}
+
+			// Always set the click handler - use onclick to override any existing handler
+			scheduleBtn.onclick = (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+				showScheduleDayPicker(courseId, card);
+			};
+
+			// Set dragstart handler (can't use ondragstart for this complex logic)
+			scheduleBtn.ondragstart = (e) => {
+				e.stopPropagation();
+				const courseName = getCourseNameFromCard(card);
+				const courseUrlEl = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+				const courseUrl = courseUrlEl ? courseUrlEl.href : '#';
+				const data = {
+					courseId: courseId,
+					courseName: courseName,
+					courseUrl: courseUrl
+				};
+				e.dataTransfer.setData('text/plain', JSON.stringify(data));
+				e.dataTransfer.effectAllowed = 'move';
+				card.style.opacity = '0.5';
+				// Scroll to schedule when starting to drag
+				const scheduleContainer = document.getElementById('jct-weekly-schedule');
+				if (scheduleContainer) {
+					// Make sure schedule is visible
+					if (!scheduleViewVisible) {
+						scheduleViewVisible = true;
+						scheduleContainer.style.display = 'block';
+						const toggleBtn = document.getElementById('jct-schedule-toggle');
+						if (toggleBtn) {
+							toggleBtn.textContent = '✕ סגור לוח זמנים';
+						}
+						saveScheduleViewState();
+					}
+					setTimeout(() => {
+						scheduleContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					}, 100);
+				}
+			};
+
+			scheduleBtn.ondragend = () => {
+				card.style.opacity = '1';
+			};
 
 			// Make the card draggable when dragging from schedule button
 			// The schedule button itself is draggable, so we don't need to make the whole card draggable
@@ -1392,7 +1685,10 @@
 
 		// After ensuring cards, reorder each grid container in a guarded way
 		isReordering = true;
-		try { document.querySelectorAll('.jct-courses-grid').forEach(reorderContainerByFavorites); }
+		try {
+			document.querySelectorAll('.jct-courses-grid').forEach(reorderContainerByFavorites);
+			document.querySelectorAll('.jct-carousel-container').forEach(reorderContainerByFavorites);
+		}
 		finally { isReordering = false; }
 	}
 
@@ -1419,6 +1715,12 @@
 	function reorderContainerByFavorites(container) {
 		if (!container) return;
 		const children = Array.from(container.children);
+
+		// Skip if children are semester groups - we don't want to reorder semesters
+		if (children.some(el => el.classList.contains('jct-semester-group'))) {
+			return; // This container has semester groups, don't reorder it
+		}
+
 		// Determine favorites and keep stable order by original index
 		const withMeta = children.map((el, i) => {
 			const card = el;
@@ -2781,6 +3083,8 @@
 							<select id="jct-view-mode" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
 								<option value="grid" ${viewMode === 'grid' ? 'selected' : ''}>בלוקים (ברירת מחדל)</option>
 								<option value="list" ${viewMode === 'list' ? 'selected' : ''}>שורות</option>
+								<option value="original" ${viewMode === 'original' ? 'selected' : ''}>מקורי</option>
+								<option value="carousel" ${viewMode === 'carousel' ? 'selected' : ''}>קלפים</option>
 							</select>
 						</label>
 					</div>
@@ -2792,6 +3096,7 @@
 								<option value="minimal" ${cardStyle === 'minimal' ? 'selected' : ''}>מינימליסטי</option>
 								<option value="cards" ${cardStyle === 'cards' ? 'selected' : ''}>כרטיסים מעוגלים</option>
 								<option value="modern" ${cardStyle === 'modern' ? 'selected' : ''}>מודרני</option>
+								<option value="glass" ${cardStyle === 'glass' ? 'selected' : ''}>זכוכית</option>
 							</select>
 						</label>
 					</div>
@@ -4278,5 +4583,35 @@
 				}
 			});
 		}
+
+		// Global event delegation for favorite and schedule buttons
+		// This ensures buttons work even if they're replaced or recreated
+		document.addEventListener('click', (e) => {
+			// Check if clicked on favorite button
+			const favBtn = e.target.closest('.jct-fav-toggle');
+			if (favBtn) {
+				e.stopPropagation();
+				e.preventDefault();
+				const card = favBtn.closest('.list-group-item, .coursebox, .card.course, li, .dashboard-card');
+				if (card) {
+					const cid = getCourseIdFromCard(card);
+					toggleFavorite(cid);
+				}
+				return;
+			}
+
+			// Check if clicked on schedule button
+			const scheduleBtn = e.target.closest('.jct-schedule-btn');
+			if (scheduleBtn) {
+				e.stopPropagation();
+				e.preventDefault();
+				const card = scheduleBtn.closest('.list-group-item, .coursebox, .card.course, li, .dashboard-card');
+				if (card) {
+					const courseId = getCourseIdFromCard(card);
+					showScheduleDayPicker(courseId, card);
+				}
+				return;
+			}
+		}, true); // Use capture phase to catch the event before other handlers
 	});
 })();

@@ -69,6 +69,7 @@
 .jct-courses-grid .coursebox,
 .jct-courses-grid .card.course,
 .jct-courses-grid .course-list > li {
+	position: relative !important;
 	border-radius: 12px !important;
 	border: 1.5px solid #e5e7eb !important;
 	background: #ffffff !important;
@@ -275,10 +276,11 @@
 		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 85%, 1) 100%
 	);
 	border: 2px solid hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 65%);
- 	pointer-events: none;
+ 	pointer-events: none !important;
 	box-shadow: inset 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%, 0.2);
+	z-index: 1 !important;
 }
-.jct-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.jct-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none !important; }
 
 /* Accent ring on card using year color */
 .jct-courses-grid > .list-group-item,
@@ -307,8 +309,8 @@
 	text-align: center;
 	cursor: pointer;
 	padding: 0;
-	z-index: 20;
-	pointer-events: auto;
+	z-index: 50 !important;
+	pointer-events: auto !important;
 	transition: all 0.2s ease;
 	box-shadow: 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 40%, 0.15);
 }
@@ -340,8 +342,8 @@
 	text-align: center;
 	cursor: pointer;
 	padding: 0;
-	z-index: 20;
-	pointer-events: auto;
+	z-index: 50 !important;
+	pointer-events: auto !important;
 	transition: all 0.2s ease;
 	box-shadow: 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 40%, 0.15);
 }
@@ -1912,6 +1914,7 @@
 	box-shadow: none !important;
 	padding: 12px !important;
 	min-height: 160px !important;
+	position: relative !important;
 }
 
 .jct-style-minimal .jct-courses-grid > .list-group-item:hover,
@@ -1937,6 +1940,17 @@
 	font-weight: 500 !important;
 }
 
+/* Fix button positioning in minimal mode */
+.jct-style-minimal .jct-fav-toggle {
+	top: 8px !important;
+	right: 8px !important;
+}
+
+.jct-style-minimal .jct-schedule-btn {
+	top: 8px !important;
+	left: 8px !important;
+}
+
 /* Style 2: CARDS - Rounded card design */
 .jct-style-cards .jct-courses-grid > .list-group-item,
 .jct-style-cards .jct-courses-grid .list-group > .list-group-item,
@@ -1949,6 +1963,7 @@
 	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
 	padding: 18px !important;
 	min-height: 200px !important;
+	position: relative !important;
 }
 
 .jct-style-cards .jct-courses-grid > .list-group-item:hover,
@@ -1972,6 +1987,235 @@
 	font-weight: 600 !important;
 }
 
+/* Fix button positioning and clickability in cards mode */
+.jct-style-cards .jct-fav-toggle {
+	top: 12px !important;
+	right: 12px !important;
+	z-index: 30 !important;
+}
+
+.jct-style-cards .jct-schedule-btn {
+	top: 12px !important;
+	left: 12px !important;
+	z-index: 30 !important;
+}
+
+/* View Mode: ORIGINAL - Restore original Moodle list view with colored left border */
+.jct-view-original .jct-courses-grid {
+	display: block !important;
+	grid-template-columns: none !important;
+	gap: 0 !important;
+}
+
+.jct-view-original .jct-courses-grid > .list-group-item,
+.jct-view-original .jct-courses-grid .list-group > .list-group-item,
+.jct-view-original .jct-courses-grid .coursebox,
+.jct-view-original .jct-courses-grid .card.course {
+	width: 100% !important;
+	max-width: none !important;
+	margin-bottom: 0.5rem !important;
+	display: block !important;
+	padding: 0.75rem 1rem !important;
+	border-radius: 8px !important;
+	background: white !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+	border: 1px solid #e0e0e0 !important;
+	min-height: 50px !important;
+	overflow: visible !important;
+	position: relative !important;
+}
+
+/* Hide thumbnails in original view */
+.jct-view-original .jct-thumb-wrap {
+	display: none !important;
+}
+
+/* Simple text layout */
+.jct-view-original .coursename {
+	margin: 0 !important;
+	font-size: 14px !important;
+	line-height: 1.5 !important;
+}
+
+.jct-view-original .info {
+	display: block !important;
+	padding: 0 !important;
+}
+
+.jct-view-original .content {
+	display: none !important;
+}
+
+/* Position buttons correctly in original view */
+.jct-view-original .jct-fav-toggle {
+	right: 8px !important;
+	top: 8px !important;
+	left: auto !important;
+}
+
+.jct-view-original .jct-schedule-btn {
+	left: 8px !important;
+	top: 8px !important;
+	right: auto !important;
+}
+
+/* Colored left border */
+.jct-view-original .jct-courses-grid > .list-group-item::before,
+.jct-view-original .jct-courses-grid .list-group > .list-group-item::before,
+.jct-view-original .jct-courses-grid .coursebox::before,
+.jct-view-original .jct-courses-grid .card.course::before {
+	content: '' !important;
+	position: absolute !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 4px !important;
+	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), var(--jct-accent-l,55%)) !important;
+	border-radius: 0 8px 8px 0 !important;
+	z-index: 1 !important;
+}
+
+/* View Mode: CAROUSEL - Card carousel per semester */
+.jct-view-carousel .jct-courses-grid {
+	display: block !important;
+	padding: 0 !important;
+}
+
+.jct-view-carousel .jct-semester-group {
+	margin-bottom: 32px;
+	padding: 20px;
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	border-radius: 16px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.jct-view-carousel .jct-semester-header {
+	margin-bottom: 16px;
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #1e293b;
+	text-align: center;
+	padding-bottom: 12px;
+	border-bottom: 2px solid #cbd5e1;
+}
+
+.jct-view-carousel .jct-carousel-wrapper {
+	position: relative;
+	padding: 0 70px;
+	overflow: hidden;
+}
+
+.jct-view-carousel .jct-carousel-container {
+	display: flex;
+	transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	gap: 20px;
+}
+
+.jct-view-carousel .jct-carousel-container > * {
+	flex: 0 0 320px !important;
+	border-radius: 20px !important;
+	border: none !important;
+	background: white !important;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+	padding: 24px !important;
+	min-height: 240px !important;
+	margin: 0 !important;
+	transition: all 0.3s ease !important;
+	display: block !important;
+}
+
+.jct-view-carousel .jct-carousel-container > *:hover {
+	transform: translateY(-4px) !important;
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18) !important;
+	z-index: 10;
+}
+
+.jct-view-carousel .jct-carousel-btn {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 40px;
+	height: 40px;
+	background: white;
+	border: 2px solid hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 70%);
+	border-radius: 50%;
+	cursor: pointer;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20px;
+	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 50%);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	transition: all 0.2s ease;
+}
+
+.jct-view-carousel .jct-carousel-btn:hover {
+	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 50%);
+	color: white;
+	transform: translateY(-50%) scale(1.1);
+}
+
+.jct-view-carousel .jct-carousel-btn:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+.jct-view-carousel .jct-carousel-btn-prev {
+	left: 10px;
+}
+
+.jct-view-carousel .jct-carousel-btn-next {
+	right: 10px;
+}
+
+.jct-rtl .jct-view-carousel .jct-carousel-btn-prev {
+	right: auto;
+	left: 0;
+}
+
+.jct-rtl .jct-view-carousel .jct-carousel-btn-next {
+	left: auto;
+	right: 0;
+}
+
+.jct-view-carousel .jct-carousel-indicators {
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.jct-view-carousel .jct-carousel-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #cbd5e1;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.jct-view-carousel .jct-carousel-dot.active {
+	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 50%);
+	width: 24px;
+	border-radius: 5px;
+}
+
+.jct-view-carousel .jct-courses-grid img.courseimage,
+.jct-view-carousel .jct-courses-grid .courseimage img,
+.jct-view-carousel .jct-courses-grid .courseimage {
+	height: 100px !important;
+	max-height: 100px !important;
+	border-radius: 14px !important;
+}
+
+.jct-view-carousel .jct-courses-grid .coursename a {
+	font-size: 16px !important;
+	font-weight: 700 !important;
+	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 30%) !important;
+}
+
 /* Style 3: MODERN - Modern with highlights */
 .jct-style-modern .jct-courses-grid > .list-group-item,
 .jct-style-modern .jct-courses-grid .list-group > .list-group-item,
@@ -1983,7 +2227,7 @@
 	background: #ffffff !important;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
 	padding: 16px !important;
-	min-height: 190px !important;
+	min-height: 160px !important;
 	position: relative !important;
 	overflow: hidden !important;
 }
@@ -2024,6 +2268,128 @@
 	font-size: 15px !important;
 	font-weight: 600 !important;
 	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 35%) !important;
+}
+
+/* Style: GLASS - Glass morphism effect (applied as overlay on any style) */
+body.jct-style-glass .jct-courses-grid > .list-group-item,
+body.jct-style-glass .jct-courses-grid .list-group > .list-group-item,
+body.jct-style-glass .jct-courses-grid .coursebox,
+body.jct-style-glass .jct-courses-grid .card.course,
+body.jct-style-glass .jct-courses-grid .course-list > li {
+	border: 1px solid rgba(255, 255, 255, 0.5) !important;
+	background: linear-gradient(135deg,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 96%, 0.35) 0%,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 92%, 0.25) 50%,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 94%, 0.3) 100%) !important;
+	backdrop-filter: blur(24px) saturate(200%) brightness(1.1) !important;
+	-webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.1) !important;
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08),
+				0 2px 8px 0 rgba(0, 0, 0, 0.04),
+				inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+				inset 0 -1px 0 0 rgba(255, 255, 255, 0.3) !important;
+	position: relative !important;
+	overflow: hidden !important;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Glass effect: animated shine overlay */
+body.jct-style-glass .jct-courses-grid > .list-group-item::before,
+body.jct-style-glass .jct-courses-grid .list-group > .list-group-item::before,
+body.jct-style-glass .jct-courses-grid .coursebox::before,
+body.jct-style-glass .jct-courses-grid .card.course::before {
+	content: '' !important;
+	position: absolute !important;
+	top: -50% !important;
+	left: -50% !important;
+	right: -50% !important;
+	bottom: -50% !important;
+	background: linear-gradient(45deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.1) 45%,
+		rgba(255, 255, 255, 0.3) 50%,
+		rgba(255, 255, 255, 0.1) 55%,
+		transparent 100%) !important;
+	border-radius: inherit !important;
+	z-index: 1 !important;
+	pointer-events: none !important;
+	opacity: 0 !important;
+	transform: translateX(-100%) rotate(45deg) !important;
+	transition: all 0.6s ease-out !important;
+}
+
+/* Glass effect: shine animation on hover */
+body.jct-style-glass .jct-courses-grid > .list-group-item:hover::before,
+body.jct-style-glass .jct-courses-grid .list-group > .list-group-item:hover::before,
+body.jct-style-glass .jct-courses-grid .coursebox:hover::before,
+body.jct-style-glass .jct-courses-grid .card.course:hover::before {
+	opacity: 1 !important;
+	transform: translateX(100%) rotate(45deg) !important;
+}
+
+/* Glass effect: soft glow overlay */
+body.jct-style-glass .jct-courses-grid > .list-group-item::after,
+body.jct-style-glass .jct-courses-grid .list-group > .list-group-item::after,
+body.jct-style-glass .jct-courses-grid .coursebox::after,
+body.jct-style-glass .jct-courses-grid .card.course::after {
+	content: '' !important;
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	background: radial-gradient(circle at 50% 0%,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,80%)), 85%, 0.4) 0%,
+		transparent 70%) !important;
+	border-radius: inherit !important;
+	z-index: 0 !important;
+	pointer-events: none !important;
+	opacity: 0.6 !important;
+}
+
+/* Glass effect: hover glow */
+body.jct-style-glass .jct-courses-grid > .list-group-item:hover,
+body.jct-style-glass .jct-courses-grid .list-group > .list-group-item:hover,
+body.jct-style-glass .jct-courses-grid .coursebox:hover,
+body.jct-style-glass .jct-courses-grid .card.course:hover {
+	box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.12),
+				0 4px 16px 0 rgba(0, 0, 0, 0.08),
+				inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+				inset 0 -1px 0 0 rgba(255, 255, 255, 0.4),
+				0 0 0 1px rgba(255, 255, 255, 0.6),
+				0 0 24px 0 hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 70%, 0.3) !important;
+	border-color: rgba(255, 255, 255, 0.7) !important;
+	background: linear-gradient(135deg,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 97%, 0.4) 0%,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 93%, 0.3) 50%,
+		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 95%, 0.35) 100%) !important;
+	transform: translateY(-2px) scale(1.01) !important;
+}
+
+/* Glass effect: text styling */
+body.jct-style-glass .jct-courses-grid .coursename a {
+	text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95),
+				 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,50%)), 50%, 0.2) !important;
+	position: relative !important;
+	z-index: 2 !important;
+}
+
+body.jct-style-glass .jct-courses-grid .teachers,
+body.jct-style-glass .jct-courses-grid .summary,
+body.jct-style-glass .jct-courses-grid .card-text {
+	text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+	position: relative !important;
+	z-index: 2 !important;
+}
+
+/* Glass effect: ensure content is above overlays */
+body.jct-style-glass .jct-courses-grid .coursename,
+body.jct-style-glass .jct-courses-grid .teachers,
+body.jct-style-glass .jct-courses-grid .summary,
+body.jct-style-glass .jct-courses-grid .card-text,
+body.jct-style-glass .jct-courses-grid .card-body,
+body.jct-style-glass .jct-courses-grid .content {
+	position: relative !important;
+	z-index: 2 !important;
 }
 
 /* =====================================
