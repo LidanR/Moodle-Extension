@@ -199,6 +199,7 @@
 				});
 
 				carouselWrapper.appendChild(carouselContainer);
+				semesterDiv.appendChild(carouselWrapper);
 
 				// Add navigation buttons if more than 1 course
 				if (groupCourses.length > 1) {
@@ -213,8 +214,8 @@
 					nextBtn.innerHTML = '▶';
 					nextBtn.addEventListener('click', () => moveCarousel(carouselContainer, 1, groupCourses.length));
 
-					carouselWrapper.appendChild(prevBtn);
-					carouselWrapper.appendChild(nextBtn);
+					semesterDiv.appendChild(prevBtn);
+					semesterDiv.appendChild(nextBtn);
 
 					// Add indicators
 					const indicators = document.createElement('div');
@@ -225,10 +226,7 @@
 						dot.addEventListener('click', () => moveCarouselToIndex(carouselContainer, i, groupCourses.length, indicators));
 						indicators.appendChild(dot);
 					}
-					semesterDiv.appendChild(carouselWrapper);
 					semesterDiv.appendChild(indicators);
-				} else {
-					semesterDiv.appendChild(carouselWrapper);
 				}
 
 				container.appendChild(semesterDiv);
@@ -293,17 +291,14 @@
 		container.style.transform = `translateX(${offset}px)`;
 
 		// Update button states
-		const wrapper = container.closest('.jct-carousel-wrapper');
-		if (wrapper) {
-			const prevBtn = wrapper.querySelector('.jct-carousel-btn-prev');
-			const nextBtn = wrapper.querySelector('.jct-carousel-btn-next');
-			if (prevBtn) prevBtn.disabled = newIndex === 0;
-			if (nextBtn) nextBtn.disabled = newIndex === totalItems - 1;
-		}
-
-		// Update indicators
 		const semesterGroup = container.closest('.jct-semester-group');
 		if (semesterGroup) {
+			const prevBtn = semesterGroup.querySelector('.jct-carousel-btn-prev');
+			const nextBtn = semesterGroup.querySelector('.jct-carousel-btn-next');
+			if (prevBtn) prevBtn.disabled = newIndex === 0;
+			if (nextBtn) nextBtn.disabled = newIndex === totalItems - 1;
+
+			// Update indicators
 			const indicators = semesterGroup.querySelector('.jct-carousel-indicators');
 			if (indicators) {
 				const dots = indicators.querySelectorAll('.jct-carousel-dot');
@@ -322,10 +317,10 @@
 		container.style.transform = `translateX(${offset}px)`;
 
 		// Update button states
-		const wrapper = container.closest('.jct-carousel-wrapper');
-		if (wrapper) {
-			const prevBtn = wrapper.querySelector('.jct-carousel-btn-prev');
-			const nextBtn = wrapper.querySelector('.jct-carousel-btn-next');
+		const semesterGroup = container.closest('.jct-semester-group');
+		if (semesterGroup) {
+			const prevBtn = semesterGroup.querySelector('.jct-carousel-btn-prev');
+			const nextBtn = semesterGroup.querySelector('.jct-carousel-btn-next');
 			if (prevBtn) prevBtn.disabled = index === 0;
 			if (nextBtn) nextBtn.disabled = index === totalItems - 1;
 		}
