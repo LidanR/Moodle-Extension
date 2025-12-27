@@ -2394,11 +2394,13 @@
 	}
 
 	// Helper function to extract due date from assignment page
-	async function getAssignmentDueDate(assignmentUrl, assignmentId) {
-		// Check cache first
-		const cache = await getDueDateCache();
-		if (cache[assignmentId] !== undefined) {
-			return cache[assignmentId] ? new Date(cache[assignmentId]) : null;
+	async function getAssignmentDueDate(assignmentUrl, assignmentId, forceRefresh = false) {
+		// Check cache first (unless force refresh)
+		if (!forceRefresh) {
+			const cache = await getDueDateCache();
+			if (cache[assignmentId] !== undefined) {
+				return cache[assignmentId] ? new Date(cache[assignmentId]) : null;
+			}
 		}
 
 		try {
@@ -4177,12 +4179,59 @@
 		};
 
 		// Function to load and display assignments
-		async function loadAndDisplayAssignments(forceRefresh = false) {
-			// Disable refresh button during scan
-			const refreshBtn = document.getElementById('jct-refresh-assignments');
-			if (refreshBtn) {
-				refreshBtn.disabled = true;
+		async function loadAndDisplayAssignments(forceRefresh = false, savedYear = '', savedSemester = '') {
+			// Get filter values from the UI
+			const filterYear = document.getElementById('jct-filter-year')?.value || '';
+			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
+			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+
+			// Check if year and semester are selected (required)
+			if (!filterYear || !filterSemester) {
+				const statusEl = document.getElementById('jct-loading-status');
+				if (statusEl) {
+					statusEl.innerHTML = `
+						<div style="text-align: center; padding: 20px;">
+							<p style="font-size: 1rem; color: #ef4444; margin-bottom: 12px;">⚠️ יש לבחור שנה וסמסטר לפני הסריקה</p>
+							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "רענן"</p>
+						</div>
+					`;
+				}
+				return;
 			}
+
+			// Check if we have cache
+			const { cache, timestamp } = await getAssignmentsCache();
+			const hasCache = cache && cache.assignments && cache.assignments.length > 0;
+			const cacheValid = hasCache && isCacheValid(timestamp);
+
+			// Check if year/semester changed
+			const yearSemesterChanged = (savedYear !== '' && savedSemester !== '' && (savedYear !== filterYear || savedSemester !== filterSemester));
+
+			// If we have valid cache and year/semester didn't change, just refilter without scanning
+			// This happens when: 1) Initial load with cache, or 2) User only changed maxOverdueDays
+			if (cacheValid && !yearSemesterChanged) {
+				// We have cache - filter by year/semester and refilter by maxOverdueDays
+				// Always force refresh due dates and submission status (they might have changed)
+				await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, true);
+				return;
+			}
+
+			// Show warning modal before starting scan (only if we're actually going to scan)
+			const shouldProceed = await showScanWarning();
+			if (!shouldProceed) {
+				return;
+			}
+
+			// Disable all filter controls during scan
+			const filterYearSelect = document.getElementById('jct-filter-year');
+			const filterSemesterSelect = document.getElementById('jct-filter-semester');
+			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
+			const refreshBtn = document.getElementById('jct-refresh-assignments');
+
+			if (filterYearSelect) filterYearSelect.disabled = true;
+			if (filterSemesterSelect) filterSemesterSelect.disabled = true;
+			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
+			if (refreshBtn) refreshBtn.disabled = true;
 
 			// Clear existing results
 			const container = document.getElementById('jct-results-container');
@@ -4200,29 +4249,6 @@
 				} else {
 					statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> טוען נתונים...`;
 				}
-			}
-
-			// Get filter values from the UI
-			const filterYear = document.getElementById('jct-filter-year')?.value || '';
-			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
-			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
-
-			// Check if year and semester are selected (required)
-			if (!filterYear || !filterSemester) {
-				if (statusEl) {
-					statusEl.innerHTML = `
-						<div style="text-align: center; padding: 20px;">
-							<p style="font-size: 1rem; color: #ef4444; margin-bottom: 12px;">⚠️ יש לבחור שנה וסמסטר לפני הסריקה</p>
-							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "רענן"</p>
-						</div>
-					`;
-				}
-				// Re-enable refresh button
-				const refreshBtnError = document.getElementById('jct-refresh-assignments');
-				if (refreshBtnError) {
-					refreshBtnError.disabled = false;
-				}
-				return;
 			}
 
 			// Scan all courses
@@ -4281,10 +4307,202 @@
 				statusEl.innerHTML = statusText;
 			}
 
-			// Re-enable refresh button after scan completes
-			const refreshBtnFinal = document.getElementById('jct-refresh-assignments');
-			if (refreshBtnFinal) {
-				refreshBtnFinal.disabled = false;
+			// Re-enable all controls after scan completes
+			if (filterYearSelect) filterYearSelect.disabled = false;
+			if (filterSemesterSelect) filterSemesterSelect.disabled = false;
+			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
+			if (refreshBtn) refreshBtn.disabled = false;
+
+			// Save the current year/semester to storage so next time we can detect if they changed
+			await new Promise(resolve => {
+				chrome.storage.sync.set({
+					assignmentFilterYear: filterYear,
+					assignmentFilterSemester: filterSemester
+				}, () => resolve());
+			});
+		}
+
+		// Function to show scan warning modal
+		async function showScanWarning() {
+			return new Promise((resolve) => {
+				const warningModal = document.createElement('div');
+				warningModal.className = 'jct-scan-warning-modal';
+				warningModal.innerHTML = `
+					<div class="jct-scan-warning-overlay"></div>
+					<div class="jct-scan-warning-content">
+						<div class="jct-scan-warning-icon">⏱️</div>
+						<h3>אזהרה - סריקת מטלות</h3>
+						<p>סריקת כל המטלות עשויה לקחת בין <strong>30 שניות ל-2 דקות</strong>.</p>
+						<p style="font-size: 0.875rem; color: #64748b; margin-top: 8px;">המערכת תסרוק את כל הקורסים שנבחרו ותבדוק את סטטוס ההגשות.</p>
+						<div class="jct-scan-warning-buttons">
+							<button class="jct-scan-warning-cancel">ביטול</button>
+							<button class="jct-scan-warning-proceed">המשך בסריקה</button>
+						</div>
+					</div>
+				`;
+				document.body.appendChild(warningModal);
+
+				// Add styles
+				const style = document.createElement('style');
+				style.textContent = `
+					.jct-scan-warning-modal {
+						position: fixed;
+						top: 0;
+						left: 0;
+						right: 0;
+						bottom: 0;
+						z-index: 100000;
+					}
+					.jct-scan-warning-overlay {
+						position: absolute;
+						top: 0;
+						left: 0;
+						right: 0;
+						bottom: 0;
+						background: rgba(0, 0, 0, 0.5);
+						backdrop-filter: blur(2px);
+					}
+					.jct-scan-warning-content {
+						position: absolute;
+						top: 50%;
+						left: 50%;
+						transform: translate(-50%, -50%);
+						background: white;
+						border-radius: 12px;
+						padding: 24px;
+						max-width: 400px;
+						box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+						text-align: center;
+					}
+					.jct-scan-warning-icon {
+						font-size: 48px;
+						margin-bottom: 16px;
+					}
+					.jct-scan-warning-content h3 {
+						margin: 0 0 16px 0;
+						font-size: 1.25rem;
+						color: #1e293b;
+					}
+					.jct-scan-warning-content p {
+						margin: 0 0 8px 0;
+						color: #475569;
+						line-height: 1.6;
+					}
+					.jct-scan-warning-buttons {
+						display: flex;
+						gap: 12px;
+						margin-top: 24px;
+					}
+					.jct-scan-warning-buttons button {
+						flex: 1;
+						padding: 10px 20px;
+						border: none;
+						border-radius: 8px;
+						font-size: 1rem;
+						cursor: pointer;
+						font-weight: 500;
+						transition: all 0.2s;
+					}
+					.jct-scan-warning-cancel {
+						background: #e2e8f0;
+						color: #475569;
+					}
+					.jct-scan-warning-cancel:hover {
+						background: #cbd5e1;
+					}
+					.jct-scan-warning-proceed {
+						background: #3b82f6;
+						color: white;
+					}
+					.jct-scan-warning-proceed:hover {
+						background: #2563eb;
+					}
+				`;
+				document.head.appendChild(style);
+
+				const cancelBtn = warningModal.querySelector('.jct-scan-warning-cancel');
+				const proceedBtn = warningModal.querySelector('.jct-scan-warning-proceed');
+
+				cancelBtn.addEventListener('click', () => {
+					warningModal.remove();
+					style.remove();
+					resolve(false);
+				});
+
+				proceedBtn.addEventListener('click', () => {
+					warningModal.remove();
+					style.remove();
+					resolve(true);
+				});
+
+				// Close on overlay click
+				warningModal.querySelector('.jct-scan-warning-overlay').addEventListener('click', () => {
+					warningModal.remove();
+					style.remove();
+					resolve(false);
+				});
+			});
+		}
+
+		// Function to refilter and display from cache without scanning
+		async function refilterAndDisplayFromCache(cachedData, maxOverdueDays, filterYear, filterSemester, forceRefreshStatus = false) {
+			const statusEl = document.getElementById('jct-loading-status');
+			if (statusEl) {
+				statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> ${forceRefreshStatus ? 'בודק תאריכי סיום וסטטוס הגשות...' : 'מסנן מטלות מהמטמון...'}`;
+			}
+
+			// Clear existing results
+			const container = document.getElementById('jct-results-container');
+			if (container) {
+				container.innerHTML = '';
+				totalCourses = 0;
+				totalAssignments = 0;
+			}
+
+			// Filter assignments by year and semester first
+			const yearFiltered = cachedData.assignments.filter(assign => {
+				const { year, semIdx } = parseHebrewYearAndSemester(assign.courseName);
+				return year === parseInt(filterYear) && semIdx === parseInt(filterSemester);
+			});
+
+			// Fetch due dates and submission status for filtered assignments only
+			const assignmentsWithData = await Promise.all(
+				yearFiltered.map(async (assign) => {
+					const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId, forceRefreshStatus);
+					const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, forceRefreshStatus);
+					return { ...assign, dueDate, submissionStatus };
+				})
+			);
+
+			// Filter assignments by due date
+			const filteredAssignments = assignmentsWithData.filter(assign =>
+				shouldShowAssignment(assign.dueDate, maxOverdueDays)
+			);
+
+			// Rebuild courses map from filtered assignments
+			const coursesMap = new Map(cachedData.courses);
+
+			// Display courses with filtered assignments
+			for (const [courseId, courseInfo] of coursesMap) {
+				const courseAssignments = filteredAssignments.filter(a => a.courseId === courseId);
+				if (courseAssignments.length > 0 && window.jctAddCourseResult) {
+					window.jctAddCourseResult(courseInfo, courseAssignments);
+				}
+			}
+
+			// Update final status
+			if (statusEl) {
+				const { timestamp } = await getAssignmentsCache();
+				const cacheDate = new Date(timestamp);
+				const cacheTime = cacheDate.toLocaleString('he-IL');
+				const totalBeforeFilter = yearFiltered.length;
+				const hiddenCount = totalBeforeFilter - totalAssignments;
+				let statusText = `✓ מטלות עודכנו מהמטמון - ${totalCourses} קורסים, ${totalAssignments} מטלות`;
+				if (hiddenCount > 0) {
+					statusText += ` (${hiddenCount} מוסתרות בגלל תאריך סיום)`;
+				}
+				statusText += ` | עדכון אחרון: ${cacheTime}`;
+				statusEl.innerHTML = statusText;
 			}
 		}
 
@@ -4294,28 +4512,29 @@
 		const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 		const refreshBtn = document.getElementById('jct-refresh-assignments');
 
-		// When filter changes, save to storage (but don't reload - user must click refresh)
+		// When filter changes, don't save to storage yet - only save after successful scan
+		// This way we can detect if year/semester changed since last scan
 		filterYearSelect?.addEventListener('change', async () => {
-			const newYear = filterYearSelect.value;
-			await new Promise(resolve => {
-				chrome.storage.sync.set({ assignmentFilterYear: newYear }, () => resolve());
-			});
+			// Just update the UI, don't save yet
 		});
 
 		filterSemesterSelect?.addEventListener('change', async () => {
-			const newSemester = filterSemesterSelect.value;
-			await new Promise(resolve => {
-				chrome.storage.sync.set({ assignmentFilterSemester: newSemester }, () => resolve());
-			});
+			// Just update the UI, don't save yet
 		});
 
-		// When maxOverdueDays changes, save to storage and reload
+		// When maxOverdueDays changes, save to storage but DON'T reload automatically
+		// User must click refresh to trigger a new scan
 		maxOverdueDaysInput?.addEventListener('change', async () => {
 			const newValue = Math.max(0, parseInt(maxOverdueDaysInput.value || '30'));
 			await new Promise(resolve => {
 				chrome.storage.sync.set({ maxOverdueDays: newValue }, () => resolve());
 			});
-			loadAndDisplayAssignments(false);
+			// Don't call loadAndDisplayAssignments here - let user click refresh
+			// Just show a message that settings were saved
+			const statusEl = document.getElementById('jct-loading-status');
+			if (statusEl) {
+				statusEl.innerHTML = `<div style="color: #3b82f6;">⚙️ ההגדרות נשמרו. לחץ "רענן" כדי להחיל את השינויים.</div>`;
+			}
 		});
 
 		// Refresh button click handler
@@ -4344,7 +4563,14 @@
 				});
 			}
 
-			await loadAndDisplayAssignments(true);
+			// Get the current saved values from storage (they might have changed)
+			const currentSettings = await new Promise(resolve => {
+				chrome.storage.sync.get(['assignmentFilterYear', 'assignmentFilterSemester'], resolve);
+			});
+			const currentSavedYear = currentSettings.assignmentFilterYear || '';
+			const currentSavedSemester = currentSettings.assignmentFilterSemester || '';
+
+			await loadAndDisplayAssignments(true, currentSavedYear, currentSavedSemester);
 
 			// Mark scanning as complete
 			isScanning = false;
@@ -4372,8 +4598,7 @@
 				statusEl.innerHTML = `
 					<div style="text-align: center; padding: 20px;">
 						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "רענן" כדי לסרוק מטלות</p>
-						<p style="font-size: 0.875rem; color: #94a3b8;">הסריקה תימשך גם אם תסגור את החלון</p>
-					</div>
+ז					</div>
 				`;
 			}
 		}
