@@ -89,6 +89,10 @@
 		} else {
 			// Grid mode (default)
 			restoreOriginalCourses();
+			// Apply column count for grid view
+			chrome.storage.sync.get({ columnCount: 3 }, ({ columnCount }) => {
+				document.documentElement.style.setProperty('--jct-columns', columnCount);
+			});
 		}
 	}
 
@@ -1677,9 +1681,11 @@
 			}
 			processedCards.add(card);
 		});
-		// colums amount
-		chrome.storage.sync.get({ columnCount: 3 }, ({ columnCount }) => {
-			document.documentElement.style.setProperty('--jct-columns', columnCount);
+		// colums amount - only apply in grid view
+		chrome.storage.sync.get({ columnCount: 3, viewMode: 'grid' }, ({ columnCount, viewMode }) => {
+			if (viewMode === 'grid') {
+				document.documentElement.style.setProperty('--jct-columns', columnCount);
+			}
 		});
 
 
@@ -3063,50 +3069,72 @@
 		const modal = document.createElement('div');
 		modal.className = 'jct-assignments-modal';
 		modal.innerHTML = `
-			<div class="jct-assignments-modal-content" style="max-width: 700px;">
-				<div class="jct-assignments-modal-header">
-					<h3>⚙️ הגדרות</h3>
-					<button class="jct-assignments-modal-close">✕</button>
+			<div class="jct-assignments-modal-content" style="max-width: 1200px; width: 90vw;">
+				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+					<h3 style="color: white; margin: 0;">⚙️ הגדרות</h3>
+					<button class="jct-assignments-modal-close" style="color: white; opacity: 0.9;">✕</button>
 				</div>
-				<div class="jct-assignments-modal-body" style="padding: 24px;">
-					<h4 style="margin: 0 0 16px; font-size: 16px;">צבעים לכל שנה ולכל סמסטר</h4>
-					<table style="border-collapse:collapse;background:#fff;width:100%;border-radius:12px;box-shadow:0 4px 16px #0001;margin-bottom:24px;">
-						${tableHtml}
-					</table>
-					<div style="margin: 24px 0 16px;">
-						<label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
-							<span>מספר עמודות (3–6):</span>
-							<input id="jct-column-count" type="number" min="3" max="6" step="1" value="${columnCount}" style="width:60px;padding:6px;border:1px solid #cbd5e1;border-radius:6px;">
-						</label>
+				<div class="jct-assignments-modal-body" style="padding: 32px;">
+					<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start;">
+						<!-- Right side: Color palette -->
+						<div>
+							<h4 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b;">🎨 צבעים לכל שנה וסמסטר</h4>
+							<table style="border-collapse:collapse;background:#fff;width:100%;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
+								${tableHtml}
+							</table>
+							<p style="color: #64748b; font-size: 13px; margin-top: 12px; line-height: 1.5;">
+								💡 כל שנה היא שורה, כל סמסטר הוא עמודה. לחץ על צבע כדי לשנות.
+							</p>
+						</div>
+
+						<!-- Left side: Settings -->
+						<div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 24px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+							<h4 style="margin: 0 0 20px; font-size: 18px; font-weight: 600; color: #1e293b;">⚡ הגדרות תצוגה</h4>
+
+							<div style="margin-bottom: 20px;">
+								<label style="display: block; margin-bottom: 8px; font-weight: 500; color: #334155; font-size: 14px;">
+									תצוגת קורסים
+								</label>
+								<select id="jct-view-mode" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 2px solid #cbd5e1; background: white; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+									<option value="grid" ${viewMode === 'grid' ? 'selected' : ''}>🔲 בלוקים</option>
+									<option value="list" ${viewMode === 'list' ? 'selected' : ''}>📋 רשימה</option>
+									<option value="original" ${viewMode === 'original' ? 'selected' : ''}>📄 מקורי</option>
+									<option value="carousel" ${viewMode === 'carousel' ? 'selected' : ''}>🎠 קלפים</option>
+								</select>
+							</div>
+
+							<div style="margin-bottom: 20px;">
+								<label style="display: block; margin-bottom: 8px; font-weight: 500; color: #334155; font-size: 14px;">
+									עיצוב כרטיסים
+								</label>
+								<select id="jct-card-style" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 2px solid #cbd5e1; background: white; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+									<option value="compact" ${cardStyle === 'compact' ? 'selected' : ''}>📦 קומפקטי</option>
+									<option value="minimal" ${cardStyle === 'minimal' ? 'selected' : ''}>✨ מינימליסטי</option>
+									<option value="cards" ${cardStyle === 'cards' ? 'selected' : ''}>🎴 כרטיסים</option>
+									<option value="modern" ${cardStyle === 'modern' ? 'selected' : ''}>🚀 מודרני</option>
+									<option value="glass" ${cardStyle === 'glass' ? 'selected' : ''}>💎 זכוכית</option>
+								</select>
+							</div>
+
+							<div style="margin-bottom: 24px;">
+								<label style="display: block; margin-bottom: 8px; font-weight: 500; color: #334155; font-size: 14px;">
+									מספר עמודות בתצוגת בלוקים
+								</label>
+								<input id="jct-column-count" type="number" min="3" max="6" step="1" value="${columnCount}"
+									style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 2px solid #cbd5e1; background: white; font-size: 14px;">
+								<span style="display: block; margin-top: 6px; font-size: 12px; color: #64748b;">טווח: 3-6 עמודות</span>
+							</div>
+
+							<div style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px;">
+								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.2s;">
+									💾 שמור שינויים
+								</button>
+								<button id="jct-settings-reset" style="padding: 10px 20px; background: white; color: #475569; border: 2px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s;">
+									🔄 איפוס לברירת מחדל
+								</button>
+							</div>
+						</div>
 					</div>
-					<div style="margin: 16px 0;">
-						<label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
-							<span>תצוגת קורסים:</span>
-							<select id="jct-view-mode" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
-								<option value="grid" ${viewMode === 'grid' ? 'selected' : ''}>בלוקים (ברירת מחדל)</option>
-								<option value="list" ${viewMode === 'list' ? 'selected' : ''}>שורות</option>
-								<option value="original" ${viewMode === 'original' ? 'selected' : ''}>מקורי</option>
-								<option value="carousel" ${viewMode === 'carousel' ? 'selected' : ''}>קלפים</option>
-							</select>
-						</label>
-					</div>
-					<div style="margin: 16px 0;">
-						<label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
-							<span>עיצוב כרטיסים:</span>
-							<select id="jct-card-style" style="padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;">
-								<option value="compact" ${cardStyle === 'compact' ? 'selected' : ''}>קומפקטי (ברירת מחדל)</option>
-								<option value="minimal" ${cardStyle === 'minimal' ? 'selected' : ''}>מינימליסטי</option>
-								<option value="cards" ${cardStyle === 'cards' ? 'selected' : ''}>כרטיסים מעוגלים</option>
-								<option value="modern" ${cardStyle === 'modern' ? 'selected' : ''}>מודרני</option>
-								<option value="glass" ${cardStyle === 'glass' ? 'selected' : ''}>זכוכית</option>
-							</select>
-						</label>
-					</div>
-					<div style="margin-top: 24px; display: flex; gap: 12px;">
-						<button id="jct-settings-save" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px;">שמירה</button>
-						<button id="jct-settings-reset" style="padding: 10px 20px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-size: 14px;">איפוס לברירת מחדל</button>
-					</div>
-					<p style="color: #64748b; font-size: 12px; margin-top: 16px;">שנה = שורה. סמסטר = עמודה. שמור ורענן את העמוד כדי לראות את השינוי.</p>
 				</div>
 			</div>
 		`;
@@ -3187,6 +3215,41 @@
 			document.getElementById('jct-card-style').value = 'compact';
 			applyViewMode('grid');
 			applyCardStyle('compact');
+		});
+
+		// Add hover effects to buttons
+		const saveBtn = document.getElementById('jct-settings-save');
+		const resetBtn = document.getElementById('jct-settings-reset');
+
+		saveBtn.addEventListener('mouseenter', () => {
+			saveBtn.style.transform = 'translateY(-2px)';
+			saveBtn.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.5)';
+		});
+		saveBtn.addEventListener('mouseleave', () => {
+			saveBtn.style.transform = 'translateY(0)';
+			saveBtn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+		});
+
+		resetBtn.addEventListener('mouseenter', () => {
+			resetBtn.style.background = '#f1f5f9';
+			resetBtn.style.borderColor = '#94a3b8';
+		});
+		resetBtn.addEventListener('mouseleave', () => {
+			resetBtn.style.background = 'white';
+			resetBtn.style.borderColor = '#cbd5e1';
+		});
+
+		// Add hover effects to select elements
+		const viewModeSelect = document.getElementById('jct-view-mode');
+		const cardStyleSelect = document.getElementById('jct-card-style');
+
+		[viewModeSelect, cardStyleSelect].forEach(select => {
+			select.addEventListener('mouseenter', () => {
+				select.style.borderColor = '#667eea';
+			});
+			select.addEventListener('mouseleave', () => {
+				select.style.borderColor = '#cbd5e1';
+			});
 		});
 	}
 
@@ -3400,8 +3463,8 @@
 				<div class="jct-calendar-body" id="jct-calendar-grid" style="padding: 8px; overflow-y: auto; flex: 1;">
 					<!-- Calendar grid will be inserted here -->
 				</div>
-				<div style="padding: 8px 12px; background: #f8fafc; border-top: 1px solid #e5e7eb;">
-					<button id="jct-add-event-btn" style="padding: 6px 14px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.8rem;">
+				<div style="padding: 12px; background: #f8fafc; border-top: 1px solid #e5e7eb; display: flex; justify-content: center;">
+					<button id="jct-add-event-btn" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); transition: all 0.2s ease;">
 						➕ הוסף אירוע חדש
 					</button>
 				</div>
@@ -3955,8 +4018,19 @@
 		});
 
 		// Add event button
-		document.getElementById('jct-add-event-btn').addEventListener('click', () => {
+		const addEventBtn = document.getElementById('jct-add-event-btn');
+		addEventBtn.addEventListener('click', () => {
 			addCustomEvent();
+		});
+
+		// Add hover effect
+		addEventBtn.addEventListener('mouseenter', () => {
+			addEventBtn.style.transform = 'translateY(-2px)';
+			addEventBtn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.5)';
+		});
+		addEventBtn.addEventListener('mouseleave', () => {
+			addEventBtn.style.transform = 'translateY(0)';
+			addEventBtn.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.4)';
 		});
 
 		// Initial render
