@@ -2883,6 +2883,176 @@
 		});
 	}
 
+	// Function to refresh today's events block
+	async function refreshTodayEventsBlock() {
+		const existingBlock = document.getElementById('jct-today-events-block');
+		if (existingBlock) {
+			// Find the button container
+			const buttonContainer = document.querySelector('.jct-action-buttons-container');
+			if (buttonContainer) {
+				existingBlock.remove();
+				await showTodayEventsBlock(buttonContainer);
+			}
+		}
+	}
+
+	// Function to show today's events block below calendar button
+	async function showTodayEventsBlock(buttonElement) {
+		// Get today's date
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const tomorrow = new Date(today);
+		tomorrow.setDate(tomorrow.getDate() + 1);
+
+		// Get custom events from storage
+		const customEvents = await new Promise(resolve => {
+			chrome.storage.local.get({ customEvents: [] }, res => {
+				resolve(res.customEvents || []);
+			});
+		});
+
+		// Get assignments from cache
+		const cache = await new Promise(resolve => {
+			chrome.storage.local.get({ assignmentScanResults: null }, res => {
+				resolve(res.assignmentScanResults);
+			});
+		});
+
+		// Get due date cache
+		const dueDateCacheData = await new Promise(resolve => {
+			chrome.storage.local.get({ dueDateCache: {} }, res => {
+				resolve(res.dueDateCache || {});
+			});
+		});
+
+		// Get submission status cache
+		const submissionStatusCache = await new Promise(resolve => {
+			chrome.storage.local.get({ submissionStatusCache: {} }, res => {
+				resolve(res.submissionStatusCache || {});
+			});
+		});
+
+		// Collect today's events
+		const todayEvents = [];
+
+		// Add assignments due today
+		if (cache && cache.assignments && Array.isArray(cache.assignments)) {
+			cache.assignments.forEach(assignment => {
+				const dueDateTimestamp = dueDateCacheData[assignment.assignmentId];
+				if (dueDateTimestamp) {
+					const dueDate = new Date(dueDateTimestamp * 1000);
+					dueDate.setHours(0, 0, 0, 0);
+
+					if (dueDate.getTime() === today.getTime()) {
+						const submissionStatus = submissionStatusCache[assignment.assignmentId] || 'unknown';
+						todayEvents.push({
+							type: 'assignment',
+							title: assignment.assignmentName,
+							courseName: assignment.courseName,
+							url: assignment.assignmentUrl,
+							dueDate: new Date(dueDateTimestamp * 1000),
+							submissionStatus: submissionStatus
+						});
+					}
+				}
+			});
+		}
+
+		// Add custom events for today
+		customEvents.forEach(event => {
+			const eventDate = new Date(event.date);
+			eventDate.setHours(0, 0, 0, 0);
+
+			if (eventDate.getTime() === today.getTime()) {
+				todayEvents.push({
+					type: 'custom',
+					title: event.title,
+					description: event.description || '',
+					time: event.time || ''
+				});
+			}
+		});
+
+		// Sort events by time/priority
+		todayEvents.sort((a, b) => {
+			if (a.type === 'assignment' && b.type === 'custom') return -1;
+			if (a.type === 'custom' && b.type === 'assignment') return 1;
+			return 0;
+		});
+
+		// Create the events block
+		const eventsBlock = document.createElement('div');
+		eventsBlock.id = 'jct-today-events-block';
+		eventsBlock.className = 'jct-today-events-block';
+
+		const todayStr = today.toLocaleDateString('he-IL', {
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		});
+
+		let html = `
+			<div class="jct-today-events-header">
+				<h3>📅 אירועי היום - ${todayStr}</h3>
+			</div>
+			<div class="jct-today-events-list">
+		`;
+
+		if (todayEvents.length === 0) {
+			html += `
+				<div class="jct-no-events">
+					<p>🎉 אין אירועים להיום!</p>
+					<p style="font-size: 0.875rem; color: #64748b; margin-top: 8px;">תהנה מיום רגוע</p>
+				</div>
+			`;
+		} else {
+			todayEvents.forEach(event => {
+				if (event.type === 'assignment') {
+					const isSubmitted = event.submissionStatus === 'submitted';
+					const statusColor = isSubmitted ? '#16a34a' : '#dc2626';
+					const statusIcon = isSubmitted ? '✓' : '✗';
+					const statusText = isSubmitted ? 'הוגש' : 'לא הוגש';
+
+					html += `
+						<div class="jct-today-event-item assignment" style="border-right: 4px solid ${statusColor};">
+							<div class="jct-event-icon">📝</div>
+							<div class="jct-event-content">
+								<h4>${event.title}</h4>
+								<p class="jct-event-course">${event.courseName}</p>
+								<div class="jct-event-meta">
+									<span class="jct-event-status" style="color: ${statusColor};">
+										${statusIcon} ${statusText}
+									</span>
+								</div>
+							</div>
+							<a href="${event.url}" class="jct-event-link" target="_blank">פתח →</a>
+						</div>
+					`;
+				} else {
+					html += `
+						<div class="jct-today-event-item custom">
+							<div class="jct-event-icon">🎯</div>
+							<div class="jct-event-content">
+								<h4>${event.title}</h4>
+								${event.description ? `<p class="jct-event-description">${event.description}</p>` : ''}
+								${event.time ? `<p class="jct-event-time">🕐 ${event.time}</p>` : ''}
+							</div>
+						</div>
+					`;
+				}
+			});
+		}
+
+		html += `</div>`;
+		eventsBlock.innerHTML = html;
+
+		// Insert the block below the button container
+		if (buttonElement && buttonElement.parentElement) {
+			buttonElement.parentElement.insertBefore(eventsBlock, buttonElement.nextSibling);
+		}
+	}
+
 	// Function to show calendar view with assignments and custom events
 	async function showCalendarModal() {
 		// Get custom events from storage
@@ -3296,6 +3466,9 @@
 							});
 							detailsModal.remove();
 							renderCalendar();
+
+							// Refresh today's events block
+							refreshTodayEventsBlock();
 						}
 					}
 				});
@@ -3367,6 +3540,9 @@
 
 				eventModal.remove();
 				renderCalendar();
+
+				// Refresh today's events block
+				refreshTodayEventsBlock();
 			});
 
 			// Click outside to close
@@ -3436,6 +3612,9 @@
 
 				eventModal.remove();
 				renderCalendar();
+
+				// Refresh today's events block
+				refreshTodayEventsBlock();
 			});
 
 			// Click outside to close
@@ -3495,6 +3674,9 @@
 			<div class="jct-assignments-modal-content jct-assignments-modal-large">
 				<div class="jct-assignments-modal-header">
 					<h3 id="jct-modal-title">טוען קורסים...</h3>
+					<div id="jct-scanning-notice" style="display: none;">
+						⏳ סורק... נא להמתין
+					</div>
 					<button class="jct-assignments-modal-close">✕</button>
 				</div>
 				<div class="jct-filter-controls" style="padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
@@ -3541,15 +3723,20 @@
 		`;
 		document.body.appendChild(modal);
 
+		// Track if scanning is in progress
+		let isScanning = false;
+
 		// Close button
 		modal.querySelector('.jct-assignments-modal-close').addEventListener('click', () => {
-			modal.remove();
-			window.jctStopScanning = true;
+			if (!isScanning) {
+				modal.remove();
+				window.jctStopScanning = true;
+			}
 		});
 
-		// Click outside to close
+		// Click outside to close (only when not scanning)
 		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
+			if (e.target === modal && !isScanning) {
 				modal.remove();
 				window.jctStopScanning = true;
 			}
@@ -3686,6 +3873,12 @@
 
 		// Function to load and display assignments
 		async function loadAndDisplayAssignments(forceRefresh = false) {
+			// Disable refresh button during scan
+			const refreshBtn = document.getElementById('jct-refresh-assignments');
+			if (refreshBtn) {
+				refreshBtn.disabled = true;
+			}
+
 			// Clear existing results
 			const container = document.getElementById('jct-results-container');
 			if (container) {
@@ -3718,6 +3911,11 @@
 							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "רענן"</p>
 						</div>
 					`;
+				}
+				// Re-enable refresh button
+				const refreshBtnError = document.getElementById('jct-refresh-assignments');
+				if (refreshBtnError) {
+					refreshBtnError.disabled = false;
 				}
 				return;
 			}
@@ -3777,6 +3975,12 @@
 				statusText += ` | עדכון אחרון: ${cacheTime}`;
 				statusEl.innerHTML = statusText;
 			}
+
+			// Re-enable refresh button after scan completes
+			const refreshBtnFinal = document.getElementById('jct-refresh-assignments');
+			if (refreshBtnFinal) {
+				refreshBtnFinal.disabled = false;
+			}
 		}
 
 		// Add event listeners for filters and refresh button
@@ -3813,8 +4017,20 @@
 		refreshBtn?.addEventListener('click', async (e) => {
 			const clearCache = e.shiftKey;
 
-			refreshBtn.disabled = true;
+			// Mark scanning as in progress
+			isScanning = true;
+
 			refreshBtn.innerHTML = clearCache ? '⏳ מנקה מטמון...' : '⏳ מרענן...';
+
+			// Hide close button and show scanning notice
+			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
+			const scanningNotice = document.getElementById('jct-scanning-notice');
+			if (closeBtn) {
+				closeBtn.style.display = 'none';
+			}
+			if (scanningNotice) {
+				scanningNotice.style.display = 'block';
+			}
 
 			if (clearCache) {
 				// Clear due date cache
@@ -3824,8 +4040,19 @@
 			}
 
 			await loadAndDisplayAssignments(true);
-			refreshBtn.disabled = false;
+
+			// Mark scanning as complete
+			isScanning = false;
+
 			refreshBtn.innerHTML = '🔄 רענן';
+
+			// Show close button and hide scanning notice
+			if (closeBtn) {
+				closeBtn.style.display = '';
+			}
+			if (scanningNotice) {
+				scanningNotice.style.display = 'none';
+			}
 		});
 
 		// Check if we have cached data to display
@@ -3960,6 +4187,9 @@
 			document.body.appendChild(assignmentsBtn);
 			document.body.appendChild(settingsBtn);
 		}
+
+		// Show today's events block automatically
+		showTodayEventsBlock(buttonContainer);
 	}
 
 	function applyCoursePageColors() {
