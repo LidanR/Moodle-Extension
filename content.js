@@ -4783,19 +4783,14 @@
 		const buttonContainer = document.createElement('div');
 		buttonContainer.className = 'jct-action-buttons-container';
 
-		// Create top row with calendar and assignments buttons
-		const topRow = document.createElement('div');
-		topRow.className = 'jct-buttons-top-row';
-		topRow.appendChild(calendarBtn);
-		topRow.appendChild(assignmentsBtn);
+		// Create single row with all 3 buttons
+		const buttonsRow = document.createElement('div');
+		buttonsRow.className = 'jct-buttons-row';
+		buttonsRow.appendChild(calendarBtn);
+		buttonsRow.appendChild(assignmentsBtn);
+		buttonsRow.appendChild(settingsBtn);
 
-		// Settings button gets its own row
-		const settingsRow = document.createElement('div');
-		settingsRow.className = 'jct-buttons-settings-row';
-		settingsRow.appendChild(settingsBtn);
-
-		buttonContainer.appendChild(topRow);
-		buttonContainer.appendChild(settingsRow);
+		buttonContainer.appendChild(buttonsRow);
 
 		// Insert the button container after the page header
 		if (pageHeader) {
