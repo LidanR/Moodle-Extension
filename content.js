@@ -130,6 +130,21 @@
 			const clonedCourses = courses.map(course => {
 				const cloned = course.cloneNode(true);
 
+				// Extract and set courseId from original card's URL
+				let courseId = null;
+				const originalLink = course.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+				if (originalLink && originalLink.href) {
+					const match = originalLink.href.match(/[?&]id=(\d+)/);
+					if (match) {
+						courseId = match[1];
+					}
+				}
+
+				// If found, set it on the cloned card
+				if (courseId) {
+					cloned.setAttribute('data-course-id', courseId);
+				}
+
 				// Make entire card clickable
 				const mainLink = cloned.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
 				if (mainLink && mainLink.href) {
@@ -149,6 +164,62 @@
 				links.forEach(link => {
 					link.style.pointerEvents = 'auto';
 					link.style.cursor = 'pointer';
+				});
+
+				// Add drag-and-drop functionality for schedule
+				cloned.setAttribute('draggable', 'true');
+
+				let scrollInterval = null;
+
+				cloned.addEventListener('dragstart', (e) => {
+					const courseId = cloned.getAttribute('data-course-id');
+					const courseName = getCourseNameFromCard(cloned);
+					const courseUrl = cloned.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a')?.href || '#';
+
+					e.dataTransfer.setData('text/plain', JSON.stringify({
+						courseId: courseId,
+						courseName: courseName,
+						courseUrl: courseUrl,
+						fromCourseList: true
+					}));
+					e.dataTransfer.effectAllowed = 'copy';
+					cloned.style.opacity = '0.5';
+				});
+
+				cloned.addEventListener('drag', (e) => {
+					// Auto-scroll when dragging near edges
+					const scrollThreshold = 80; // Distance from edge to trigger scroll
+					const scrollSpeed = 15; // Pixels to scroll per interval
+
+					if (e.clientY > 0 && e.clientY < window.innerHeight) {
+						// Clear any existing scroll interval
+						if (scrollInterval) {
+							clearInterval(scrollInterval);
+							scrollInterval = null;
+						}
+
+						// Check if near top edge
+						if (e.clientY < scrollThreshold) {
+							scrollInterval = setInterval(() => {
+								window.scrollBy(0, -scrollSpeed);
+							}, 20);
+						}
+						// Check if near bottom edge
+						else if (e.clientY > window.innerHeight - scrollThreshold) {
+							scrollInterval = setInterval(() => {
+								window.scrollBy(0, scrollSpeed);
+							}, 20);
+						}
+					}
+				});
+
+				cloned.addEventListener('dragend', () => {
+					cloned.style.opacity = '1';
+					// Clear scroll interval when drag ends
+					if (scrollInterval) {
+						clearInterval(scrollInterval);
+						scrollInterval = null;
+					}
 				});
 
 				return cloned;
@@ -1598,7 +1669,7 @@
 					courseUrl: courseUrl
 				};
 				e.dataTransfer.setData('text/plain', JSON.stringify(data));
-				e.dataTransfer.effectAllowed = 'move';
+				e.dataTransfer.effectAllowed = 'copy';
 				card.style.opacity = '0.5';
 				// Scroll to schedule when starting to drag
 				const scheduleContainer = document.getElementById('jct-weekly-schedule');
@@ -2282,7 +2353,7 @@
 
 			column.addEventListener('dragover', (e) => {
 				e.preventDefault();
-				e.dataTransfer.dropEffect = 'move';
+				e.dataTransfer.dropEffect = 'copy';
 			});
 
 			column.addEventListener('dragleave', (e) => {
@@ -2298,12 +2369,22 @@
 
 				try {
 					const dataStr = e.dataTransfer.getData('text/plain');
-					if (!dataStr || dataStr === 'null') return;
+					console.log('Drop received - raw data:', dataStr);
+
+					if (!dataStr || dataStr === 'null') {
+						console.log('No data received in drop');
+						return;
+					}
 
 					const data = JSON.parse(dataStr);
 					const dayKey = column.getAttribute('data-day');
 
-					if (!data.courseId || !dayKey) return;
+					console.log('Drop parsed:', { data, dayKey });
+
+					if (!data.courseId || !dayKey) {
+						console.log('Missing courseId or dayKey:', { courseId: data.courseId, dayKey });
+						return;
+					}
 
 					// Ask for time
 					const timeData = await showTimePickerDialog(
@@ -2340,6 +2421,8 @@
 		courseCards.forEach(card => {
 			card.setAttribute('draggable', 'true');
 
+			let scrollInterval = null;
+
 			card.addEventListener('dragstart', (e) => {
 				const courseId = card.getAttribute('data-course-id');
 				const courseName = getCourseNameFromCard(card);
@@ -2355,8 +2438,40 @@
 				card.style.opacity = '0.5';
 			});
 
+			card.addEventListener('drag', (e) => {
+				// Auto-scroll when dragging near edges
+				const scrollThreshold = 80; // Distance from edge to trigger scroll
+				const scrollSpeed = 15; // Pixels to scroll per interval
+
+				if (e.clientY > 0 && e.clientY < window.innerHeight) {
+					// Clear any existing scroll interval
+					if (scrollInterval) {
+						clearInterval(scrollInterval);
+						scrollInterval = null;
+					}
+
+					// Check if near top edge
+					if (e.clientY < scrollThreshold) {
+						scrollInterval = setInterval(() => {
+							window.scrollBy(0, -scrollSpeed);
+						}, 20);
+					}
+					// Check if near bottom edge
+					else if (e.clientY > window.innerHeight - scrollThreshold) {
+						scrollInterval = setInterval(() => {
+							window.scrollBy(0, scrollSpeed);
+						}, 20);
+					}
+				}
+			});
+
 			card.addEventListener('dragend', () => {
 				card.style.opacity = '1';
+				// Clear scroll interval when drag ends
+				if (scrollInterval) {
+					clearInterval(scrollInterval);
+					scrollInterval = null;
+				}
 			});
 		});
 	}
@@ -2568,11 +2683,19 @@
 			const parser = new DOMParser();
 			const doc = parser.parseFromString(html, 'text/html');
 
-			// Find the submission status in the table
-			const statusRow = Array.from(doc.querySelectorAll('table.generaltable tr')).find(row => {
+			// Find the submission status in the table - try multiple selectors
+			let statusRow = Array.from(doc.querySelectorAll('table.generaltable tr')).find(row => {
 				const th = row.querySelector('th');
 				return th && th.textContent.includes('מצב ההגשה');
 			});
+
+			// If not found, try all tables
+			if (!statusRow) {
+				statusRow = Array.from(doc.querySelectorAll('table tr')).find(row => {
+					const th = row.querySelector('th');
+					return th && th.textContent.includes('מצב ההגשה');
+				});
+			}
 
 			if (statusRow) {
 				const statusCell = statusRow.querySelector('td');
@@ -2580,7 +2703,10 @@
 					const statusText = statusCell.textContent.trim();
 
 					let status = 'not_submitted';
-					if (statusText.includes('הוגש למתן ציון') || statusText.includes('הוגש')) {
+					// Check both text content and CSS classes
+					if (statusText.includes('הוגש למתן ציון') || statusText.includes('הוגש') ||
+						statusCell.classList.contains('submissionstatussubmitted') ||
+						statusCell.className.includes('submitted')) {
 						status = 'submitted';
 					} else if (statusText.includes('אין עדיין הגשות')) {
 						status = 'not_submitted';
@@ -2811,12 +2937,17 @@
 
 						// Step 1: Find section links (course sections with images/topics)
 						// Look for: <a href="https://moodle.jct.ac.il/course/section.php?id=327980">
+						// AND also: <a href="https://moodle.jct.ac.il/course/view.php?id=73462&section=1#tabs-tree-start">
 						const sectionLinks = doc.querySelectorAll('a[href*="/course/section.php"]');
+						const tabSectionLinks = doc.querySelectorAll('a[href*="/course/view.php"][href*="section="][href*="#tabs-tree-start"]');
 
-						console.log(`Found ${sectionLinks.length} section links in ${courseName}`);
+						console.log(`Found ${sectionLinks.length} section.php links and ${tabSectionLinks.length} tab section links in ${courseName}`);
+
+						// Combine both types of section links
+						const allSectionLinks = [...sectionLinks, ...tabSectionLinks];
 
 						// Step 2: Fetch each section and look for assignments inside
-						for (const sectionLink of sectionLinks) {
+						for (const sectionLink of allSectionLinks) {
 							const sectionHref = sectionLink.getAttribute('href');
 							if (!sectionHref || sectionHref === '#') continue;
 
@@ -4032,8 +4163,17 @@
 		renderCalendar();
 	}
 
+	// Global flag to track if we've already done a status refresh in current modal session
+	let hasRefreshedStatusGlobal = false;
+	let isModalOpening = false;
+
 	// Function to show all assignments in a modal
 	async function showAllAssignmentsModal() {
+		// Prevent opening multiple modals
+		if (document.querySelector('.jct-assignments-modal') || isModalOpening) {
+			return;
+		}
+		isModalOpening = true;
 		// Get settings including filter preferences
 		const settings = await new Promise(resolve => {
 			chrome.storage.sync.get({
@@ -4045,6 +4185,7 @@
 		const maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 30;
 		const savedFilterYear = settings.assignmentFilterYear || '';
 		const savedFilterSemester = settings.assignmentFilterSemester || '';
+		const hideSubmitted = settings.hideSubmittedAssignments !== undefined ? settings.hideSubmittedAssignments : false;
 
 		// Create modal with live results
 		const modal = document.createElement('div');
@@ -4058,37 +4199,51 @@
 					</div>
 					<button class="jct-assignments-modal-close">✕</button>
 				</div>
-				<div class="jct-filter-controls" style="padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-					<label style="display: flex; align-items: center; gap: 8px;">
-						<span style="font-weight: 500;">שנה:</span>
-						<select id="jct-filter-year" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">
-							<option value="" ${savedFilterYear === '' ? 'selected' : ''}>בחר שנה...</option>
-							<option value="5784" ${savedFilterYear === '5784' ? 'selected' : ''}>תשפ"ד</option>
-							<option value="5785" ${savedFilterYear === '5785' ? 'selected' : ''}>תשפ"ה</option>
-							<option value="5786" ${savedFilterYear === '5786' ? 'selected' : ''}>תשפ"ו</option>
-							<option value="5787" ${savedFilterYear === '5787' ? 'selected' : ''}>תשפ"ז</option>
-							<option value="5788" ${savedFilterYear === '5788' ? 'selected' : ''}>תשפ"ח</option>
-							<option value="5789" ${savedFilterYear === '5789' ? 'selected' : ''}>תשפ"ט</option>
-							<option value="5790" ${savedFilterYear === '5790' ? 'selected' : ''}>תש"צ</option>
-						</select>
-					</label>
-					<label style="display: flex; align-items: center; gap: 8px;">
-						<span style="font-weight: 500;">סמסטר:</span>
-						<select id="jct-filter-semester" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer;">
-							<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>בחר סמסטר...</option>
-							<option value="0" ${savedFilterSemester === '0' ? 'selected' : ''}>אלול</option>
-							<option value="1" ${savedFilterSemester === '1' ? 'selected' : ''}>א'</option>
-							<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
-						</select>
-					</label>
-					<label style="display: flex; align-items: center; gap: 8px;">
-						<span style="font-weight: 500;">הסתר מטלות באיחור (ימים):</span>
-						<input id="jct-max-overdue-days" type="number" min="0" step="1" value="${maxOverdueDays}" style="width: 70px; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: white;">
-						<span style="font-size: 0.75rem; color: #64748b;">(0 = הצג תמיד)</span>
-					</label>
-					<button id="jct-refresh-assignments" style="padding: 6px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-						🔄 רענן
-					</button>
+				<div class="jct-filter-controls" style="padding: 10px 20px; background: linear-gradient(to bottom, #f8fafc, #ffffff); border-bottom: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
+					<!-- שורה ראשונה: שנה, סמסטר וכפתור רענן -->
+					<div style="display: flex; gap: 12px; align-items: center; justify-content: space-between;">
+						<div style="display: flex; gap: 12px; align-items: center;">
+							<label style="display: flex; align-items: center; gap: 6px;">
+								<span style="font-weight: 500; font-size: 0.875rem; color: #64748b;">שנה:</span>
+								<select id="jct-filter-year" style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
+									<option value="" ${savedFilterYear === '' ? 'selected' : ''}>בחר...</option>
+									<option value="5784" ${savedFilterYear === '5784' ? 'selected' : ''}>תשפ"ד</option>
+									<option value="5785" ${savedFilterYear === '5785' ? 'selected' : ''}>תשפ"ה</option>
+									<option value="5786" ${savedFilterYear === '5786' ? 'selected' : ''}>תשפ"ו</option>
+									<option value="5787" ${savedFilterYear === '5787' ? 'selected' : ''}>תשפ"ז</option>
+									<option value="5788" ${savedFilterYear === '5788' ? 'selected' : ''}>תשפ"ח</option>
+									<option value="5789" ${savedFilterYear === '5789' ? 'selected' : ''}>תשפ"ט</option>
+									<option value="5790" ${savedFilterYear === '5790' ? 'selected' : ''}>תש"צ</option>
+								</select>
+							</label>
+							<label style="display: flex; align-items: center; gap: 6px;">
+								<span style="font-weight: 500; font-size: 0.875rem; color: #64748b;">סמסטר:</span>
+								<select id="jct-filter-semester" style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
+									<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>בחר...</option>
+									<option value="0" ${savedFilterSemester === '0' ? 'selected' : ''}>אלול</option>
+									<option value="1" ${savedFilterSemester === '1' ? 'selected' : ''}>א'</option>
+									<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
+								</select>
+							</label>
+						</div>
+						<button id="jct-refresh-assignments" style="padding: 6px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.875rem; transition: all 0.2s; box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);" title="רענן - בודק סטטוס הגשות מחדש. Shift+לחיצה - מרענן גם תאריכי הגשה">
+							🔄 רענן
+						</button>
+					</div>
+
+					<!-- שורה שנייה: מסננים קומפקטיים -->
+					<div style="display: flex; gap: 12px; align-items: center; padding: 6px 10px; background: #f1f5f9; border-radius: 6px;">
+						<label style="display: flex; align-items: center; gap: 5px;">
+							<span style="font-weight: 500; font-size: 0.8125rem; color: #475569;">הסתר איחור מעל</span>
+							<input id="jct-max-overdue-days" type="number" min="0" step="1" value="${maxOverdueDays}" style="width: 55px; padding: 3px 6px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; font-size: 0.8125rem; text-align: center;">
+							<span style="font-size: 0.75rem; color: #94a3b8;">ימים</span>
+						</label>
+						<div style="width: 1px; height: 20px; background: #cbd5e1;"></div>
+						<label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+							<input type="checkbox" id="jct-hide-submitted" ${hideSubmitted ? 'checked' : ''} style="width: 15px; height: 15px; cursor: pointer;">
+							<span style="font-weight: 500; font-size: 0.8125rem; color: #475569;">הסתר מטלות שהוגשו</span>
+						</label>
+					</div>
 				</div>
 				<div class="jct-modal-status" style="padding: 12px 24px; background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
 					<div id="jct-loading-status" style="font-size: 0.875rem; color: #64748b;">
@@ -4101,6 +4256,7 @@
 			</div>
 		`;
 		document.body.appendChild(modal);
+		isModalOpening = false; // Modal is now in DOM
 
 		// Track if scanning is in progress
 		let isScanning = false;
@@ -4110,6 +4266,7 @@
 			if (!isScanning) {
 				modal.remove();
 				window.jctStopScanning = true;
+				isModalOpening = false;
 			}
 		});
 
@@ -4117,6 +4274,7 @@
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal && !isScanning) {
 				modal.remove();
+				isModalOpening = false;
 				window.jctStopScanning = true;
 			}
 		});
@@ -4256,6 +4414,7 @@
 			const filterYear = document.getElementById('jct-filter-year')?.value || '';
 			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
 			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+			const hideSubmitted = document.getElementById('jct-hide-submitted')?.checked || false;
 
 			// Check if year and semester are selected (required)
 			if (!filterYear || !filterSemester) {
@@ -4282,9 +4441,14 @@
 			// If we have valid cache and year/semester didn't change, just refilter without scanning
 			// This happens when: 1) Initial load with cache, or 2) User only changed maxOverdueDays
 			if (cacheValid && !yearSemesterChanged) {
-				// We have cache - filter by year/semester and refilter by maxOverdueDays
-				// Always force refresh due dates and submission status (they might have changed)
-				await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, true);
+				// We have cache - first display immediately with cached status
+				await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, false, hideSubmitted);
+
+				// Then update status in background ONLY if we haven't done it yet in this modal session OR if explicitly requested (forceRefresh)
+				if (!hasRefreshedStatusGlobal || forceRefresh) {
+					hasRefreshedStatusGlobal = true;
+					refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, true, hideSubmitted);
+				}
 				return;
 			}
 
@@ -4294,16 +4458,20 @@
 				return;
 			}
 
-			// Disable all filter controls during scan
+			// Disable all filter controls during scan and hide close button
 			const filterYearSelect = document.getElementById('jct-filter-year');
 			const filterSemesterSelect = document.getElementById('jct-filter-semester');
 			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 			const refreshBtn = document.getElementById('jct-refresh-assignments');
+			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
+			const scanningNotice = document.getElementById('jct-scanning-notice');
 
 			if (filterYearSelect) filterYearSelect.disabled = true;
 			if (filterSemesterSelect) filterSemesterSelect.disabled = true;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
+			if (closeBtn) closeBtn.style.display = 'none';
+			if (scanningNotice) scanningNotice.style.display = 'block';
 
 			// Clear existing results
 			const container = document.getElementById('jct-results-container');
@@ -4342,10 +4510,18 @@
 					})
 				);
 
-				// Filter assignments by due date
-				const filteredAssignments = assignmentsWithData.filter(assign =>
-					shouldShowAssignment(assign.dueDate, maxOverdueDays)
-				);
+				// Filter assignments by due date and submission status
+				const filteredAssignments = assignmentsWithData.filter(assign => {
+					// Check due date
+					if (!shouldShowAssignment(assign.dueDate, maxOverdueDays)) {
+						return false;
+					}
+					// Check submission status if hideSubmitted is enabled
+					if (hideSubmitted && assign.submissionStatus === 'submitted') {
+						return false;
+					}
+					return true;
+				});
 
 				// Clear previous results and reset counters
 				const container = document.getElementById('jct-results-container');
@@ -4379,11 +4555,13 @@
 				statusEl.innerHTML = statusText;
 			}
 
-			// Re-enable all controls after scan completes
+			// Re-enable all controls after scan completes and show close button
 			if (filterYearSelect) filterYearSelect.disabled = false;
 			if (filterSemesterSelect) filterSemesterSelect.disabled = false;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
 			if (refreshBtn) refreshBtn.disabled = false;
+			if (closeBtn) closeBtn.style.display = '';
+			if (scanningNotice) scanningNotice.style.display = 'none';
 
 			// Save the current year/semester to storage so next time we can detect if they changed
 			await new Promise(resolve => {
@@ -4517,31 +4695,30 @@
 		}
 
 		// Function to refilter and display from cache without scanning
-		async function refilterAndDisplayFromCache(cachedData, maxOverdueDays, filterYear, filterSemester, forceRefreshStatus = false) {
+		async function refilterAndDisplayFromCache(cachedData, maxOverdueDays, filterYear, filterSemester, forceRefreshStatus = false, hideSubmitted = false) {
 			const statusEl = document.getElementById('jct-loading-status');
+
+			// Show appropriate message
 			if (statusEl) {
-				statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> ${forceRefreshStatus ? 'בודק תאריכי סיום וסטטוס הגשות...' : 'מסנן מטלות מהמטמון...'}`;
+				if (forceRefreshStatus) {
+					statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> מעדכן סטטוס הגשות...`;
+				} else {
+					statusEl.innerHTML = `<span class="jct-loading-spinner-small"></span> מסנן מטלות מהמטמון...`;
+				}
 			}
 
-			// Disable all filter controls during status check
-			const filterYearSelect = document.getElementById('jct-filter-year');
-			const filterSemesterSelect = document.getElementById('jct-filter-semester');
-			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
-			const refreshBtn = document.getElementById('jct-refresh-assignments');
-
-			if (forceRefreshStatus) {
-				if (filterYearSelect) filterYearSelect.disabled = true;
-				if (filterSemesterSelect) filterSemesterSelect.disabled = true;
-				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
-				if (refreshBtn) refreshBtn.disabled = true;
-			}
-
-			// Clear existing results
+			// Clear existing results only if NOT refreshing status (first display)
 			const container = document.getElementById('jct-results-container');
-			if (container) {
-				container.innerHTML = '';
-				totalCourses = 0;
-				totalAssignments = 0;
+			if (!forceRefreshStatus) {
+				// First display - clear and show fresh
+				if (container) {
+					container.innerHTML = '';
+					totalCourses = 0;
+					totalAssignments = 0;
+				}
+			} else {
+				// Refreshing status in background - DON'T disable controls, DON'T show loading message
+				// Just let it update silently in the background
 			}
 
 			// Filter assignments by year and semester first
@@ -4559,13 +4736,28 @@
 				})
 			);
 
-			// Filter assignments by due date
-			const filteredAssignments = assignmentsWithData.filter(assign =>
-				shouldShowAssignment(assign.dueDate, maxOverdueDays)
-			);
+			// Filter assignments by due date and submission status
+			const filteredAssignments = assignmentsWithData.filter(assign => {
+				// Check due date
+				if (!shouldShowAssignment(assign.dueDate, maxOverdueDays)) {
+					return false;
+				}
+				// Check submission status if hideSubmitted is enabled
+				if (hideSubmitted && assign.submissionStatus === 'submitted') {
+					return false;
+				}
+				return true;
+			});
 
 			// Rebuild courses map from filtered assignments
 			const coursesMap = new Map(cachedData.courses);
+
+			// If refreshing status, clear before re-displaying with updated status
+			if (forceRefreshStatus && container) {
+				container.innerHTML = '';
+				totalCourses = 0;
+				totalAssignments = 0;
+			}
 
 			// Display courses with filtered assignments
 			for (const [courseId, courseInfo] of coursesMap) {
@@ -4590,13 +4782,7 @@
 				statusEl.innerHTML = statusText;
 			}
 
-			// Re-enable all controls after status check completes
-			if (forceRefreshStatus) {
-				if (filterYearSelect) filterYearSelect.disabled = false;
-				if (filterSemesterSelect) filterSemesterSelect.disabled = false;
-				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
-				if (refreshBtn) refreshBtn.disabled = false;
-			}
+			// No need to re-enable controls since we didn't disable them during background refresh
 		}
 
 		// Add event listeners for filters and refresh button
@@ -4615,18 +4801,38 @@
 			// Just update the UI, don't save yet
 		});
 
-		// When maxOverdueDays changes, save to storage but DON'T reload automatically
-		// User must click refresh to trigger a new scan
+		// When maxOverdueDays changes, apply filter immediately without status refresh
 		maxOverdueDaysInput?.addEventListener('change', async () => {
 			const newValue = Math.max(0, parseInt(maxOverdueDaysInput.value || '30'));
 			await new Promise(resolve => {
 				chrome.storage.sync.set({ maxOverdueDays: newValue }, () => resolve());
 			});
-			// Don't call loadAndDisplayAssignments here - let user click refresh
-			// Just show a message that settings were saved
-			const statusEl = document.getElementById('jct-loading-status');
-			if (statusEl) {
-				statusEl.innerHTML = `<div style="color: #3b82f6;">⚙️ ההגדרות נשמרו. לחץ "רענן" כדי להחיל את השינויים.</div>`;
+
+			// Refilter existing data immediately
+			const { cache, timestamp } = await getAssignmentsCache();
+			if (cache && isCacheValid(timestamp)) {
+				const filterYear = document.getElementById('jct-filter-year')?.value || '';
+				const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
+				const hideSubmitted = document.getElementById('jct-hide-submitted')?.checked || false;
+				await refilterAndDisplayFromCache(cache, newValue, filterYear, filterSemester, false, hideSubmitted);
+			}
+		});
+
+		// When hideSubmitted checkbox changes, apply filter immediately without status refresh
+		const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
+		hideSubmittedCheckbox?.addEventListener('change', async () => {
+			const isChecked = hideSubmittedCheckbox.checked;
+			await new Promise(resolve => {
+				chrome.storage.sync.set({ hideSubmittedAssignments: isChecked }, () => resolve());
+			});
+
+			// Refilter existing data immediately
+			const { cache, timestamp } = await getAssignmentsCache();
+			if (cache && isCacheValid(timestamp)) {
+				const filterYear = document.getElementById('jct-filter-year')?.value || '';
+				const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
+				const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+				await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, false, isChecked);
 			}
 		});
 
@@ -4649,10 +4855,22 @@
 				scanningNotice.style.display = 'block';
 			}
 
+			// Always clear submission status cache to check if submitted
+			// If Shift is pressed, also clear due date cache
 			if (clearCache) {
-				// Clear due date cache
+				// Clear both due date cache and submission status cache
 				await new Promise(resolve => {
-					chrome.storage.local.set({ dueDateCache: {} }, () => resolve());
+					chrome.storage.local.set({
+						dueDateCache: {},
+						submissionStatusCache: {}
+					}, () => resolve());
+				});
+			} else {
+				// Clear only submission status cache
+				await new Promise(resolve => {
+					chrome.storage.local.set({
+						submissionStatusCache: {}
+					}, () => resolve());
 				});
 			}
 
@@ -4662,6 +4880,9 @@
 			});
 			const currentSavedYear = currentSettings.assignmentFilterYear || '';
 			const currentSavedSemester = currentSettings.assignmentFilterSemester || '';
+
+			// Reset the flag so status will be refreshed
+			hasRefreshedStatusGlobal = false;
 
 			await loadAndDisplayAssignments(true, currentSavedYear, currentSavedSemester);
 
@@ -4702,8 +4923,8 @@
 		const body = document.body;
 		if (!body || body.id !== 'page-site-index') return;
 
-		// Check if button already exists
-		if (document.getElementById('jct-settings-button')) {
+		// Check if buttons already exist
+		if (document.getElementById('jct-settings-button') || document.getElementById('jct-show-all-assignments-button')) {
 			return;
 		}
 
@@ -4877,6 +5098,24 @@
 		createWeeklyScheduleView();
 		addSettingsButton();
 		applyCoursePageColors();
+
+		// Clear assignment submission cache if we're on an assignment page
+		if (window.location.href.includes('/mod/assign/view.php')) {
+			const urlParams = new URLSearchParams(window.location.search);
+			const assignmentId = urlParams.get('id');
+			if (assignmentId) {
+				chrome.storage.local.get({ submissionStatusCache: {} }, res => {
+					const cache = res.submissionStatusCache || {};
+					// Find and remove cache entries for this assignment
+					Object.keys(cache).forEach(key => {
+						if (key.includes(`-${assignmentId}`)) {
+							delete cache[key];
+						}
+					});
+					chrome.storage.local.set({ submissionStatusCache: cache });
+				});
+			}
+		}
 
 		// Don't auto-scan - user must click refresh button manually
 
