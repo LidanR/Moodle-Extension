@@ -2540,6 +2540,9 @@ body.jct-style-glass .jct-courses-grid .content {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+	overflow-y: auto;
+	flex: 1;
+	padding-left: 4px;
 }
 
 .jct-today-event-item {

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Moodle JCT Redesign",
   "description": "Improves the design and usability of moodle.jct.ac.il with modern styles and small layout tweaks.",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "permissions": [
     "storage"
   ],
