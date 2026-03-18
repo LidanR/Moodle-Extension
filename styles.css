@@ -3041,10 +3041,20 @@ body.jct-dark-mode .main-inner {
 	color: #e2e8f0 !important;
 }
 
+<<<<<<< HEAD
 /* Bootstrap color class overrides */
 body.jct-dark-mode .bg-white,
 body.jct-dark-mode .bg-light {
 	background: #1e293b !important;
+=======
+.jct-today-events-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+	flex: 1;
+	padding-left: 4px;
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 }
 
 body.jct-dark-mode .text-body,

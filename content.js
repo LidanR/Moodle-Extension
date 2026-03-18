@@ -2185,6 +2185,7 @@
 		const region = document.getElementById('region-main') || document.querySelector('#region-main, main');
 		if (!region) return null;
 
+<<<<<<< HEAD
 		// Create schedule container (always visible)
 		scheduleContainer = document.createElement('div');
 		scheduleContainer.id = 'jct-weekly-schedule';
@@ -2196,11 +2197,44 @@
 			pageHeader.parentElement.insertBefore(scheduleContainer, pageHeader.nextSibling);
 		} else {
 			// Fallback: Insert before courses
+=======
+		// Create schedule container (always visible, no toggle button)
+		scheduleContainer = document.createElement('div');
+		scheduleContainer.id = 'jct-weekly-schedule';
+		scheduleContainer.className = 'jct-weekly-schedule';
+		scheduleContainer.style.cssText = `
+			display: block;
+			background: white;
+			border: 1px solid #e5e7eb;
+			border-radius: 12px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			overflow: hidden;
+			grid-column: 1 / -1;
+			margin-top: -6px;
+		`;
+
+		// Insert schedule into the main layout container (after buttons + TODO)
+		const mainLayout = document.querySelector('.jct-main-layout-container');
+		if (mainLayout) {
+			mainLayout.appendChild(scheduleContainer);
+		} else {
+			// Fallback: Insert before "My Courses" heading
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 			const coursesHeading = region.querySelector('#frontpage-course-list h2');
 			if (coursesHeading && coursesHeading.parentElement) {
 				coursesHeading.parentElement.insertBefore(scheduleContainer, coursesHeading);
 			} else {
+<<<<<<< HEAD
 				region.insertBefore(scheduleContainer, region.firstChild);
+=======
+				// Fallback: Insert before courses grid
+				const coursesGrid = region.querySelector('.jct-courses-grid');
+				if (coursesGrid && coursesGrid.parentElement) {
+					coursesGrid.parentElement.insertBefore(scheduleContainer, coursesGrid);
+				} else {
+					region.insertBefore(scheduleContainer, region.firstChild);
+				}
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 			}
 		}
 
@@ -2247,6 +2281,7 @@
 			});
 		});
 
+<<<<<<< HEAD
 		// Load assignments & events for this week
 		const assignmentsByDay = {};
 		const eventsByDay = {};
@@ -2341,6 +2376,12 @@
 		html += '<span class="jct-schedule-hint">גררו את ה 📅 מהקורס למערכת או לחצו עליו</span>';
 		html += '<button class="jct-schedule-delete-all-btn" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button>';
 		html += '</div></div>';
+=======
+		// Build HTML
+		let html = '<div class="jct-schedule-header" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; min-height: 32px !important; gap: 12px !important;">';
+		html += '<span class="jct-schedule-hint" style="font-size: 0.75rem !important; color: #64748b !important; line-height: 1 !important; margin: 0 !important; padding: 0 !important; display: inline-block !important; vertical-align: middle !important;">גרור 📅 קורסים לימים או לחץ על ✏️ לעריכה</span>';
+		html += '<button class="jct-schedule-delete-all-btn" style="padding: 5px 10px !important; font-size: 0.75rem !important; background: #ef4444 !important; color: white !important; border: none !important; border-radius: 4px !important; cursor: pointer !important; white-space: nowrap !important; line-height: 1 !important; height: 24px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; margin: 0 !important; vertical-align: middle !important;" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button></div>';
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 		html += '<div class="jct-schedule-grid">';
 
 		// Day columns (Sun-Fri)
@@ -2479,6 +2520,10 @@
 		// Setup drag and drop
 		setupScheduleDragAndDrop();
 
+<<<<<<< HEAD
+=======
+		// Schedule is always visible now
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 		scheduleContainer.style.display = 'block';
 	}
 
@@ -4893,7 +4938,10 @@
 			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 			const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
 			const refreshBtn = document.getElementById('jct-refresh-assignments');
+<<<<<<< HEAD
 			const rescanBtn = document.getElementById('jct-rescan-assignments');
+=======
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 
 			// Disable controls if checking status
 			if (forceRefreshStatus) {
@@ -4902,7 +4950,10 @@
 				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
 				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
 				if (refreshBtn) refreshBtn.disabled = true;
+<<<<<<< HEAD
 				if (rescanBtn) rescanBtn.disabled = true;
+=======
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 			}
 
 			// Show appropriate message
@@ -4997,7 +5048,10 @@
 				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
 				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
 				if (refreshBtn) refreshBtn.disabled = false;
+<<<<<<< HEAD
 				if (rescanBtn) rescanBtn.disabled = false;
+=======
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 			}
 		}
 
@@ -5236,12 +5290,113 @@
 			}
 		});
 
+<<<<<<< HEAD
 		// Inject buttons into the schedule header actions area
 		const actionsContainer = document.getElementById('jct-schedule-actions');
 		if (actionsContainer) {
 			actionsContainer.appendChild(calendarBtn);
 			actionsContainer.appendChild(assignmentsBtn);
 			actionsContainer.appendChild(settingsBtn);
+=======
+		// Create a grid container for the new layout
+		const buttonContainer = document.createElement('div');
+		buttonContainer.className = 'jct-action-buttons-container';
+		buttonContainer.style.cssText = `
+			background: white;
+			border: 1px solid #e5e7eb;
+			border-radius: 12px;
+			padding: 16px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			height: 400px;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		`;
+
+		// Create main layout container with buttons and TODO side by side
+		const mainLayoutContainer = document.createElement('div');
+		mainLayoutContainer.className = 'jct-main-layout-container';
+		mainLayoutContainer.style.cssText = `
+			display: grid;
+			grid-template-columns: 1fr 350px;
+			grid-template-rows: auto auto;
+			column-gap: 20px;
+			row-gap: 6px;
+			margin-top: 20px;
+			margin-bottom: 0px;
+		`;
+
+		// Add media query for responsive design and fix spacing
+		const style = document.createElement('style');
+		style.textContent = `
+			#page-content {
+				margin-top: -10px !important;
+			}
+			@media (max-width: 1200px) {
+				.jct-main-layout-container {
+					grid-template-columns: 1fr !important;
+					gap: 12px !important;
+				}
+				#jct-todo-sidebar {
+					height: auto !important;
+					min-height: 300px !important;
+				}
+				.jct-action-buttons-container {
+					height: auto !important;
+				}
+			}
+		`;
+		document.head.appendChild(style);
+
+		// Create single row with all 3 buttons (removed TODO button)
+		const buttonsRow = document.createElement('div');
+		buttonsRow.className = 'jct-buttons-row';
+		buttonsRow.style.cssText = `
+			display: flex;
+			gap: 12px;
+		`;
+		buttonsRow.appendChild(calendarBtn);
+		buttonsRow.appendChild(assignmentsBtn);
+		buttonsRow.appendChild(settingsBtn);
+
+		buttonContainer.appendChild(buttonsRow);
+
+		// Create TODO list container (right side)
+		const todoContainer = document.createElement('div');
+		todoContainer.id = 'jct-todo-sidebar';
+		todoContainer.style.cssText = `
+			background: white;
+			border: 1px solid #e5e7eb;
+			border-radius: 12px;
+			padding: 16px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			height: 400px;
+			display: flex;
+			flex-direction: column;
+		`;
+
+		todoContainer.innerHTML = `
+			<h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #1e293b; display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+				<span>✓</span>
+				<span>רשימת TODO</span>
+			</h3>
+			<div style="display: flex; gap: 6px; margin-bottom: 12px; flex-shrink: 0;">
+				<input type="text" id="jct-todo-input" placeholder="הוסף משימה..." style="flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.8125rem;">
+				<button id="jct-todo-add-btn" style="padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8125rem; font-weight: 500;">➕</button>
+			</div>
+			<div id="jct-todo-list" style="flex: 1; overflow-y: auto; overflow-x: hidden;"></div>
+		`;
+
+		// Add containers to main layout
+		mainLayoutContainer.appendChild(buttonContainer);
+		mainLayoutContainer.appendChild(todoContainer);
+
+		// Insert the main layout container after the page header
+		if (pageHeader) {
+			pageHeader.parentElement.insertBefore(mainLayoutContainer, pageHeader.nextSibling);
+		} else if (pageTitleContainer) {
+			pageTitleContainer.parentElement.insertBefore(mainLayoutContainer, pageTitleContainer.nextSibling);
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 		} else {
 			// Fallback: insert buttons after page header if schedule not ready yet
 			const btnRow = document.createElement('div');
@@ -5254,6 +5409,7 @@
 			}
 		}
 
+<<<<<<< HEAD
 		// Show scan hint bubble if user never scanned
 		getAssignmentsCache().then(({ cache }) => {
 			if (cache && cache.assignments && cache.assignments.length > 0) return;
@@ -5272,6 +5428,21 @@
 				bubble.remove();
 			}, { once: true });
 		});
+=======
+		// Show today's events block automatically
+		showTodayEventsBlock(buttonContainer);
+
+		// Add schedule container to main layout if it exists
+		const existingSchedule = document.getElementById('jct-weekly-schedule');
+		if (existingSchedule && existingSchedule.parentElement) {
+			// Move schedule into the main layout container
+			existingSchedule.remove();
+			mainLayoutContainer.appendChild(existingSchedule);
+		}
+
+		// Initialize TODO list functionality
+		initializeTodoList();
+>>>>>>> 25397ca4cccca7c9c31d7a52acaa34cd3c5c24f4
 	}
 
 	// Initialize TODO list functionality
