@@ -13,7 +13,7 @@
 	const DEFAULT_PALETTE = [
 		["#3b82f6", "#818cf8", "#bae6fd"], // 5784
 		["#22c55e", "#4ade80", "#bbf7d0"], // 5785
-		["#f97316", "#fbbf24", "#fed7aa"], // 5786
+		["#f97316", "#0a5da5", "#fed7aa"], // 5786
 		["#f43f5e", "#fda4af", "#fecdd3"], // 5787
 		["#a21caf", "#f472b6", "#f3e8ff"], // 5788
 		["#2563eb", "#60a5fa", "#dbeafe"], // 5789
@@ -26,10 +26,10 @@
 	const processedCards = new WeakSet();
 	let isReordering = false;
 	let scheduled = false;
-	let scheduleViewVisible = false;
 	let saveSchedulesTimeout = null;
 	let currentViewMode = 'grid'; // Default view mode
 	let currentCardStyle = 'compact'; // Default card style
+	let currentWeekOffset = 0; // 0 = this week, -1 = last week, +1 = next week
 
 	// Function to apply card style
 	function applyCardStyle(style) {
@@ -113,11 +113,21 @@
 			// Mark container as having carousel to prevent future rebuilds
 			container.setAttribute('data-jct-carousel-initialized', 'true');
 
-			// Get all courses and save original structure (exclude paging buttons)
-			const courses = Array.from(container.children).filter(child =>
-				!child.classList.contains('paging') &&
-				!child.classList.contains('paging-morelink')
-			);
+			// Get all courses and save original structure (exclude paging buttons and course 110102)
+			const courses = Array.from(container.children).filter(child => {
+				if (child.classList.contains('paging') || child.classList.contains('paging-morelink')) {
+					return false;
+				}
+				// Skip "לימודי קודש" course (110102)
+				const link = child.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+				if (link) {
+					const courseName = link.textContent.trim();
+					if (courseName.includes('110102')) {
+						return false;
+					}
+				}
+				return true;
+			});
 
 			if (courses.length === 0) return;
 
@@ -419,22 +429,20 @@
 				}
 			}
 
+			removeUnwantedCourses();
 			markCoursesContainers();
 			ensureStructureAndColor();
 			refreshFavoritesUI();
 			applyViewMode(currentViewMode);
 			// Don't update schedule view here - it causes event listeners to be lost
-			// Only update if schedule is visible and we need to refresh
-			if (scheduleViewVisible) {
-				// Only update if container exists and is visible
-				const container = document.getElementById('jct-weekly-schedule');
-				if (container && container.style.display !== 'none') {
-					// Use a debounced update to avoid constant refreshing
-					clearTimeout(scheduleUpdateTimeout);
-					scheduleUpdateTimeout = setTimeout(() => {
-						updateWeeklyScheduleView();
-					}, 500);
-				}
+			// Only update if schedule container exists (it's always visible now)
+			const container = document.getElementById('jct-weekly-schedule');
+			if (container) {
+				// Use a debounced update to avoid constant refreshing
+				clearTimeout(scheduleUpdateTimeout);
+				scheduleUpdateTimeout = setTimeout(() => {
+					updateWeeklyScheduleView();
+				}, 500);
 			}
 		});
 	}
@@ -457,17 +465,16 @@
 		return new Promise((resolve) => {
 			try {
 				// Try local first, then sync
-				chrome.storage.local.get({ courseSchedules: {}, scheduleViewVisible: false }, (res) => {
+				chrome.storage.local.get({ courseSchedules: {} }, (res) => {
 					if (chrome.runtime.lastError) {
 						// Try sync as fallback
-						chrome.storage.sync.get({ courseSchedules: {}, scheduleViewVisible: false }, (res2) => {
+						chrome.storage.sync.get({ courseSchedules: {} }, (res2) => {
 							if (chrome.runtime.lastError) {
 								console.error('Error loading schedules:', chrome.runtime.lastError);
 								resolve(courseSchedules);
 								return;
 							}
 							courseSchedules = res2.courseSchedules || {};
-							scheduleViewVisible = res2.scheduleViewVisible || false;
 							const beforeMigration = JSON.stringify(courseSchedules);
 							migrateSchedules();
 							const afterMigration = JSON.stringify(courseSchedules);
@@ -480,7 +487,6 @@
 						return;
 					}
 					courseSchedules = res.courseSchedules || {};
-					scheduleViewVisible = res.scheduleViewVisible || false;
 					const beforeMigration = JSON.stringify(courseSchedules);
 					migrateSchedules();
 					const afterMigration = JSON.stringify(courseSchedules);
@@ -911,18 +917,6 @@
 				return courseAssignments[courseId].assignments;
 			}
 			return [];
-		}
-	}
-
-	function saveScheduleViewState() {
-		try {
-			chrome.storage.local.set({ scheduleViewVisible: scheduleViewVisible }, () => {
-				if (chrome.runtime.lastError) {
-					chrome.storage.sync.set({ scheduleViewVisible: scheduleViewVisible });
-				}
-			});
-		} catch (e) {
-			// Ignore
 		}
 	}
 
@@ -1572,6 +1566,16 @@
 			// Note: We used to skip carousel cards, but that prevented buttons from working
 			// Now we process all cards including carousel cards
 
+			// Skip "לימודי קודש" course (110102)
+			const link = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+			if (link) {
+				const courseName = link.textContent.trim();
+				if (courseName.includes('110102')) {
+					card.style.display = 'none';
+					return;
+				}
+			}
+
 			// Ensure base positioning for overlays
 			if (!card.style.position) card.style.position = 'relative';
 
@@ -1674,16 +1678,7 @@
 				// Scroll to schedule when starting to drag
 				const scheduleContainer = document.getElementById('jct-weekly-schedule');
 				if (scheduleContainer) {
-					// Make sure schedule is visible
-					if (!scheduleViewVisible) {
-						scheduleViewVisible = true;
-						scheduleContainer.style.display = 'block';
-						const toggleBtn = document.getElementById('jct-schedule-toggle');
-						if (toggleBtn) {
-							toggleBtn.textContent = '✕ סגור לוח זמנים';
-						}
-						saveScheduleViewState();
-					}
+					// Schedule is always visible now, just scroll to it
 					setTimeout(() => {
 						scheduleContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 					}, 100);
@@ -1762,6 +1757,22 @@
 			document.querySelectorAll('.jct-carousel-container').forEach(reorderContainerByFavorites);
 		}
 		finally { isReordering = false; }
+	}
+
+	function removeUnwantedCourses() {
+		// Remove "לימודי קודש" course (any course with 110102 in the name) from DOM
+		const allCourseLinks = document.querySelectorAll('a[href*="/course/view.php"]');
+		allCourseLinks.forEach(link => {
+			const courseName = link.textContent.trim();
+			// Check if course name contains "110102" (לימודי קודש)
+			if (courseName.includes('110102')) {
+				// Find the course card parent
+				const courseCard = link.closest('.list-group-item, .coursebox, .card.course, li, .dashboard-card');
+				if (courseCard) {
+					courseCard.remove();
+				}
+			}
+		});
 	}
 
 	function markCoursesContainers() {
@@ -2047,7 +2058,7 @@
 		});
 	}
 
-	function createWeeklyScheduleView() {
+	async function createWeeklyScheduleView() {
 		// Only show schedule on main page
 		const body = document.body;
 		if (!body || body.id !== 'page-site-index') return null;
@@ -2055,63 +2066,37 @@
 		// Check if schedule view already exists
 		let scheduleContainer = document.getElementById('jct-weekly-schedule');
 		if (scheduleContainer) {
-			updateWeeklyScheduleView();
+			await updateWeeklyScheduleView();
 			return scheduleContainer;
 		}
 
 		const region = document.getElementById('region-main') || document.querySelector('#region-main, main');
 		if (!region) return null;
 
-		// Create toggle button
-		const toggleBtn = document.createElement('button');
-		toggleBtn.id = 'jct-schedule-toggle';
-		toggleBtn.className = 'jct-schedule-toggle';
-		toggleBtn.innerHTML = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 לוח זמנים שבועי';
-		toggleBtn.addEventListener('click', () => {
-			scheduleViewVisible = !scheduleViewVisible;
-			const container = document.getElementById('jct-weekly-schedule');
-			if (container) {
-				container.style.display = scheduleViewVisible ? 'block' : 'none';
-				toggleBtn.innerHTML = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 לוח זמנים שבועי';
-				saveScheduleViewState();
-				// Scroll to schedule if opening
-				if (scheduleViewVisible) {
-					setTimeout(() => {
-						container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-					}, 100);
-				}
-			}
-		});
-
-		// Create schedule container
+		// Create schedule container (always visible)
 		scheduleContainer = document.createElement('div');
 		scheduleContainer.id = 'jct-weekly-schedule';
 		scheduleContainer.className = 'jct-weekly-schedule';
-		scheduleContainer.style.display = scheduleViewVisible ? 'block' : 'none';
 
-		// Insert toggle button and schedule before "My Courses" heading
-		const coursesHeading = region.querySelector('#frontpage-course-list h2');
-		if (coursesHeading && coursesHeading.parentElement) {
-			// Insert button first, then schedule after it (so schedule is after button but both before heading)
-			coursesHeading.parentElement.insertBefore(scheduleContainer, coursesHeading);
-			coursesHeading.parentElement.insertBefore(toggleBtn, scheduleContainer);
+		// Insert right after page header
+		const pageHeader = document.querySelector('#page-header, .page-header');
+		if (pageHeader && pageHeader.parentElement) {
+			pageHeader.parentElement.insertBefore(scheduleContainer, pageHeader.nextSibling);
 		} else {
-			// Fallback: Insert before courses grid
-			const coursesGrid = region.querySelector('.jct-courses-grid');
-			if (coursesGrid && coursesGrid.parentElement) {
-				coursesGrid.parentElement.insertBefore(scheduleContainer, coursesGrid);
-				coursesGrid.parentElement.insertBefore(toggleBtn, scheduleContainer);
+			// Fallback: Insert before courses
+			const coursesHeading = region.querySelector('#frontpage-course-list h2');
+			if (coursesHeading && coursesHeading.parentElement) {
+				coursesHeading.parentElement.insertBefore(scheduleContainer, coursesHeading);
 			} else {
 				region.insertBefore(scheduleContainer, region.firstChild);
-				region.insertBefore(toggleBtn, region.firstChild);
 			}
 		}
 
-		updateWeeklyScheduleView();
+		await updateWeeklyScheduleView();
 		return scheduleContainer;
 	}
 
-	function updateWeeklyScheduleView() {
+	async function updateWeeklyScheduleView() {
 		const scheduleContainer = document.getElementById('jct-weekly-schedule');
 		if (!scheduleContainer) {
 			console.log('Schedule container not found, creating it...');
@@ -2150,21 +2135,120 @@
 			});
 		});
 
-		// Build HTML
-		let html = '<div class="jct-schedule-header"><h2>לוח זמנים שבועי</h2><p class="jct-schedule-hint">גרור 📅 קורסים לימים או לחץ על ✏️ לעריכה</p>';
-		html += '<button class="jct-schedule-delete-all-btn" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button></div>';
+		// Load assignments & events for this week
+		const assignmentsByDay = {};
+		const eventsByDay = {};
+		DAYS_OF_WEEK_EN.forEach(day => { assignmentsByDay[day] = []; eventsByDay[day] = []; });
+
+		// Calculate week boundaries (Sunday to Friday), with offset for navigation
+		const realToday = new Date();
+		const now = new Date(realToday);
+		now.setDate(now.getDate() + (currentWeekOffset * 7));
+		const currentDayIdx = now.getDay(); // 0=Sunday
+		const weekStart = new Date(now);
+		weekStart.setDate(now.getDate() - currentDayIdx);
+		weekStart.setHours(0, 0, 0, 0);
+		const weekEnd = new Date(weekStart);
+		weekEnd.setDate(weekStart.getDate() + 6);
+		weekEnd.setHours(23, 59, 59, 999);
+
+		try {
+			// Load assignment data
+			const { cache } = await getAssignmentsCache();
+			const dueDateCacheData = await new Promise(resolve => {
+				chrome.storage.local.get({ dueDateCache: {} }, res => resolve(res.dueDateCache || {}));
+			});
+			const submissionStatusCacheData = await new Promise(resolve => {
+				chrome.storage.local.get({ submissionStatusCache: {} }, res => resolve(res.submissionStatusCache || {}));
+			});
+
+			if (cache && cache.assignments && Array.isArray(cache.assignments)) {
+				cache.assignments.forEach(assignment => {
+					const ts = dueDateCacheData[assignment.assignmentId];
+					if (!ts) return;
+					const dueDate = new Date(ts);
+					if (dueDate >= weekStart && dueDate <= weekEnd) {
+						const dayIdx = dueDate.getDay(); // 0=Sunday
+						if (dayIdx >= 0 && dayIdx <= 5) {
+							const dayKey = DAYS_OF_WEEK_EN[dayIdx];
+							const cacheKey = `submission_status_${assignment.assignmentId}`;
+							const statusEntry = submissionStatusCacheData[cacheKey];
+							const status = statusEntry ? statusEntry.status : 'unknown';
+							assignmentsByDay[dayKey].push({
+								name: assignment.assignmentName,
+								course: assignment.courseName,
+								url: assignment.assignmentUrl,
+								status: status
+							});
+						}
+					}
+				});
+			}
+
+			// Load custom events
+			const customEvents = await new Promise(resolve => {
+				chrome.storage.local.get({ customEvents: [] }, res => resolve(res.customEvents || []));
+			});
+			customEvents.forEach(event => {
+				const eventDate = new Date(event.startDate || event.date);
+				if (isNaN(eventDate.getTime())) return;
+				eventDate.setHours(0, 0, 0, 0);
+				if (eventDate >= weekStart && eventDate <= weekEnd) {
+					const dayIdx = eventDate.getDay();
+					if (dayIdx >= 0 && dayIdx <= 5) {
+						const dayKey = DAYS_OF_WEEK_EN[dayIdx];
+						eventsByDay[dayKey].push({
+							title: event.title,
+							description: event.description || '',
+							color: event.color || '#f59e0b'
+						});
+					}
+				}
+			});
+		} catch (err) {
+			console.error('[JCT Schedule] Error loading assignments/events:', err);
+		}
+
+		// Format week label
+		const weekStartLabel = `${weekStart.getDate()}/${weekStart.getMonth() + 1}`;
+		const weekEndDate = new Date(weekStart);
+		weekEndDate.setDate(weekStart.getDate() + 5); // Friday
+		const weekEndLabel = `${weekEndDate.getDate()}/${weekEndDate.getMonth() + 1}`;
+		const todayBtnStyle = currentWeekOffset === 0 ? ' style="visibility:hidden"' : '';
+
+		// Build HTML - header with action buttons + week navigation
+		let html = '<div class="jct-schedule-header">';
+		html += '<div class="jct-schedule-actions" id="jct-schedule-actions"></div>';
+		html += '<div class="jct-week-nav">';
+		html += '<button class="jct-week-nav-btn" id="jct-week-prev">▶</button>';
+		html += `<span class="jct-week-nav-label">${weekStartLabel} - ${weekEndLabel}</span>`;
+		html += '<button class="jct-week-nav-btn" id="jct-week-next">◀</button>';
+		html += `<button class="jct-week-nav-btn jct-week-today-btn" id="jct-week-today"${todayBtnStyle}>היום</button>`;
+		html += '</div>';
+		html += '<div class="jct-schedule-header-right">';
+		html += '<span class="jct-schedule-hint">גררו את ה 📅 מהקורס למערכת או לחצו עליו</span>';
+		html += '<button class="jct-schedule-delete-all-btn" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button>';
+		html += '</div></div>';
 		html += '<div class="jct-schedule-grid">';
 
+		// Day columns (Sun-Fri)
 		DAYS_OF_WEEK.forEach((dayName, idx) => {
 			const dayKey = DAYS_OF_WEEK_EN[idx];
 			const sessions = sessionsByDay[dayKey] || [];
+			const dayAssignments = assignmentsByDay[dayKey] || [];
+			const dayEvents = eventsByDay[dayKey] || [];
+			const isToday = currentWeekOffset === 0 && idx === realToday.getDay();
+			const dayDate = new Date(weekStart);
+			dayDate.setDate(weekStart.getDate() + idx);
+			const dateStr = `${dayDate.getDate()}/${dayDate.getMonth() + 1}`;
 
-			html += `<div class="jct-schedule-day" data-day="${dayKey}">
-				<div class="jct-schedule-day-header">${dayName}</div>
+			html += `<div class="jct-schedule-day${isToday ? ' jct-schedule-today' : ''}" data-day="${dayKey}">
+				<div class="jct-schedule-day-header">${dayName}<span class="jct-day-date">${dateStr}</span></div>
 				<div class="jct-schedule-day-courses" data-day="${dayKey}">`;
 
-			if (sessions.length === 0) {
-				html += '<div class="jct-schedule-empty">אין שיעורים</div>';
+			// Courses
+			if (sessions.length === 0 && dayAssignments.length === 0 && dayEvents.length === 0) {
+				html += '<div class="jct-schedule-empty">-</div>';
 			} else {
 				sessions.forEach(sessionData => {
 					const timeDisplay = sessionData.startTime && sessionData.endTime
@@ -2178,13 +2262,66 @@
 						<button class="jct-schedule-edit-course" data-course-id="${sessionData.id}" title="ערוך מערכת">✏️</button>
 					</div>`;
 				});
+
+				// Separator if there are assignments or events
+				if ((dayAssignments.length > 0 || dayEvents.length > 0) && sessions.length > 0) {
+					html += '<div class="jct-schedule-separator"></div>';
+				}
+
+				// Assignments
+				dayAssignments.forEach(a => {
+					const isSubmitted = a.status === 'submitted';
+					const statusIcon = isSubmitted ? '✓' : '✗';
+					const statusClass = isSubmitted ? 'submitted' : 'not-submitted';
+					html += `<a href="${a.url}" class="jct-schedule-assignment-item ${statusClass}" target="_blank">
+						<span class="jct-assignment-status">${statusIcon}</span>
+						<span class="jct-assignment-name">${a.name}</span>
+					</a>`;
+				});
+
+				// Custom events
+				dayEvents.forEach(ev => {
+					html += `<div class="jct-schedule-event-item">
+						<span class="jct-event-dot" style="background:${ev.color}"></span>
+						<span class="jct-event-name">${ev.title}</span>
+					</div>`;
+				});
 			}
 
 			html += '</div></div>';
 		});
 
+		// TODO column (7th column)
+		html += `<div class="jct-schedule-day jct-todo-column">
+			<div class="jct-schedule-day-header">✓ TODO</div>
+			<div class="jct-todo-body">
+				<div class="jct-todo-input-row">
+					<input type="text" id="jct-todo-input" placeholder="משימה חדשה...">
+					<button id="jct-todo-add-btn">+</button>
+				</div>
+				<div id="jct-todo-list"></div>
+			</div>
+		</div>`;
+
 		html += '</div>';
 		scheduleContainer.innerHTML = html;
+
+		// Initialize TODO
+		initializeTodoList();
+
+		// Week navigation handlers
+		document.getElementById('jct-week-prev')?.addEventListener('click', () => {
+			currentWeekOffset--;
+			updateWeeklyScheduleView();
+		});
+		document.getElementById('jct-week-next')?.addEventListener('click', () => {
+			currentWeekOffset++;
+			updateWeeklyScheduleView();
+		});
+		document.getElementById('jct-week-today')?.addEventListener('click', () => {
+			currentWeekOffset = 0;
+			updateWeeklyScheduleView();
+		});
 
 		// Setup delete all button - use event delegation on document to ensure it always works
 		// Remove old listener if exists
@@ -2198,7 +2335,6 @@
 			if (deleteBtn) {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('Delete all button clicked');
 				const hasCourses = Object.keys(courseSchedules).length > 0;
 				if (!hasCourses) {
 					alert('אין קורסים במערכת למחיקה');
@@ -2210,7 +2346,6 @@
 						courseSchedules = {};
 						try {
 							await saveCourseSchedules();
-							// Use setTimeout to avoid race conditions
 							setTimeout(() => {
 								updateWeeklyScheduleView();
 								alert('כל הקורסים נמחקו מהלוח זמנים');
@@ -2224,18 +2359,15 @@
 			}
 		};
 
-		// Use event delegation on document - this way it always works even if HTML is replaced
 		document.addEventListener('click', scheduleContainer._deleteAllHandler);
+
+		// Re-inject action buttons (they get destroyed by innerHTML rebuild)
+		addSettingsButton();
 
 		// Setup drag and drop
 		setupScheduleDragAndDrop();
 
-		// Make sure the container visibility matches saved state
-		const toggleBtn = document.getElementById('jct-schedule-toggle');
-		if (toggleBtn) {
-			scheduleContainer.style.display = scheduleViewVisible ? 'block' : 'none';
-			toggleBtn.textContent = scheduleViewVisible ? '✕ סגור לוח זמנים' : '📅 הצג לוח זמנים שבועי';
-		}
+		scheduleContainer.style.display = 'block';
 	}
 
 	function showTimePickerDialog(courseName) {
@@ -2867,6 +2999,11 @@
 
 			// Filter courses by year and semester BEFORE processing
 			const filteredCourses = Array.from(uniqueCoursesMap.values()).filter(({ courseName }) => {
+				// Skip "לימודי קודש" course (110102)
+				if (courseName.includes('110102')) {
+					return false;
+				}
+
 				// Parse year and semester from course name
 				const { year, semIdx } = parseHebrewYearAndSemester(courseName);
 
@@ -3269,12 +3406,14 @@
 		// Close button
 		modal.querySelector('.jct-assignments-modal-close').addEventListener('click', () => {
 			modal.remove();
+			updateWeeklyScheduleView();
 		});
 
 		// Click outside to close
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
 				modal.remove();
+				updateWeeklyScheduleView();
 			}
 		});
 
@@ -3379,179 +3518,6 @@
 		});
 	}
 
-	// Function to refresh today's events block
-	async function refreshTodayEventsBlock() {
-		const existingBlock = document.getElementById('jct-today-events-block');
-		if (existingBlock) {
-			// Find the button container
-			const buttonContainer = document.querySelector('.jct-action-buttons-container');
-			if (buttonContainer) {
-				existingBlock.remove();
-				await showTodayEventsBlock(buttonContainer);
-			}
-		}
-	}
-
-	// Function to show today's events block below calendar button
-	async function showTodayEventsBlock(buttonElement) {
-		// Get today's date
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		const tomorrow = new Date(today);
-		tomorrow.setDate(tomorrow.getDate() + 1);
-
-		// Get custom events from storage
-		const customEvents = await new Promise(resolve => {
-			chrome.storage.local.get({ customEvents: [] }, res => {
-				resolve(res.customEvents || []);
-			});
-		});
-
-		// Get assignments from cache
-		const cache = await new Promise(resolve => {
-			chrome.storage.local.get({ assignmentScanResults: null }, res => {
-				resolve(res.assignmentScanResults);
-			});
-		});
-
-		// Get due date cache
-		const dueDateCacheData = await new Promise(resolve => {
-			chrome.storage.local.get({ dueDateCache: {} }, res => {
-				resolve(res.dueDateCache || {});
-			});
-		});
-
-		// Get submission status cache
-		const submissionStatusCache = await new Promise(resolve => {
-			chrome.storage.local.get({ submissionStatusCache: {} }, res => {
-				resolve(res.submissionStatusCache || {});
-			});
-		});
-
-		// Collect today's events
-		const todayEvents = [];
-
-		// Add assignments due today
-		if (cache && cache.assignments && Array.isArray(cache.assignments)) {
-			cache.assignments.forEach(assignment => {
-				const dueDateTimestamp = dueDateCacheData[assignment.assignmentId];
-				if (dueDateTimestamp) {
-					const dueDate = new Date(dueDateTimestamp * 1000);
-					dueDate.setHours(0, 0, 0, 0);
-
-					if (dueDate.getTime() === today.getTime()) {
-						const submissionStatus = submissionStatusCache[assignment.assignmentId] || 'unknown';
-						todayEvents.push({
-							type: 'assignment',
-							title: assignment.assignmentName,
-							courseName: assignment.courseName,
-							url: assignment.assignmentUrl,
-							dueDate: new Date(dueDateTimestamp * 1000),
-							submissionStatus: submissionStatus
-						});
-					}
-				}
-			});
-		}
-
-		// Add custom events for today
-		customEvents.forEach(event => {
-			const eventDate = new Date(event.date);
-			eventDate.setHours(0, 0, 0, 0);
-
-			if (eventDate.getTime() === today.getTime()) {
-				todayEvents.push({
-					type: 'custom',
-					title: event.title,
-					description: event.description || '',
-					time: event.time || ''
-				});
-			}
-		});
-
-		// Sort events by time/priority
-		todayEvents.sort((a, b) => {
-			if (a.type === 'assignment' && b.type === 'custom') return -1;
-			if (a.type === 'custom' && b.type === 'assignment') return 1;
-			return 0;
-		});
-
-		// Create the events block
-		const eventsBlock = document.createElement('div');
-		eventsBlock.id = 'jct-today-events-block';
-		eventsBlock.className = 'jct-today-events-block';
-
-		const todayStr = today.toLocaleDateString('he-IL', {
-			weekday: 'long',
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric'
-		});
-
-		let html = `
-			<div class="jct-today-events-header">
-				<h3>📅 אירועי היום - ${todayStr}</h3>
-			</div>
-			<div class="jct-today-events-list">
-		`;
-
-		if (todayEvents.length === 0) {
-			html += `
-				<div class="jct-no-events">
-					<p>🎉 אין אירועים להיום!</p>
-					<p style="font-size: 0.875rem; color: #64748b; margin-top: 8px;">תהנה מיום רגוע</p>
-				</div>
-			`;
-		} else {
-			todayEvents.forEach(event => {
-				if (event.type === 'assignment') {
-					const isSubmitted = event.submissionStatus === 'submitted';
-					const statusColor = isSubmitted ? '#16a34a' : '#dc2626';
-					const statusIcon = isSubmitted ? '✓' : '✗';
-					const statusText = isSubmitted ? 'הוגש' : 'לא הוגש';
-
-					html += `
-						<div class="jct-today-event-item assignment" style="border-right: 4px solid ${statusColor};">
-							<div class="jct-event-icon">📝</div>
-							<div class="jct-event-content">
-								<h4>${event.title}</h4>
-								<p class="jct-event-course">${event.courseName}</p>
-								<div class="jct-event-meta">
-									<span class="jct-event-status" style="color: ${statusColor};">
-										${statusIcon} ${statusText}
-									</span>
-								</div>
-							</div>
-							<a href="${event.url}" class="jct-event-link" target="_blank">פתח →</a>
-						</div>
-					`;
-				} else {
-					html += `
-						<div class="jct-today-event-item custom">
-							<div class="jct-event-icon">🎯</div>
-							<div class="jct-event-content">
-								<h4>${event.title}</h4>
-								${event.description ? `<p class="jct-event-description">${event.description}</p>` : ''}
-								${event.time ? `<p class="jct-event-time">🕐 ${event.time}</p>` : ''}
-							</div>
-						</div>
-					`;
-				}
-			});
-		}
-
-		html += `</div>`;
-		eventsBlock.innerHTML = html;
-
-		// Insert the block inside the button container (grid layout)
-		const buttonContainer = document.querySelector('.jct-action-buttons-container');
-		if (buttonContainer) {
-			buttonContainer.appendChild(eventsBlock);
-		} else if (buttonElement && buttonElement.parentElement) {
-			buttonElement.parentElement.insertBefore(eventsBlock, buttonElement.nextSibling);
-		}
-	}
-
 	// Function to show calendar view with assignments and custom events
 	async function showCalendarModal() {
 		// Get custom events from storage
@@ -3601,12 +3567,14 @@
 		// Close button
 		modal.querySelector('.jct-calendar-modal-close').addEventListener('click', () => {
 			modal.remove();
+			updateWeeklyScheduleView();
 		});
 
 		// Click outside to close
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
 				modal.remove();
+				updateWeeklyScheduleView();
 			}
 		});
 
@@ -3965,9 +3933,6 @@
 							});
 							detailsModal.remove();
 							renderCalendar();
-
-							// Refresh today's events block
-							refreshTodayEventsBlock();
 						}
 					}
 				});
@@ -4039,9 +4004,6 @@
 
 				eventModal.remove();
 				renderCalendar();
-
-				// Refresh today's events block
-				refreshTodayEventsBlock();
 			});
 
 			// Click outside to close
@@ -4111,9 +4073,6 @@
 
 				eventModal.remove();
 				renderCalendar();
-
-				// Refresh today's events block
-				refreshTodayEventsBlock();
 			});
 
 			// Click outside to close
@@ -4200,7 +4159,7 @@
 					<button class="jct-assignments-modal-close">✕</button>
 				</div>
 				<div class="jct-filter-controls" style="padding: 10px 20px; background: linear-gradient(to bottom, #f8fafc, #ffffff); border-bottom: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
-					<!-- שורה ראשונה: שנה, סמסטר וכפתור רענן -->
+					<!-- שורה ראשונה: שנה, סמסטר וכפתורי פעולה -->
 					<div style="display: flex; gap: 12px; align-items: center; justify-content: space-between;">
 						<div style="display: flex; gap: 12px; align-items: center;">
 							<label style="display: flex; align-items: center; gap: 6px;">
@@ -4226,9 +4185,14 @@
 								</select>
 							</label>
 						</div>
-						<button id="jct-refresh-assignments" style="padding: 6px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.875rem; transition: all 0.2s; box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);" title="רענן - בודק סטטוס הגשות מחדש. Shift+לחיצה - מרענן גם תאריכי הגשה">
-							🔄 רענן
-						</button>
+						<div style="display: flex; gap: 4px;">
+							<button id="jct-refresh-assignments" style="padding: 6px 14px; background: #3b82f6; color: white; border: none; border-radius: 6px 0 0 6px; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="בדוק סטטוס הגשות מחדש">
+								🔄 בדוק הגשות
+							</button>
+							<button id="jct-rescan-assignments" style="padding: 6px 14px; background: #f59e0b; color: white; border: none; border-radius: 0 6px 6px 0; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="סריקה מחדש - סורק את כל המטלות מחדש">
+								🔍 סרוק מחדש
+							</button>
+						</div>
 					</div>
 
 					<!-- שורה שנייה: מסננים קומפקטיים -->
@@ -4267,6 +4231,7 @@
 				modal.remove();
 				window.jctStopScanning = true;
 				isModalOpening = false;
+				updateWeeklyScheduleView();
 			}
 		});
 
@@ -4276,6 +4241,7 @@
 				modal.remove();
 				isModalOpening = false;
 				window.jctStopScanning = true;
+				updateWeeklyScheduleView();
 			}
 		});
 
@@ -4423,7 +4389,7 @@
 					statusEl.innerHTML = `
 						<div style="text-align: center; padding: 20px;">
 							<p style="font-size: 1rem; color: #ef4444; margin-bottom: 12px;">⚠️ יש לבחור שנה וסמסטר לפני הסריקה</p>
-							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "רענן"</p>
+							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "סרוק מחדש"</p>
 						</div>
 					`;
 				}
@@ -4462,14 +4428,18 @@
 			const filterYearSelect = document.getElementById('jct-filter-year');
 			const filterSemesterSelect = document.getElementById('jct-filter-semester');
 			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
+			const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
 			const refreshBtn = document.getElementById('jct-refresh-assignments');
+			const rescanBtn = document.getElementById('jct-rescan-assignments');
 			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
 			const scanningNotice = document.getElementById('jct-scanning-notice');
 
 			if (filterYearSelect) filterYearSelect.disabled = true;
 			if (filterSemesterSelect) filterSemesterSelect.disabled = true;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
+			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
+			if (rescanBtn) rescanBtn.disabled = true;
 			if (closeBtn) closeBtn.style.display = 'none';
 			if (scanningNotice) scanningNotice.style.display = 'block';
 
@@ -4559,7 +4529,9 @@
 			if (filterYearSelect) filterYearSelect.disabled = false;
 			if (filterSemesterSelect) filterSemesterSelect.disabled = false;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
+			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
 			if (refreshBtn) refreshBtn.disabled = false;
+			if (rescanBtn) rescanBtn.disabled = false;
 			if (closeBtn) closeBtn.style.display = '';
 			if (scanningNotice) scanningNotice.style.display = 'none';
 
@@ -4698,6 +4670,24 @@
 		async function refilterAndDisplayFromCache(cachedData, maxOverdueDays, filterYear, filterSemester, forceRefreshStatus = false, hideSubmitted = false) {
 			const statusEl = document.getElementById('jct-loading-status');
 
+			// Get filter controls
+			const filterYearSelect = document.getElementById('jct-filter-year');
+			const filterSemesterSelect = document.getElementById('jct-filter-semester');
+			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
+			const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
+			const refreshBtn = document.getElementById('jct-refresh-assignments');
+			const rescanBtn = document.getElementById('jct-rescan-assignments');
+
+			// Disable controls if checking status
+			if (forceRefreshStatus) {
+				if (filterYearSelect) filterYearSelect.disabled = true;
+				if (filterSemesterSelect) filterSemesterSelect.disabled = true;
+				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
+				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
+				if (refreshBtn) refreshBtn.disabled = true;
+				if (rescanBtn) rescanBtn.disabled = true;
+			}
+
 			// Show appropriate message
 			if (statusEl) {
 				if (forceRefreshStatus) {
@@ -4717,8 +4707,7 @@
 					totalAssignments = 0;
 				}
 			} else {
-				// Refreshing status in background - DON'T disable controls, DON'T show loading message
-				// Just let it update silently in the background
+				// Refreshing status - clear and re-display with updated status
 			}
 
 			// Filter assignments by year and semester first
@@ -4727,10 +4716,12 @@
 				return year === parseInt(filterYear) && semIdx === parseInt(filterSemester);
 			});
 
-			// Fetch due dates and submission status for filtered assignments only
+			// Fetch due dates (from cache only) and submission status for filtered assignments
 			const assignmentsWithData = await Promise.all(
 				yearFiltered.map(async (assign) => {
-					const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId, forceRefreshStatus);
+					// Due dates: always from cache, never re-fetch during status check
+					const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId, false);
+					// Submission status: re-fetch if forceRefreshStatus is true
 					const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, forceRefreshStatus);
 					return { ...assign, dueDate, submissionStatus };
 				})
@@ -4782,7 +4773,15 @@
 				statusEl.innerHTML = statusText;
 			}
 
-			// No need to re-enable controls since we didn't disable them during background refresh
+			// Re-enable controls if we disabled them during status check
+			if (forceRefreshStatus) {
+				if (filterYearSelect) filterYearSelect.disabled = false;
+				if (filterSemesterSelect) filterSemesterSelect.disabled = false;
+				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
+				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
+				if (refreshBtn) refreshBtn.disabled = false;
+				if (rescanBtn) rescanBtn.disabled = false;
+			}
 		}
 
 		// Add event listeners for filters and refresh button
@@ -4836,68 +4835,89 @@
 			}
 		});
 
-		// Refresh button click handler
-		refreshBtn?.addEventListener('click', async (e) => {
-			const clearCache = e.shiftKey;
+		// "Check submissions" button - ONLY refreshes submission status, no course scan
+		refreshBtn?.addEventListener('click', async () => {
+			// Must have cached data to check status against
+			const { cache } = await getAssignmentsCache();
+			if (!cache || !cache.assignments || cache.assignments.length === 0) {
+				const statusEl = document.getElementById('jct-loading-status');
+				if (statusEl) {
+					statusEl.innerHTML = `<span style="color: #f59e0b;">⚠️ אין נתונים במטמון. יש ללחוץ על "סרוק מחדש" קודם.</span>`;
+				}
+				return;
+			}
 
-			// Mark scanning as in progress
 			isScanning = true;
+			refreshBtn.innerHTML = '⏳ בודק...';
+			refreshBtn.disabled = true;
+			const rescanBtn = document.getElementById('jct-rescan-assignments');
+			if (rescanBtn) rescanBtn.disabled = true;
+			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
+			if (closeBtn) closeBtn.style.display = 'none';
+			const scanningNotice = document.getElementById('jct-scanning-notice');
+			if (scanningNotice) scanningNotice.style.display = 'block';
 
-			refreshBtn.innerHTML = clearCache ? '⏳ מנקה מטמון...' : '⏳ מרענן...';
+			// Clear only submission status cache so it re-checks
+			await new Promise(resolve => {
+				chrome.storage.local.set({ submissionStatusCache: {} }, () => resolve());
+			});
 
-			// Hide close button and show scanning notice
+			// Get current filter values from UI
+			const filterYear = document.getElementById('jct-filter-year')?.value || '';
+			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
+			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+			const hideSubmitted = document.getElementById('jct-hide-submitted')?.checked || false;
+
+			hasRefreshedStatusGlobal = false;
+
+			// Directly refilter from cache with forceRefreshStatus=true — no scan, no warning
+			await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, true, hideSubmitted);
+
+			isScanning = false;
+			refreshBtn.innerHTML = '🔄 בדוק הגשות';
+			refreshBtn.disabled = false;
+			if (rescanBtn) rescanBtn.disabled = false;
+			if (closeBtn) closeBtn.style.display = '';
+			if (scanningNotice) scanningNotice.style.display = 'none';
+		});
+
+		// "Rescan" button - clears all caches and forces a full new scan (with warning)
+		const rescanBtn = document.getElementById('jct-rescan-assignments');
+		rescanBtn?.addEventListener('click', async () => {
+			isScanning = true;
+			rescanBtn.innerHTML = '⏳ סורק...';
+			rescanBtn.disabled = true;
+			if (refreshBtn) refreshBtn.disabled = true;
 			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
 			const scanningNotice = document.getElementById('jct-scanning-notice');
-			if (closeBtn) {
-				closeBtn.style.display = 'none';
-			}
-			if (scanningNotice) {
-				scanningNotice.style.display = 'block';
-			}
+			if (closeBtn) closeBtn.style.display = 'none';
+			if (scanningNotice) scanningNotice.style.display = 'block';
 
-			// Always clear submission status cache to check if submitted
-			// If Shift is pressed, also clear due date cache
-			if (clearCache) {
-				// Clear both due date cache and submission status cache
-				await new Promise(resolve => {
-					chrome.storage.local.set({
-						dueDateCache: {},
-						submissionStatusCache: {}
-					}, () => resolve());
-				});
-			} else {
-				// Clear only submission status cache
-				await new Promise(resolve => {
-					chrome.storage.local.set({
-						submissionStatusCache: {}
-					}, () => resolve());
-				});
-			}
+			// Clear ALL caches to force a full rescan
+			await new Promise(resolve => {
+				chrome.storage.local.set({
+					assignmentsCache: null,
+					assignmentsCacheTimestamp: 0,
+					dueDateCache: {},
+					submissionStatusCache: {}
+				}, () => resolve());
+			});
 
-			// Get the current saved values from storage (they might have changed)
 			const currentSettings = await new Promise(resolve => {
 				chrome.storage.sync.get(['assignmentFilterYear', 'assignmentFilterSemester'], resolve);
 			});
 			const currentSavedYear = currentSettings.assignmentFilterYear || '';
 			const currentSavedSemester = currentSettings.assignmentFilterSemester || '';
 
-			// Reset the flag so status will be refreshed
 			hasRefreshedStatusGlobal = false;
-
 			await loadAndDisplayAssignments(true, currentSavedYear, currentSavedSemester);
 
-			// Mark scanning as complete
 			isScanning = false;
-
-			refreshBtn.innerHTML = '🔄 רענן';
-
-			// Show close button and hide scanning notice
-			if (closeBtn) {
-				closeBtn.style.display = '';
-			}
-			if (scanningNotice) {
-				scanningNotice.style.display = 'none';
-			}
+			rescanBtn.innerHTML = '🔍 סרוק מחדש';
+			rescanBtn.disabled = false;
+			if (refreshBtn) refreshBtn.disabled = false;
+			if (closeBtn) closeBtn.style.display = '';
+			if (scanningNotice) scanningNotice.style.display = 'none';
 		});
 
 		// Check if we have cached data to display
@@ -4911,7 +4931,7 @@
 			if (statusEl) {
 				statusEl.innerHTML = `
 					<div style="text-align: center; padding: 20px;">
-						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "רענן" כדי לסרוק מטלות</p>
+						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "סרוק מחדש" כדי לסרוק מטלות</p>
 					</div>
 				`;
 			}
@@ -4928,9 +4948,8 @@
 			return;
 		}
 
-		// Find the main page header with title
+		// Find the main page header
 		const pageHeader = document.querySelector('#page-header, .page-header');
-		const pageTitleContainer = document.querySelector('.page-header-headings, .page-context-header, #page-header .card-body, .page-header-content');
 
 		const settingsBtn = document.createElement('button');
 		settingsBtn.id = 'jct-settings-button';
@@ -5000,46 +5019,117 @@
 			}
 		});
 
-		// Create a grid container for the new layout
-		const buttonContainer = document.createElement('div');
-		buttonContainer.className = 'jct-action-buttons-container';
-
-		// Create single row with all 3 buttons
-		const buttonsRow = document.createElement('div');
-		buttonsRow.className = 'jct-buttons-row';
-		buttonsRow.appendChild(calendarBtn);
-		buttonsRow.appendChild(assignmentsBtn);
-		buttonsRow.appendChild(settingsBtn);
-
-		buttonContainer.appendChild(buttonsRow);
-
-		// Insert the button container after the page header
-		if (pageHeader) {
-			pageHeader.parentElement.insertBefore(buttonContainer, pageHeader.nextSibling);
-		} else if (pageTitleContainer) {
-			pageTitleContainer.parentElement.insertBefore(buttonContainer, pageTitleContainer.nextSibling);
+		// Inject buttons into the schedule header actions area
+		const actionsContainer = document.getElementById('jct-schedule-actions');
+		if (actionsContainer) {
+			actionsContainer.appendChild(calendarBtn);
+			actionsContainer.appendChild(assignmentsBtn);
+			actionsContainer.appendChild(settingsBtn);
 		} else {
-			// Fallback: fixed position top left (right in RTL)
-			calendarBtn.style.position = 'fixed';
-			calendarBtn.style.top = '20px';
-			calendarBtn.style.left = '20px';
-			calendarBtn.style.zIndex = '10000';
-
-			assignmentsBtn.style.position = 'fixed';
-			assignmentsBtn.style.top = '20px';
-			assignmentsBtn.style.left = '80px';
-			assignmentsBtn.style.zIndex = '10000';
-			settingsBtn.style.position = 'fixed';
-			settingsBtn.style.top = '20px';
-			settingsBtn.style.left = '140px';
-			settingsBtn.style.zIndex = '10000';
-			document.body.appendChild(calendarBtn);
-			document.body.appendChild(assignmentsBtn);
-			document.body.appendChild(settingsBtn);
+			// Fallback: insert buttons after page header if schedule not ready yet
+			const btnRow = document.createElement('div');
+			btnRow.className = 'jct-schedule-actions';
+			btnRow.appendChild(calendarBtn);
+			btnRow.appendChild(assignmentsBtn);
+			btnRow.appendChild(settingsBtn);
+			if (pageHeader) {
+				pageHeader.parentElement.insertBefore(btnRow, pageHeader.nextSibling);
+			}
 		}
 
-		// Show today's events block automatically
-		showTodayEventsBlock(buttonContainer);
+		// Show scan hint bubble if user never scanned
+		getAssignmentsCache().then(({ cache }) => {
+			if (cache && cache.assignments && cache.assignments.length > 0) return;
+			// No cache — show hint
+			const wrapper = assignmentsBtn.parentElement;
+			if (!wrapper) return;
+			wrapper.style.position = 'relative';
+
+			const bubble = document.createElement('div');
+			bubble.className = 'jct-scan-hint-bubble';
+			bubble.textContent = 'לחץ כאן כדי לסרוק את המטלות שלך';
+			wrapper.appendChild(bubble);
+
+			// Dismiss on click
+			assignmentsBtn.addEventListener('click', () => {
+				bubble.remove();
+			}, { once: true });
+		});
+	}
+
+	// Initialize TODO list functionality
+	async function initializeTodoList() {
+		const todoInput = document.getElementById('jct-todo-input');
+		const todoAddBtn = document.getElementById('jct-todo-add-btn');
+		const todoList = document.getElementById('jct-todo-list');
+
+		if (!todoInput || !todoAddBtn || !todoList) return;
+
+		// Load todos from storage
+		let todos = await new Promise(resolve => {
+			chrome.storage.local.get({ todoList: [] }, res => resolve(res.todoList));
+		});
+
+		// Render todos
+		function renderTodos() {
+			if (todos.length === 0) {
+				todoList.innerHTML = `
+					<div style="text-align: center; padding: 30px 10px; color: #94a3b8;">
+						<div style="font-size: 2rem; margin-bottom: 8px;">📝</div>
+						<p style="font-size: 0.8125rem; margin: 0;">אין משימות</p>
+					</div>
+				`;
+				return;
+			}
+
+			todoList.innerHTML = todos.map((todo, index) => `
+				<div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: ${todo.completed ? '#f1f5f9' : 'white'}; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 6px;">
+					<input type="checkbox" ${todo.completed ? 'checked' : ''} data-index="${index}" class="jct-todo-check" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
+					<span style="flex: 1; ${todo.completed ? 'text-decoration: line-through; color: #94a3b8;' : 'color: #1e293b;'} font-size: 0.8125rem; word-break: break-word;">${todo.text}</span>
+					<button data-index="${index}" class="jct-todo-del" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; opacity: 0.7; flex-shrink: 0;">🗑️</button>
+				</div>
+			`).join('');
+
+			// Add event listeners
+			todoList.querySelectorAll('.jct-todo-check').forEach(checkbox => {
+				checkbox.addEventListener('change', async (e) => {
+					const index = parseInt(e.target.dataset.index);
+					todos[index].completed = e.target.checked;
+					await chrome.storage.local.set({ todoList: todos });
+					renderTodos();
+				});
+			});
+
+			todoList.querySelectorAll('.jct-todo-del').forEach(btn => {
+				btn.addEventListener('click', async (e) => {
+					const index = parseInt(e.target.dataset.index);
+					todos.splice(index, 1);
+					await chrome.storage.local.set({ todoList: todos });
+					renderTodos();
+				});
+				btn.addEventListener('mouseenter', () => btn.style.opacity = '1');
+				btn.addEventListener('mouseleave', () => btn.style.opacity = '0.7');
+			});
+		}
+
+		// Add todo
+		async function addTodo() {
+			const text = todoInput.value.trim();
+			if (!text) return;
+
+			todos.push({ text, completed: false });
+			await chrome.storage.local.set({ todoList: todos });
+			todoInput.value = '';
+			renderTodos();
+		}
+
+		todoAddBtn.addEventListener('click', addTodo);
+		todoInput.addEventListener('keypress', (e) => {
+			if (e.key === 'Enter') addTodo();
+		});
+
+		// Initial render
+		renderTodos();
 	}
 
 	function applyCoursePageColors() {
@@ -5091,11 +5181,12 @@
 		const html = document.documentElement;
 		if (html.dir === 'rtl') html.classList.add('jct-rtl');
 		await Promise.all([loadPaletteHeb(), loadFavorites(), loadCourseSchedules(), loadCourseAssignments(), loadViewMode()]);
+		removeUnwantedCourses();
 		markCoursesContainers();
 		ensureStructureAndColor();
 		relocateTopBlocksAfterCourses();
 		hideFrontClutter();
-		createWeeklyScheduleView();
+		await createWeeklyScheduleView();
 		addSettingsButton();
 		applyCoursePageColors();
 

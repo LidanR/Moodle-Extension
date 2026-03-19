@@ -6,8 +6,14 @@
 	line-height: 1.55;
 }
 
-.jct-moodle-redesign a { color: #1f4ed8; text-decoration: none; }
-.jct-moodle-redesign a:hover { text-decoration: underline; }
+.jct-moodle-redesign a {
+	color: #1f4ed8;
+	text-decoration: none;
+}
+
+.jct-moodle-redesign a:hover {
+	text-decoration: underline;
+}
 
 .jct-moodle-redesign #page,
 .jct-moodle-redesign #region-main,
@@ -47,53 +53,59 @@
 }
 
 /* Ensure children in our grid ignore Bootstrap flex sizing */
-.jct-courses-grid > *,
-.jct-courses-grid .list-group > *,
-.jct-courses-grid .row > * {
+.jct-courses-grid>*,
+.jct-courses-grid .list-group>*,
+.jct-courses-grid .row>* {
 	flex: 0 0 auto !important;
 	max-width: 100% !important;
 }
 
 /* If a grid container accidentally has display:flex from Bootstrap, force grid */
-.jct-courses-grid { display: grid !important; }
+.jct-courses-grid {
+	display: grid !important;
+}
 
 /* Ensure grid items don't force 100% width */
-.jct-courses-grid > * { width: auto !important; }
+.jct-courses-grid>* {
+	width: auto !important;
+}
 
 /* Override Bootstrap list-group vertical layout inside our grid */
-.jct-courses-grid.list-group { display: grid !important; }
+.jct-courses-grid.list-group {
+	display: grid !important;
+}
 
 /* Convert list items to cards - COMPACT */
-.jct-courses-grid > .list-group-item,
-.jct-courses-grid .list-group > .list-group-item,
+.jct-courses-grid>.list-group-item,
+.jct-courses-grid .list-group>.list-group-item,
 .jct-courses-grid .coursebox,
 .jct-courses-grid .card.course,
-.jct-courses-grid .course-list > li {
+.jct-courses-grid .course-list>li {
 	position: relative !important;
 	border-radius: 12px !important;
 	border: 1.5px solid #e5e7eb !important;
 	background: #ffffff !important;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 	transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 	margin: 0 !important;
 	padding: 14px !important;
 }
 
-.jct-courses-grid > .list-group-item:hover,
-.jct-courses-grid .list-group > .list-group-item:hover,
+.jct-courses-grid>.list-group-item:hover,
+.jct-courses-grid .list-group>.list-group-item:hover,
 .jct-courses-grid .coursebox:hover,
 .jct-courses-grid .card.course:hover {
-	transform: translateY(-6px);
-	box-shadow: 0 16px 32px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 50%, 0.25);
-	border-color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 65%);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	border-color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 60%)), 70%);
 }
 
 /* Uniform card sizing - COMPACT */
-.jct-courses-grid > .list-group-item,
-.jct-courses-grid .list-group > .list-group-item,
+.jct-courses-grid>.list-group-item,
+.jct-courses-grid .list-group>.list-group-item,
 .jct-courses-grid .coursebox,
 .jct-courses-grid .card.course,
-.jct-courses-grid .course-list > li {
+.jct-courses-grid .course-list>li {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -117,36 +129,34 @@
 }
 
 
-/* Stronger accent usage on card background and top bar */
-.jct-courses-grid > .list-group-item,
-.jct-courses-grid .list-group > .list-group-item,
+/* Flat card styling with subtle accent */
+.jct-courses-grid>.list-group-item,
+.jct-courses-grid .list-group>.list-group-item,
 .jct-courses-grid .coursebox,
 .jct-courses-grid .card.course,
-.jct-courses-grid .course-list > li {
-	background: linear-gradient(135deg,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 97%, 1) 0%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,50%)), 94%, 1) 100%) !important;
-	border: 2px solid hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 75%) !important;
-	box-shadow: 0 4px 16px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 50%, 0.15);
+.jct-courses-grid .course-list>li {
+	background: #ffffff !important;
+	border: 1px solid #e5e7eb !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 	position: relative;
 }
 
-.jct-courses-grid > .list-group-item::before,
-.jct-courses-grid .list-group > .list-group-item::before,
+.jct-courses-grid>.list-group-item::before,
+.jct-courses-grid .list-group>.list-group-item::before,
 .jct-courses-grid .coursebox::before,
 .jct-courses-grid .card.course::before,
-.jct-courses-grid .course-list > li::before {
+.jct-courses-grid .course-list>li::before {
 	content: "";
 	position: absolute;
-	top: 0; left: 0; right: 0;
-	height: 8px;
-	background: linear-gradient(90deg,
-		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), calc(var(--jct-accent-l,50%) - 5%)) 0%,
-		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,80%)), var(--jct-accent-l,55%)) 50%,
-		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), calc(var(--jct-accent-l,50%) - 5%)) 100%);
-	border-top-left-radius: 14px; border-top-right-radius: 14px;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 65%)), var(--jct-accent-l, 55%));
+	border-top-left-radius: 12px;
+	border-top-right-radius: 12px;
 	pointer-events: none;
-	box-shadow: 0 2px 4px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%, 0.3);
+	box-shadow: none;
 }
 
 /* Thumbnail area: fixed height for uniformity - COMPACT */
@@ -171,13 +181,20 @@
 	color: #4f46e5;
 	border: 1px dashed #c7cde8;
 }
-.jct-course-thumb svg { width: 48px; height: 48px; opacity: 0.9; }
+
+.jct-course-thumb svg {
+	width: 48px;
+	height: 48px;
+	opacity: 0.9;
+}
 
 /* Larger title remains */
 .jct-courses-grid .coursename a,
 .jct-courses-grid .course-title a,
 .jct-courses-grid .list-group-item a.course-title,
-.jct-courses-grid .list-group-item .coursename a { margin-top: 2px; }
+.jct-courses-grid .list-group-item .coursename a {
+	margin-top: 2px;
+}
 
 /* Title sizing inside various structures */
 .jct-courses-grid .coursename a,
@@ -186,7 +203,7 @@
 .jct-courses-grid .list-group-item .coursename a {
 	font-size: 15px !important;
 	font-weight: 600 !important;
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 30%) !important;
+	color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 30%) !important;
 	text-decoration: none !important;
 	transition: color 0.2s ease !important;
 	line-height: 1.3 !important;
@@ -196,7 +213,7 @@
 .jct-courses-grid .course-title a:hover,
 .jct-courses-grid .list-group-item a.course-title:hover,
 .jct-courses-grid .list-group-item .coursename a:hover {
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,80%)), 40%) !important;
+	color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 80%)), 40%) !important;
 }
 
 /* Subtext */
@@ -232,19 +249,23 @@
 /* Keep subtle card spacing without changing site-wide spacing */
 .jct-courses-grid .coursebox,
 .jct-courses-grid .block_myoverview .course,
-.jct-courses-grid .card.course { margin: 0 !important; }
+.jct-courses-grid .card.course {
+	margin: 0 !important;
+}
 
 /* Keep overall minimal tweaks */
-.jct-moodle-redesign h1, 
-.jct-moodle-redesign h2, 
+.jct-moodle-redesign h1,
+.jct-moodle-redesign h2,
 .jct-moodle-redesign #page-header .page-context-header h1 {
 	font-weight: 700;
 	letter-spacing: -0.01em;
 }
 
-.jct-moodle-redesign .btn, 
+.jct-moodle-redesign .btn,
 .jct-moodle-redesign input[type="submit"],
-.jct-moodle-redesign button { border-radius: 8px !important; }
+.jct-moodle-redesign button {
+	border-radius: 8px !important;
+}
 
 .jct-moodle-redesign input[type="text"],
 .jct-moodle-redesign input[type="search"],
@@ -256,40 +277,58 @@
 	padding: 6px 10px !important;
 }
 
-.jct-moodle-redesign table th, 
+.jct-moodle-redesign table th,
 .jct-moodle-redesign table td {
 	border-bottom: 1px solid #eaecef !important;
 	padding: 10px 12px !important;
 }
 
-.jct-moodle-redesign .breadcrumb { background: transparent !important; }
-.jct-moodle-redesign #page-footer { background: transparent; color: #6b7280; }
+.jct-moodle-redesign .breadcrumb {
+	background: transparent !important;
+}
 
-.jct-rtl { direction: rtl; }
+.jct-moodle-redesign #page-footer {
+	background: transparent;
+	color: #6b7280;
+}
+
+.jct-rtl {
+	direction: rtl;
+}
 
 /* Thumbnail wrapper fixed at top */
 .jct-thumb-wrap {
-	width: 100%; height: 140px; border-radius: 12px; overflow: hidden; margin-bottom: 12px; position: relative;
+	width: 100%;
+	height: 140px;
+	border-radius: 10px;
+	overflow: hidden;
+	margin-bottom: 12px;
+	position: relative;
 	background: linear-gradient(135deg,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 85%, 1) 0%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 75%, 1) 50%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 85%, 1) 100%
-	);
-	border: 2px solid hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 65%);
- 	pointer-events: none !important;
-	box-shadow: inset 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%, 0.2);
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 50%)), 92%, 1) 0%,
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 45%)), 88%, 1) 100%);
+	border: 1px solid hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 40%)), 80%, 0.5);
+	pointer-events: none !important;
+	box-shadow: none;
 	z-index: 1 !important;
 }
-.jct-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none !important; }
 
-/* Accent ring on card using year color */
-.jct-courses-grid > .list-group-item,
-.jct-courses-grid .list-group > .list-group-item,
+.jct-thumb-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	pointer-events: none !important;
+}
+
+/* Subtle accent border on card */
+.jct-courses-grid>.list-group-item,
+.jct-courses-grid .list-group>.list-group-item,
 .jct-courses-grid .coursebox,
 .jct-courses-grid .card.course,
-.jct-courses-grid .course-list > li {
-	box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-	border-color: hsl(var(--jct-accent-h,230), var(--jct-accent-s,60%), 85%) !important;
+.jct-courses-grid .course-list>li {
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	border-color: #e5e7eb !important;
 }
 
 /* Favorite star button */
@@ -297,28 +336,30 @@
 	position: absolute;
 	top: 10px;
 	right: 10px;
-	width: 36px;
-	height: 36px;
+	width: 32px;
+	height: 32px;
 	border-radius: 999px;
-	border: 2px solid hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 60%, 0.3);
-	background: rgba(255,255,255,0.95);
-	backdrop-filter: saturate(140%) blur(6px);
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 50%);
-	font-size: 18px;
-	line-height: 32px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(4px);
+	color: #94a3b8;
+	font-size: 16px;
+	line-height: 30px;
 	text-align: center;
 	cursor: pointer;
 	padding: 0;
 	z-index: 50 !important;
 	pointer-events: auto !important;
 	transition: all 0.2s ease;
-	box-shadow: 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 40%, 0.15);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
+
 .jct-fav-toggle:hover {
 	background: #fff;
-	transform: scale(1.1);
-	box-shadow: 0 4px 16px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%, 0.3);
+	transform: scale(1.05);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
+
 .jct-fav-toggle.jct-fav-on {
 	color: #f59e0b;
 	border-color: rgba(245, 158, 11, 0.5);
@@ -330,32 +371,34 @@
 	position: absolute;
 	top: 10px;
 	left: 10px;
-	width: 36px;
-	height: 36px;
+	width: 32px;
+	height: 32px;
 	border-radius: 999px;
-	border: 2px solid hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 60%, 0.3);
-	background: rgba(255,255,255,0.95);
-	backdrop-filter: saturate(140%) blur(6px);
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 45%);
-	font-size: 16px;
-	line-height: 32px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(4px);
+	color: #94a3b8;
+	font-size: 14px;
+	line-height: 30px;
 	text-align: center;
 	cursor: pointer;
 	padding: 0;
 	z-index: 50 !important;
 	pointer-events: auto !important;
 	transition: all 0.2s ease;
-	box-shadow: 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 40%, 0.15);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
+
 .jct-schedule-btn:hover {
-	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 95%);
-	border-color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 55%);
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%);
-	box-shadow: 0 4px 16px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 40%, 0.3);
-	transform: scale(1.15);
+	background: #f8fafc;
+	border-color: rgba(0, 0, 0, 0.12);
+	color: #64748b;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+	transform: scale(1.05);
 }
+
 .jct-schedule-btn:active {
-	transform: scale(0.95);
+	transform: scale(0.97);
 }
 
 /* Reset grid sizing back to balanced default */
@@ -369,8 +412,8 @@
 	.jct-courses-grid {
 		display: grid !important;
 		grid-template-columns: repeat(var(--jct-columns, 3), minmax(0, 1fr)) !important;
-		column-gap: 28px !important;
-		row-gap: 28px !important;
+		column-gap: 16px !important;
+		row-gap: 16px !important;
 		padding-inline: 8px;
 	}
 }
@@ -387,38 +430,13 @@
 	color: #1f2937 !important;
 	margin: 32px auto 24px auto !important;
 	padding-bottom: 12px !important;
-	border-bottom: 3px solid transparent !important;
-	border-image: linear-gradient(90deg, #667eea 0%, #764ba2 100%) 1 !important;
+	border-bottom: 2px solid #e2e8f0 !important;
+	border-image: none !important;
 	display: inline-block !important;
 	text-align: center !important;
 }
 
 /* Weekly Schedule View */
-.jct-schedule-toggle {
-	margin: 20px auto !important;
-	padding: 14px 28px;
-	border-radius: 14px;
-	border: none;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	color: white;
-	font-size: 1rem;
-	font-weight: 600;
-	cursor: pointer;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-	display: block;
-}
-
-.jct-schedule-toggle:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-}
-
-.jct-schedule-toggle:active {
-	transform: translateY(0);
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
 .jct-weekly-schedule {
 	margin: 24px 0;
 	padding: 24px;
@@ -429,92 +447,323 @@
 }
 
 .jct-schedule-header {
-	margin-bottom: 20px;
-	padding-bottom: 16px;
-	border-bottom: 2px solid #e5e7eb;
+	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #e5e7eb;
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
 }
 
-.jct-schedule-header h2 {
-	margin: 0;
-	font-size: 22px;
-	font-weight: 700;
-	color: #0f172a;
-	letter-spacing: -0.01em;
+.jct-schedule-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	position: relative;
+}
+
+/* Scan hint bubble */
+.jct-scan-hint-bubble {
+	position: absolute;
+	bottom: calc(100% + 10px);
+	left: 50%;
+	transform: translateX(-50%);
+	background: #1e293b;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 500;
+	padding: 8px 14px;
+	border-radius: 8px;
+	white-space: nowrap;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	animation: jct-bubble-in 0.3s ease;
+	z-index: 10;
+	pointer-events: none;
+}
+
+.jct-scan-hint-bubble::after {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border: 6px solid transparent;
+	border-top-color: #1e293b;
+}
+
+@keyframes jct-bubble-in {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(4px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+	}
+}
+
+/* Week navigation */
+.jct-week-nav {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.jct-week-nav-btn {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 4px 10px;
+	cursor: pointer;
+	font-size: 13px;
+	color: #475569;
+	transition: all 0.15s ease;
+	line-height: 1;
+}
+
+.jct-week-nav-btn:hover {
+	background: #f1f5f9;
+	border-color: #cbd5e1;
+}
+
+.jct-week-nav-label {
+	font-size: 13px;
+	font-weight: 600;
+	color: #334155;
+	min-width: 90px;
+	text-align: center;
+	user-select: none;
+}
+
+.jct-week-today-btn {
+	background: #3b82f6 !important;
+	color: #ffffff !important;
+	border-color: #3b82f6 !important;
+	font-weight: 500;
+}
+
+.jct-week-today-btn:hover {
+	background: #2563eb !important;
+}
+
+/* Day date under day name */
+.jct-day-date {
+	display: block;
+	font-size: 11px;
+	font-weight: 400;
+	opacity: 0.65;
+	margin-top: 1px;
+}
+
+.jct-schedule-header-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-right: auto;
+}
+
+.jct-schedule-hint {
+	font-size: 12px;
+	color: #94a3b8;
+	white-space: nowrap;
 }
 
 .jct-schedule-delete-all-btn {
-	margin-top: 12px;
-	padding: 8px 16px;
-	border-radius: 8px;
-	border: 2px solid #dc2626;
-	background: #fee2e2;
+	padding: 6px 12px;
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	background: #fff;
 	color: #dc2626;
-	font-size: 14px;
-	font-weight: 600;
+	font-size: 13px;
+	font-weight: 500;
 	cursor: pointer;
 	transition: all 0.2s ease;
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	margin-right: auto;
+	gap: 4px;
 }
 
 .jct-schedule-delete-all-btn:hover {
-	background: #dc2626;
-	color: #ffffff;
-	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+	background: #fef2f2;
+	border-color: #fca5a5;
 }
 
 .jct-schedule-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-	gap: 16px;
-}
-
-.jct-schedule-day {
-	background: #f8fafc;
-	border-radius: 12px;
-	border: 1px solid #e2e8f0;
-	overflow: hidden;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.jct-schedule-day:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.jct-schedule-day-header {
-	padding: 14px 12px;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	color: #ffffff;
-	font-weight: 700;
-	font-size: 15px;
-	text-align: center;
-	letter-spacing: 0.01em;
-}
-
-.jct-schedule-day-courses {
-	padding: 12px;
-	min-height: 120px;
-	display: flex;
-	flex-direction: column;
+	grid-template-columns: repeat(6, 1fr) minmax(140px, 1.2fr);
 	gap: 8px;
 }
 
-.jct-schedule-course-item {
-	padding: 10px 12px;
+.jct-schedule-day {
 	background: #ffffff;
-	border-radius: 8px;
+	border-radius: 10px;
+	border: 1px solid #e2e8f0;
+	overflow: hidden;
+	transition: box-shadow 0.2s ease;
+}
+
+.jct-schedule-day:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.jct-schedule-day-header {
+	padding: 10px 8px;
+	background: #f1f5f9;
+	color: #334155;
+	font-weight: 600;
+	font-size: 13px;
+	text-align: center;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+/* Today column highlight */
+.jct-schedule-today {
+	border-color: #3b82f6;
+}
+
+.jct-schedule-today .jct-schedule-day-header {
+	background: #3b82f6;
+	color: #ffffff;
+	border-bottom-color: #3b82f6;
+}
+
+.jct-schedule-day-courses {
+	padding: 8px;
+	min-height: 100px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* Separator between courses and assignments */
+.jct-schedule-separator {
+	border-top: 1px dashed #cbd5e1;
+	margin: 4px 0;
+}
+
+/* Assignment items in day columns */
+.jct-schedule-assignment-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	text-decoration: none;
+	color: #334155;
+	background: #fffbeb;
+	border: 1px solid #fde68a;
+	transition: background 0.15s ease;
+	word-break: break-word;
+}
+
+.jct-schedule-assignment-item:hover {
+	background: #fef3c7;
+}
+
+.jct-schedule-assignment-item.submitted {
+	background: #f0fdf4;
+	border-color: #bbf7d0;
+}
+
+.jct-schedule-assignment-item.submitted:hover {
+	background: #dcfce7;
+}
+
+.jct-schedule-assignment-item.not-submitted {
+	background: #fef2f2;
+	border-color: #fecaca;
+}
+
+.jct-schedule-assignment-item.not-submitted:hover {
+	background: #fee2e2;
+}
+
+.jct-assignment-status {
+	font-weight: 700;
+	font-size: 11px;
+	flex-shrink: 0;
+}
+
+.jct-schedule-assignment-item.submitted .jct-assignment-status {
+	color: #16a34a;
+}
+
+.jct-schedule-assignment-item.not-submitted .jct-assignment-status {
+	color: #dc2626;
+}
+
+.jct-assignment-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Custom event items in day columns */
+.jct-schedule-event-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	color: #475569;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+}
+
+.jct-event-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.jct-event-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* TODO column (7th column) */
+.jct-todo-column {
+	background: #fafbff !important;
+	border-color: #e0e7ff !important;
+}
+
+.jct-todo-column .jct-schedule-day-header {
+	background: #eef2ff;
+	color: #4338ca;
+	border-bottom-color: #e0e7ff;
+}
+
+.jct-todo-body {
+	padding: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-height: 100px;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.jct-schedule-course-item {
+	padding: 8px 10px;
+	background: #ffffff;
+	border-radius: 6px;
 	border: 1px solid #e2e8f0;
 	color: #1e293b;
-	font-size: 13px;
+	font-size: 12px;
 	font-weight: 500;
-	transition: all 0.2s ease;
+	transition: all 0.15s ease;
 	text-align: center;
 	word-break: break-word;
 	position: relative;
@@ -522,7 +771,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 8px;
+	gap: 6px;
 }
 
 .jct-schedule-course-item[draggable="true"] {
@@ -620,13 +869,6 @@
 	opacity: 0.7;
 	flex-shrink: 0;
 	margin-right: 8px;
-}
-
-.jct-schedule-course-item {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 10px 12px;
 }
 
 .jct-schedule-edit-course:hover {
@@ -841,8 +1083,13 @@
 }
 
 @keyframes fadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 @keyframes slideUp {
@@ -850,6 +1097,7 @@
 		opacity: 0;
 		transform: translateY(20px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -886,17 +1134,40 @@
 @media (max-width: 768px) {
 	.jct-schedule-grid {
 		grid-template-columns: repeat(2, 1fr);
-		gap: 12px;
+		gap: 8px;
 	}
-	
+
 	.jct-weekly-schedule {
-		padding: 16px;
+		padding: 12px;
+	}
+
+	.jct-schedule-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.jct-schedule-header-right {
+		justify-content: center;
+	}
+
+	.jct-todo-column {
+		grid-column: 1 / -1;
 	}
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 769px) and (max-width: 1100px) {
 	.jct-schedule-grid {
-		grid-template-columns: repeat(6, 1fr);
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	.jct-todo-column {
+		grid-column: span 2;
+	}
+}
+
+@media (min-width: 1101px) {
+	.jct-schedule-grid {
+		grid-template-columns: repeat(6, 1fr) minmax(140px, 1.2fr);
 	}
 }
 
@@ -1371,62 +1642,292 @@
 	width: 100% !important;
 }
 
-/* Action buttons container - simplified layout */
-.jct-action-buttons-container {
-	display: grid !important;
-	grid-template-columns: 1fr !important;
-	gap: 16px !important;
-	padding: 16px 24px !important;
+/* ============================================
+   My Courses Page (/my/courses.php)
+   ============================================ */
+.jct-moodle-redesign.pagelayout-mycourses {
 	background: #f8fafc !important;
-	margin-bottom: 24px !important;
-	width: 100% !important;
-	box-sizing: border-box !important;
 }
 
-/* Buttons row - single row with 3 equal buttons */
-.jct-buttons-row {
+/* Clean up page header */
+.jct-moodle-redesign.pagelayout-mycourses #page-header {
+	background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+	border-bottom: none !important;
+	padding: 28px 0 !important;
+	margin-bottom: 0 !important;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses #page-header h1,
+.jct-moodle-redesign.pagelayout-mycourses #page-header .page-header-headings h1 {
+	color: #ffffff !important;
+	font-size: 1.75rem !important;
+	font-weight: 700 !important;
+}
+
+/* Main content area */
+.jct-moodle-redesign.pagelayout-mycourses #region-main {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 24px 0 !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses #region-main-box {
+	background: transparent !important;
+}
+
+/* Overview block — the main container */
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview {
+	background: #ffffff !important;
+	border-radius: 16px !important;
+	border: 1px solid #e5e7eb !important;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+	padding: 20px 24px !important;
+	overflow: hidden !important;
+}
+
+/* Section heading */
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview .card-text h5,
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview [data-region="courses-view"] h5 {
+	font-size: 1.1rem !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+}
+
+/* Filter/sort controls bar */
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview .d-flex.align-items-center,
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview [data-region="filter"] {
+	gap: 8px !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview .dropdown-toggle,
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview .btn-outline-secondary {
+	border-radius: 8px !important;
+	font-size: 0.85rem !important;
+	padding: 6px 12px !important;
+}
+
+/* Course cards in card view */
+.jct-moodle-redesign.pagelayout-mycourses .dashboard-card-deck,
+.jct-moodle-redesign.pagelayout-mycourses .card-deck {
 	display: grid !important;
-	grid-template-columns: 1fr 1fr 1fr !important;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
 	gap: 16px !important;
 }
 
-/* Settings buttons - modern block design */
-.jct-settings-button {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-	color: white !important;
-	border: none !important;
-	padding: 16px !important;
+.jct-moodle-redesign.pagelayout-mycourses .dashboard-card-deck .dashboard-card,
+.jct-moodle-redesign.pagelayout-mycourses .card-deck .coursebox,
+.jct-moodle-redesign.pagelayout-mycourses .card-deck .card {
 	border-radius: 12px !important;
-	font-size: 1rem !important;
+	border: 1px solid #e2e8f0 !important;
+	overflow: hidden !important;
+	box-shadow: none !important;
+	transition: all 0.15s ease !important;
+	margin: 0 !important;
+	background: #ffffff !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .dashboard-card-deck .dashboard-card:hover,
+.jct-moodle-redesign.pagelayout-mycourses .card-deck .coursebox:hover,
+.jct-moodle-redesign.pagelayout-mycourses .card-deck .card:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+	transform: translateY(-2px) !important;
+}
+
+/* Course card image */
+.jct-moodle-redesign.pagelayout-mycourses .course-summaryimage,
+.jct-moodle-redesign.pagelayout-mycourses .dashboard-card-img {
+	height: 140px !important;
+	object-fit: cover !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+}
+
+/* Course card body/content */
+.jct-moodle-redesign.pagelayout-mycourses .course-info-container,
+.jct-moodle-redesign.pagelayout-mycourses .dashboard-card .card-body {
+	padding: 14px 16px !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .dashboard-card .card-body .text-muted {
+	font-size: 0.8rem !important;
+	color: #64748b !important;
+}
+
+/* Course title in cards */
+.jct-moodle-redesign.pagelayout-mycourses .coursename a,
+.jct-moodle-redesign.pagelayout-mycourses .course-title a,
+.jct-moodle-redesign.pagelayout-mycourses .multiline a {
+	font-size: 0.95rem !important;
 	font-weight: 600 !important;
+	color: #1e293b !important;
+	text-decoration: none !important;
+	line-height: 1.4 !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .coursename a:hover,
+.jct-moodle-redesign.pagelayout-mycourses .course-title a:hover,
+.jct-moodle-redesign.pagelayout-mycourses .multiline a:hover {
+	color: #2563eb !important;
+}
+
+/* List view cleanup */
+.jct-moodle-redesign.pagelayout-mycourses .list-group-item {
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	margin-bottom: 8px !important;
+	padding: 12px 16px !important;
+	transition: all 0.15s ease !important;
+	background: #ffffff !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .list-group-item:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Summary/short description */
+.jct-moodle-redesign.pagelayout-mycourses .summary .no-overflow,
+.jct-moodle-redesign.pagelayout-mycourses .course-description {
+	font-size: 0.825rem !important;
+	color: #64748b !important;
+	line-height: 1.5 !important;
+}
+
+/* Progress bar */
+.jct-moodle-redesign.pagelayout-mycourses .progress {
+	height: 6px !important;
+	border-radius: 3px !important;
+	background: #e2e8f0 !important;
+	overflow: hidden !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .progress-bar {
+	border-radius: 3px !important;
+	background: #3b82f6 !important;
+}
+
+/* Pagination & paging */
+.jct-moodle-redesign.pagelayout-mycourses .paging-bar,
+.jct-moodle-redesign.pagelayout-mycourses [data-region="paging-bar"] {
+	margin-top: 16px !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .page-link {
+	border-radius: 8px !important;
+	margin: 0 2px !important;
+	font-size: 0.85rem !important;
+}
+
+/* Remove ugly default block borders */
+.jct-moodle-redesign.pagelayout-mycourses .card.block {
+	border: none !important;
+	box-shadow: none !important;
+	background: transparent !important;
+}
+
+/* Clean up the content inside the overview block */
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview .card-body {
+	padding: 0 !important;
+}
+
+.jct-moodle-redesign.pagelayout-mycourses .block_myoverview > .card-body > .content {
+	padding: 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.jct-moodle-redesign.pagelayout-mycourses .dashboard-card-deck,
+	.jct-moodle-redesign.pagelayout-mycourses .card-deck {
+		grid-template-columns: 1fr !important;
+	}
+
+	.jct-moodle-redesign.pagelayout-mycourses .block_myoverview {
+		padding: 16px !important;
+		border-radius: 12px !important;
+	}
+}
+
+/* ============================================
+   Dashboard – Schedule is the main layout now
+   ============================================ */
+
+/* Action buttons in schedule header */
+.jct-settings-button {
+	background: #ffffff !important;
+	color: #334155 !important;
+	border: 1px solid #e2e8f0 !important;
+	padding: 6px 14px !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
 	cursor: pointer !important;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-	display: flex !important;
+	transition: all 0.15s ease !important;
+	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	gap: 8px !important;
+	gap: 5px !important;
 	margin: 0 !important;
-	box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
+	box-shadow: none !important;
 	text-shadow: none !important;
-	width: 100% !important;
-	min-height: 80px !important;
+	white-space: nowrap !important;
 }
 
 .jct-settings-button:hover {
-	transform: translateY(-2px) !important;
-	box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4) !important;
+	background: #9cc0fb !important;
+	border-color: #3b82f6 !important;
+	color: #1e293b !important;
 }
 
 .jct-settings-button:active {
-	transform: translateY(0) !important;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2) !important;
+	background: #e2e8f0 !important;
 }
 
-/* Responsive layout for buttons */
-@media (max-width: 768px) {
-	.jct-buttons-row {
-		grid-template-columns: 1fr !important;
-	}
+/* ---- TODO (inside schedule column) ---- */
+.jct-todo-input-row {
+	display: flex !important;
+	gap: 4px !important;
+	flex-shrink: 0 !important;
+}
+
+.jct-todo-input-row input {
+	flex: 1 !important;
+	padding: 6px 10px !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 6px !important;
+	font-size: 12px !important;
+	outline: none !important;
+	transition: border-color 0.15s ease !important;
+	background: #ffffff !important;
+	min-width: 0 !important;
+}
+
+.jct-todo-input-row input:focus {
+	border-color: #818cf8 !important;
+}
+
+.jct-todo-input-row button {
+	padding: 6px 10px !important;
+	background: #6366f1 !important;
+	color: white !important;
+	border: none !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	transition: background 0.15s ease !important;
+	flex-shrink: 0 !important;
+}
+
+.jct-todo-input-row button:hover {
+	background: #4f46e5 !important;
+}
+
+#jct-todo-list {
+	flex: 1 !important;
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
 }
 
 /* Course page improvements */
@@ -1439,10 +1940,9 @@
 .jct-course-page-themed.pagelayout-course,
 .jct-course-page-themed.pagelayout-incourse {
 	background: linear-gradient(180deg,
-		hsla(var(--jct-course-h,230), calc(var(--jct-course-s,60%)), 96%, 1) 0%,
-		#f8fafc 300px,
-		#ffffff 100%
-	) !important;
+			hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 96%, 1) 0%,
+			#f8fafc 300px,
+			#ffffff 100%) !important;
 }
 
 /* Improve course sections */
@@ -1459,25 +1959,25 @@
 	border: 1px solid #e5e7eb !important;
 	margin-bottom: 20px !important;
 	padding: 20px !important;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 	transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
 }
 
 .jct-moodle-redesign .course-content li.section:hover {
-	box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Course sections with theme color */
 .jct-course-page-themed .course-content li.section {
-	border-left: 4px solid hsl(var(--jct-course-h,230), calc(var(--jct-course-s,65%)), var(--jct-course-l,55%)) !important;
-	border-top: 1px solid hsla(var(--jct-course-h,230), calc(var(--jct-course-s,50%)), 85%, 1) !important;
-	border-right: 1px solid hsla(var(--jct-course-h,230), calc(var(--jct-course-s,50%)), 85%, 1) !important;
-	border-bottom: 1px solid hsla(var(--jct-course-h,230), calc(var(--jct-course-s,50%)), 85%, 1) !important;
+	border-left: 4px solid hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), var(--jct-course-l, 55%)) !important;
+	border-top: 1px solid hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 85%, 1) !important;
+	border-right: 1px solid hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 85%, 1) !important;
+	border-bottom: 1px solid hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 85%, 1) !important;
 }
 
 .jct-course-page-themed .course-content li.section:hover {
-	box-shadow: 0 4px 16px hsla(var(--jct-course-h,230), calc(var(--jct-course-s,60%)), 50%, 0.15) !important;
-	border-left-color: hsl(var(--jct-course-h,230), calc(var(--jct-course-s,70%)), var(--jct-course-l,50%)) !important;
+	box-shadow: 0 4px 16px hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 50%, 0.15) !important;
+	border-left-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 70%)), var(--jct-course-l, 50%)) !important;
 }
 
 /* Section headers */
@@ -1490,7 +1990,7 @@
 
 /* Section headers with theme color */
 .jct-course-page-themed .course-content .sectionname {
-	color: hsl(var(--jct-course-h,230), calc(var(--jct-course-s,70%)), 30%) !important;
+	color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 70%)), 30%) !important;
 }
 
 /* Activities and resources */
@@ -1515,29 +2015,28 @@
 
 /* Activities with theme color */
 .jct-course-page-themed .activity {
-	background: hsla(var(--jct-course-h,230), calc(var(--jct-course-s,40%)), 98%, 1) !important;
-	border-color: hsla(var(--jct-course-h,230), calc(var(--jct-course-s,50%)), 88%, 1) !important;
+	background: hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 40%)), 98%, 1) !important;
+	border-color: hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 88%, 1) !important;
 }
 
 .jct-course-page-themed .activity:hover {
-	background: hsla(var(--jct-course-h,230), calc(var(--jct-course-s,50%)), 96%, 1) !important;
-	border-color: hsl(var(--jct-course-h,230), calc(var(--jct-course-s,60%)), 70%) !important;
-	box-shadow: 0 2px 8px hsla(var(--jct-course-h,230), calc(var(--jct-course-s,60%)), 50%, 0.1) !important;
+	background: hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 96%, 1) !important;
+	border-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 70%) !important;
+	box-shadow: 0 2px 8px hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 50%, 0.1) !important;
 }
 
 /* Page header with theme color */
 .jct-course-page-themed #page-header {
 	background: linear-gradient(135deg,
-		hsla(var(--jct-course-h,230), calc(var(--jct-course-s,65%)), 92%, 1) 0%,
-		hsla(var(--jct-course-h,230), calc(var(--jct-course-s,55%)), 95%, 1) 100%
-	) !important;
-	border-bottom: 3px solid hsl(var(--jct-course-h,230), calc(var(--jct-course-s,65%)), var(--jct-course-l,55%)) !important;
-	box-shadow: 0 4px 12px hsla(var(--jct-course-h,230), calc(var(--jct-course-s,60%)), 50%, 0.12) !important;
+			hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), 92%, 1) 0%,
+			hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 55%)), 95%, 1) 100%) !important;
+	border-bottom: 3px solid hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), var(--jct-course-l, 55%)) !important;
+	box-shadow: 0 4px 12px hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 50%, 0.12) !important;
 }
 
 .jct-course-page-themed #page-header h1,
 .jct-course-page-themed #page-header .page-header-headings h1 {
-	color: hsl(var(--jct-course-h,230), calc(var(--jct-course-s,75%)), 25%) !important;
+	color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 75%)), 25%) !important;
 }
 
 /* ==============================================
@@ -1562,8 +2061,13 @@
 }
 
 @keyframes fadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 /* Modal content */
@@ -1588,6 +2092,7 @@
 		transform: translateY(40px);
 		opacity: 0;
 	}
+
 	to {
 		transform: translateY(0);
 		opacity: 1;
@@ -1630,10 +2135,13 @@
 }
 
 @keyframes gentlePulse {
-	0%, 100% {
+
+	0%,
+	100% {
 		opacity: 1;
 		transform: translate(-50%, -50%) scale(1);
 	}
+
 	50% {
 		opacity: 0.9;
 		transform: translate(-50%, -50%) scale(1.02);
@@ -1801,7 +2309,9 @@
 }
 
 @keyframes spin {
-	to { transform: rotate(360deg); }
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 /* No assignments message */
@@ -1919,11 +2429,11 @@
 /* ========== CARD STYLES ========== */
 
 /* Style 1: MINIMAL - Clean and minimal */
-.jct-style-minimal .jct-courses-grid > .list-group-item,
-.jct-style-minimal .jct-courses-grid .list-group > .list-group-item,
+.jct-style-minimal .jct-courses-grid>.list-group-item,
+.jct-style-minimal .jct-courses-grid .list-group>.list-group-item,
 .jct-style-minimal .jct-courses-grid .coursebox,
 .jct-style-minimal .jct-courses-grid .card.course,
-.jct-style-minimal .jct-courses-grid .course-list > li {
+.jct-style-minimal .jct-courses-grid .course-list>li {
 	border-radius: 4px !important;
 	border: 1px solid #e0e0e0 !important;
 	background: #fafafa !important;
@@ -1933,8 +2443,8 @@
 	position: relative !important;
 }
 
-.jct-style-minimal .jct-courses-grid > .list-group-item:hover,
-.jct-style-minimal .jct-courses-grid .list-group > .list-group-item:hover,
+.jct-style-minimal .jct-courses-grid>.list-group-item:hover,
+.jct-style-minimal .jct-courses-grid .list-group>.list-group-item:hover,
 .jct-style-minimal .jct-courses-grid .coursebox:hover,
 .jct-style-minimal .jct-courses-grid .card.course:hover {
 	background: #ffffff !important;
@@ -1968,11 +2478,11 @@
 }
 
 /* Style 2: CARDS - Rounded card design */
-.jct-style-cards .jct-courses-grid > .list-group-item,
-.jct-style-cards .jct-courses-grid .list-group > .list-group-item,
+.jct-style-cards .jct-courses-grid>.list-group-item,
+.jct-style-cards .jct-courses-grid .list-group>.list-group-item,
 .jct-style-cards .jct-courses-grid .coursebox,
 .jct-style-cards .jct-courses-grid .card.course,
-.jct-style-cards .jct-courses-grid .course-list > li {
+.jct-style-cards .jct-courses-grid .course-list>li {
 	border-radius: 20px !important;
 	border: none !important;
 	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
@@ -1982,8 +2492,8 @@
 	position: relative !important;
 }
 
-.jct-style-cards .jct-courses-grid > .list-group-item:hover,
-.jct-style-cards .jct-courses-grid .list-group > .list-group-item:hover,
+.jct-style-cards .jct-courses-grid>.list-group-item:hover,
+.jct-style-cards .jct-courses-grid .list-group>.list-group-item:hover,
 .jct-style-cards .jct-courses-grid .coursebox:hover,
 .jct-style-cards .jct-courses-grid .card.course:hover {
 	transform: translateY(-8px) scale(1.02) !important;
@@ -2023,8 +2533,8 @@
 	gap: 0 !important;
 }
 
-.jct-view-original .jct-courses-grid > .list-group-item,
-.jct-view-original .jct-courses-grid .list-group > .list-group-item,
+.jct-view-original .jct-courses-grid>.list-group-item,
+.jct-view-original .jct-courses-grid .list-group>.list-group-item,
 .jct-view-original .jct-courses-grid .coursebox,
 .jct-view-original .jct-courses-grid .card.course {
 	width: 100% !important;
@@ -2076,8 +2586,8 @@
 }
 
 /* Colored left border */
-.jct-view-original .jct-courses-grid > .list-group-item::before,
-.jct-view-original .jct-courses-grid .list-group > .list-group-item::before,
+.jct-view-original .jct-courses-grid>.list-group-item::before,
+.jct-view-original .jct-courses-grid .list-group>.list-group-item::before,
 .jct-view-original .jct-courses-grid .coursebox::before,
 .jct-view-original .jct-courses-grid .card.course::before {
 	content: '' !important;
@@ -2086,7 +2596,7 @@
 	right: 0 !important;
 	bottom: 0 !important;
 	width: 4px !important;
-	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), var(--jct-accent-l,55%)) !important;
+	background: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), var(--jct-accent-l, 55%)) !important;
 	border-radius: 0 8px 8px 0 !important;
 	z-index: 1 !important;
 }
@@ -2131,7 +2641,7 @@
 	gap: 20px;
 }
 
-.jct-view-carousel .jct-carousel-container > * {
+.jct-view-carousel .jct-carousel-container>* {
 	flex: 0 0 320px !important;
 	border-radius: 20px !important;
 	border: none !important;
@@ -2144,7 +2654,7 @@
 	display: block !important;
 }
 
-.jct-view-carousel .jct-carousel-container > *:hover {
+.jct-view-carousel .jct-carousel-container>*:hover {
 	transform: translateY(-4px) !important;
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18) !important;
 	z-index: 10;
@@ -2157,7 +2667,7 @@
 	width: 40px;
 	height: 40px;
 	background: white;
-	border: 2px solid hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 70%);
+	border: 2px solid hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 60%)), 70%);
 	border-radius: 50%;
 	cursor: pointer;
 	z-index: 20;
@@ -2165,13 +2675,13 @@
 	align-items: center;
 	justify-content: center;
 	font-size: 20px;
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 50%);
+	color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 50%);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 	transition: all 0.2s ease;
 }
 
 .jct-view-carousel .jct-carousel-btn:hover {
-	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 50%);
+	background: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 50%);
 	color: white;
 	transform: translateY(-50%) scale(1.1);
 }
@@ -2217,7 +2727,7 @@
 }
 
 .jct-view-carousel .jct-carousel-dot.active {
-	background: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 50%);
+	background: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 50%);
 	width: 24px;
 	border-radius: 5px;
 }
@@ -2233,15 +2743,15 @@
 .jct-view-carousel .jct-courses-grid .coursename a {
 	font-size: 16px !important;
 	font-weight: 700 !important;
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 30%) !important;
+	color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 30%) !important;
 }
 
 /* Style 3: MODERN - Modern with highlights */
-.jct-style-modern .jct-courses-grid > .list-group-item,
-.jct-style-modern .jct-courses-grid .list-group > .list-group-item,
+.jct-style-modern .jct-courses-grid>.list-group-item,
+.jct-style-modern .jct-courses-grid .list-group>.list-group-item,
 .jct-style-modern .jct-courses-grid .coursebox,
 .jct-style-modern .jct-courses-grid .card.course,
-.jct-style-modern .jct-courses-grid .course-list > li {
+.jct-style-modern .jct-courses-grid .course-list>li {
 	border-radius: 10px !important;
 	border: 2px solid transparent !important;
 	background: #ffffff !important;
@@ -2252,8 +2762,8 @@
 	overflow: hidden !important;
 }
 
-.jct-style-modern .jct-courses-grid > .list-group-item::before,
-.jct-style-modern .jct-courses-grid .list-group > .list-group-item::before,
+.jct-style-modern .jct-courses-grid>.list-group-item::before,
+.jct-style-modern .jct-courses-grid .list-group>.list-group-item::before,
 .jct-style-modern .jct-courses-grid .coursebox::before,
 .jct-style-modern .jct-courses-grid .card.course::before {
 	content: '' !important;
@@ -2263,16 +2773,16 @@
 	width: 4px !important;
 	height: 100% !important;
 	background: linear-gradient(180deg,
-		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 55%),
-		hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 70%)) !important;
+			hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 55%),
+			hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 70%)) !important;
 }
 
-.jct-style-modern .jct-courses-grid > .list-group-item:hover,
-.jct-style-modern .jct-courses-grid .list-group > .list-group-item:hover,
+.jct-style-modern .jct-courses-grid>.list-group-item:hover,
+.jct-style-modern .jct-courses-grid .list-group>.list-group-item:hover,
 .jct-style-modern .jct-courses-grid .coursebox:hover,
 .jct-style-modern .jct-courses-grid .card.course:hover {
 	transform: translateX(4px) !important;
-	border-color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 65%) !important;
+	border-color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 65%) !important;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
@@ -2287,34 +2797,34 @@
 .jct-style-modern .jct-courses-grid .coursename a {
 	font-size: 15px !important;
 	font-weight: 600 !important;
-	color: hsl(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 35%) !important;
+	color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 35%) !important;
 }
 
 /* Style: GLASS - Glass morphism effect (applied as overlay on any style) */
-body.jct-style-glass .jct-courses-grid > .list-group-item,
-body.jct-style-glass .jct-courses-grid .list-group > .list-group-item,
+body.jct-style-glass .jct-courses-grid>.list-group-item,
+body.jct-style-glass .jct-courses-grid .list-group>.list-group-item,
 body.jct-style-glass .jct-courses-grid .coursebox,
 body.jct-style-glass .jct-courses-grid .card.course,
-body.jct-style-glass .jct-courses-grid .course-list > li {
+body.jct-style-glass .jct-courses-grid .course-list>li {
 	border: 1px solid rgba(255, 255, 255, 0.5) !important;
 	background: linear-gradient(135deg,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 96%, 0.35) 0%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 92%, 0.25) 50%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 94%, 0.3) 100%) !important;
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 96%, 0.35) 0%,
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 60%)), 92%, 0.25) 50%,
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 65%)), 94%, 0.3) 100%) !important;
 	backdrop-filter: blur(24px) saturate(200%) brightness(1.1) !important;
 	-webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.1) !important;
 	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08),
-				0 2px 8px 0 rgba(0, 0, 0, 0.04),
-				inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
-				inset 0 -1px 0 0 rgba(255, 255, 255, 0.3) !important;
+		0 2px 8px 0 rgba(0, 0, 0, 0.04),
+		inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+		inset 0 -1px 0 0 rgba(255, 255, 255, 0.3) !important;
 	position: relative !important;
 	overflow: hidden !important;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Glass effect: animated shine overlay */
-body.jct-style-glass .jct-courses-grid > .list-group-item::before,
-body.jct-style-glass .jct-courses-grid .list-group > .list-group-item::before,
+body.jct-style-glass .jct-courses-grid>.list-group-item::before,
+body.jct-style-glass .jct-courses-grid .list-group>.list-group-item::before,
 body.jct-style-glass .jct-courses-grid .coursebox::before,
 body.jct-style-glass .jct-courses-grid .card.course::before {
 	content: '' !important;
@@ -2324,11 +2834,11 @@ body.jct-style-glass .jct-courses-grid .card.course::before {
 	right: -50% !important;
 	bottom: -50% !important;
 	background: linear-gradient(45deg,
-		transparent 0%,
-		rgba(255, 255, 255, 0.1) 45%,
-		rgba(255, 255, 255, 0.3) 50%,
-		rgba(255, 255, 255, 0.1) 55%,
-		transparent 100%) !important;
+			transparent 0%,
+			rgba(255, 255, 255, 0.1) 45%,
+			rgba(255, 255, 255, 0.3) 50%,
+			rgba(255, 255, 255, 0.1) 55%,
+			transparent 100%) !important;
 	border-radius: inherit !important;
 	z-index: 1 !important;
 	pointer-events: none !important;
@@ -2338,8 +2848,8 @@ body.jct-style-glass .jct-courses-grid .card.course::before {
 }
 
 /* Glass effect: shine animation on hover */
-body.jct-style-glass .jct-courses-grid > .list-group-item:hover::before,
-body.jct-style-glass .jct-courses-grid .list-group > .list-group-item:hover::before,
+body.jct-style-glass .jct-courses-grid>.list-group-item:hover::before,
+body.jct-style-glass .jct-courses-grid .list-group>.list-group-item:hover::before,
 body.jct-style-glass .jct-courses-grid .coursebox:hover::before,
 body.jct-style-glass .jct-courses-grid .card.course:hover::before {
 	opacity: 1 !important;
@@ -2347,8 +2857,8 @@ body.jct-style-glass .jct-courses-grid .card.course:hover::before {
 }
 
 /* Glass effect: soft glow overlay */
-body.jct-style-glass .jct-courses-grid > .list-group-item::after,
-body.jct-style-glass .jct-courses-grid .list-group > .list-group-item::after,
+body.jct-style-glass .jct-courses-grid>.list-group-item::after,
+body.jct-style-glass .jct-courses-grid .list-group>.list-group-item::after,
 body.jct-style-glass .jct-courses-grid .coursebox::after,
 body.jct-style-glass .jct-courses-grid .card.course::after {
 	content: '' !important;
@@ -2358,8 +2868,8 @@ body.jct-style-glass .jct-courses-grid .card.course::after {
 	right: 0 !important;
 	bottom: 0 !important;
 	background: radial-gradient(circle at 50% 0%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,80%)), 85%, 0.4) 0%,
-		transparent 70%) !important;
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 80%)), 85%, 0.4) 0%,
+			transparent 70%) !important;
 	border-radius: inherit !important;
 	z-index: 0 !important;
 	pointer-events: none !important;
@@ -2367,28 +2877,28 @@ body.jct-style-glass .jct-courses-grid .card.course::after {
 }
 
 /* Glass effect: hover glow */
-body.jct-style-glass .jct-courses-grid > .list-group-item:hover,
-body.jct-style-glass .jct-courses-grid .list-group > .list-group-item:hover,
+body.jct-style-glass .jct-courses-grid>.list-group-item:hover,
+body.jct-style-glass .jct-courses-grid .list-group>.list-group-item:hover,
 body.jct-style-glass .jct-courses-grid .coursebox:hover,
 body.jct-style-glass .jct-courses-grid .card.course:hover {
 	box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.12),
-				0 4px 16px 0 rgba(0, 0, 0, 0.08),
-				inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-				inset 0 -1px 0 0 rgba(255, 255, 255, 0.4),
-				0 0 0 1px rgba(255, 255, 255, 0.6),
-				0 0 24px 0 hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 70%, 0.3) !important;
+		0 4px 16px 0 rgba(0, 0, 0, 0.08),
+		inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+		inset 0 -1px 0 0 rgba(255, 255, 255, 0.4),
+		0 0 0 1px rgba(255, 255, 255, 0.6),
+		0 0 24px 0 hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 70%, 0.3) !important;
 	border-color: rgba(255, 255, 255, 0.7) !important;
 	background: linear-gradient(135deg,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,70%)), 97%, 0.4) 0%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,60%)), 93%, 0.3) 50%,
-		hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,65%)), 95%, 0.35) 100%) !important;
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 70%)), 97%, 0.4) 0%,
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 60%)), 93%, 0.3) 50%,
+			hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 65%)), 95%, 0.35) 100%) !important;
 	transform: translateY(-2px) scale(1.01) !important;
 }
 
 /* Glass effect: text styling */
 body.jct-style-glass .jct-courses-grid .coursename a {
 	text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95),
-				 0 2px 8px hsla(var(--jct-accent-h,230), calc(var(--jct-accent-s,50%)), 50%, 0.2) !important;
+		0 2px 8px hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 50%)), 50%, 0.2) !important;
 	position: relative !important;
 	z-index: 2 !important;
 }
@@ -2483,192 +2993,4 @@ body.jct-style-glass .jct-courses-grid .content {
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 	transition: all 0.2s ease;
 	z-index: 10;
-}
-
-/* Today's Events Block Styles */
-.jct-today-events-block {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-	border-radius: 12px !important;
-	padding: 16px !important;
-	box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25) !important;
-	animation: slideDown 0.3s ease-out !important;
-	width: 100% !important;
-	min-height: 200px !important;
-	max-height: 600px !important;
-	display: flex !important;
-	flex-direction: column !important;
-	overflow: hidden !important;
-}
-
-@keyframes slideDown {
-	from {
-		opacity: 0;
-		transform: translateY(-20px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@keyframes pulse {
-	0%, 100% {
-		opacity: 1;
-		transform: scale(1);
-	}
-	50% {
-		opacity: 0.85;
-		transform: scale(1.02);
-	}
-}
-
-.jct-today-events-header {
-	margin-bottom: 12px;
-	padding-bottom: 12px;
-	border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.jct-today-events-header h3 {
-	margin: 0;
-	color: white;
-	font-size: 1.1rem;
-	font-weight: 700;
-	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.jct-today-events-list {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.jct-today-event-item {
-	background: white;
-	border-radius: 8px;
-	padding: 12px;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	transition: all 0.2s ease;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.jct-today-event-item:hover {
-	transform: translateX(-4px);
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.jct-event-icon {
-	font-size: 1.5rem;
-	flex-shrink: 0;
-	width: 40px;
-	height: 40px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-	border-radius: 50%;
-	box-shadow: 0 3px 8px rgba(245, 87, 108, 0.25);
-}
-
-.jct-today-event-item.assignment .jct-event-icon {
-	background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-	box-shadow: 0 3px 8px rgba(79, 172, 254, 0.25);
-}
-
-.jct-event-content {
-	flex: 1;
-	min-width: 0;
-}
-
-.jct-event-content h4 {
-	margin: 0 0 6px 0;
-	font-size: 0.95rem;
-	font-weight: 600;
-	color: #1f2937;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.jct-event-course {
-	margin: 0 0 6px 0;
-	font-size: 0.8rem;
-	color: #6b7280;
-	font-weight: 500;
-}
-
-.jct-event-description {
-	margin: 4px 0 0 0;
-	font-size: 0.8rem;
-	color: #6b7280;
-}
-
-.jct-event-time {
-	margin: 4px 0 0 0;
-	font-size: 0.8rem;
-	color: #6b7280;
-	font-weight: 500;
-}
-
-.jct-event-meta {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
-
-.jct-event-status {
-	font-weight: 600;
-	font-size: 0.875rem;
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.jct-event-link {
-	padding: 8px 16px;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	color: white !important;
-	text-decoration: none !important;
-	border-radius: 8px;
-	font-weight: 600;
-	font-size: 0.875rem;
-	transition: all 0.2s ease;
-	white-space: nowrap;
-	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.jct-event-link:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-	text-decoration: none !important;
-}
-
-.jct-no-events {
-	background: white;
-	border-radius: 12px;
-	padding: 40px;
-	text-align: center;
-}
-
-.jct-no-events p:first-child {
-	margin: 0;
-	font-size: 1.5rem;
-	font-weight: 600;
-	color: #1f2937;
-}
-
-/* RTL support for today's events */
-.jct-rtl .jct-today-event-item {
-	flex-direction: row-reverse;
-}
-
-.jct-rtl .jct-today-event-item:hover {
-	transform: translateX(4px);
-}
-
-.jct-rtl .jct-today-event-item.assignment,
-.jct-rtl .jct-today-event-item.custom {
-	border-right: 4px solid;
-	border-left: none;
 }
