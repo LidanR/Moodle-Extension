@@ -14,6 +14,7 @@
 		["#3b82f6", "#818cf8", "#bae6fd"], // 5784
 		["#22c55e", "#4ade80", "#bbf7d0"], // 5785
 		["#f97316", "#0a5da5", "#fed7aa"], // 5786
+		["#f97316", "#0a5da5", "#fed7aa"], // 5786
 		["#f43f5e", "#fda4af", "#fecdd3"], // 5787
 		["#a21caf", "#f472b6", "#f3e8ff"], // 5788
 		["#2563eb", "#60a5fa", "#dbeafe"], // 5789
@@ -40,6 +41,109 @@
 
 		// Add the selected style class
 		document.body.classList.add(`jct-style-${style}`);
+	}
+
+	// Function to apply dark mode
+	function applyDarkMode(enabled) {
+		currentDarkMode = enabled;
+		if (enabled) {
+			document.body.classList.add('jct-dark-mode');
+		} else {
+			document.body.classList.remove('jct-dark-mode');
+		}
+		// Also update any open extension modals/elements with inline styles
+		applyDarkModeToInlineStyles(enabled);
+	}
+
+	function applyDarkModeToInlineStyles(enabled) {
+		const darkBg = '#1e293b';
+		const darkBgAlt = '#253349';
+		const darkText = '#e2e8f0';
+		const darkBorder = '#334155';
+
+		// Settings modal table
+		const settingsTable = document.querySelector('.jct-assignments-modal-body table[style*="background:#fff"], .jct-assignments-modal-body table[style*="background: #fff"]');
+		if (settingsTable) {
+			settingsTable.style.background = enabled ? darkBg : '#fff';
+		}
+
+		// Settings modal wrapper div with gradient background
+		const settingsWrapper = document.querySelector('.jct-assignments-modal-body [style*="background: linear-gradient"]');
+		if (settingsWrapper) {
+			settingsWrapper.style.background = enabled ? darkBg : '';
+		}
+
+		// All select/input elements in settings with white backgrounds
+		document.querySelectorAll('.jct-assignments-modal-body select, .jct-assignments-modal-body input').forEach(el => {
+			if (el.type !== 'color' && el.type !== 'checkbox' && el.type !== 'radio') {
+				el.style.background = enabled ? darkBg : 'white';
+				el.style.color = enabled ? darkText : '';
+				el.style.borderColor = enabled ? '#475569' : '#cbd5e1';
+			}
+		});
+
+		// Dark mode toggle container
+		const toggleContainer = document.querySelector('.jct-assignments-modal-body [style*="justify-content: space-between"][style*="border: 2px"]');
+		if (toggleContainer) {
+			toggleContainer.style.background = enabled ? darkBg : 'white';
+			toggleContainer.style.borderColor = enabled ? '#475569' : '#cbd5e1';
+		}
+
+		// Calendar modal panels
+		document.querySelectorAll('.jct-calendar-modal-content [style*="background: #f8fafc"]').forEach(el => {
+			el.style.background = enabled ? darkBg : '#f8fafc';
+		});
+		document.querySelectorAll('.jct-calendar-modal-content [style*="background: #e0e7ff"]').forEach(el => {
+			el.style.background = enabled ? darkBgAlt : '#e0e7ff';
+			el.style.color = enabled ? darkText : '';
+		});
+
+		// Event detail/edit modals
+		document.querySelectorAll('.jct-event-edit-content[style*="background: white"], [style*="background: white"][style*="border-radius: 12px"][style*="max-width"]').forEach(el => {
+			el.style.background = enabled ? darkBg : 'white';
+			el.style.color = enabled ? darkText : '';
+		});
+
+		// Assignments modal filter controls
+		const filterControls = document.querySelector('.jct-filter-controls[style]');
+		if (filterControls) {
+			filterControls.style.background = enabled ? darkBg : '';
+			filterControls.style.borderColor = enabled ? darkBorder : '';
+		}
+
+		// Modal status bar
+		const statusBar = document.querySelector('.jct-modal-status[style]');
+		if (statusBar) {
+			statusBar.style.background = enabled ? darkBgAlt : '#f8fafc';
+			statusBar.style.borderColor = enabled ? darkBorder : '';
+		}
+
+		// Reset button
+		const resetBtn = document.getElementById('jct-settings-reset');
+		if (resetBtn) {
+			resetBtn.style.background = enabled ? darkBg : 'white';
+			resetBtn.style.color = enabled ? darkText : '#475569';
+			resetBtn.style.borderColor = enabled ? '#475569' : '#cbd5e1';
+		}
+	}
+
+	// Function to apply decorative pattern
+	// Function to apply page accent color
+	function applyPageAccent(color) {
+		currentPageAccentColor = color;
+		document.documentElement.style.setProperty('--jct-page-accent', color);
+		// Generate a darker shade for gradients
+		const darkerColor = adjustColorBrightness(color, -30);
+		document.documentElement.style.setProperty('--jct-page-accent-dark', darkerColor);
+	}
+
+	// Helper: adjust hex color brightness
+	function adjustColorBrightness(hex, amount) {
+		hex = hex.replace('#', '');
+		const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+		const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+		const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+		return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 	}
 
 	// Function to apply view mode
@@ -113,6 +217,21 @@
 			// Mark container as having carousel to prevent future rebuilds
 			container.setAttribute('data-jct-carousel-initialized', 'true');
 
+			// Get all courses and save original structure (exclude paging buttons and course 110102)
+			const courses = Array.from(container.children).filter(child => {
+				if (child.classList.contains('paging') || child.classList.contains('paging-morelink')) {
+					return false;
+				}
+				// Skip "לימודי קודש" course (110102)
+				const link = child.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+				if (link) {
+					const courseName = link.textContent.trim();
+					if (courseName.includes('110102')) {
+						return false;
+					}
+				}
+				return true;
+			});
 			// Get all courses and save original structure (exclude paging buttons and course 110102)
 			const courses = Array.from(container.children).filter(child => {
 				if (child.classList.contains('paging') || child.classList.contains('paging-morelink')) {
@@ -430,11 +549,20 @@
 			}
 
 			removeUnwantedCourses();
+			removeUnwantedCourses();
 			markCoursesContainers();
 			ensureStructureAndColor();
 			refreshFavoritesUI();
 			applyViewMode(currentViewMode);
 			// Don't update schedule view here - it causes event listeners to be lost
+			// Only update if schedule container exists (it's always visible now)
+			const container = document.getElementById('jct-weekly-schedule');
+			if (container) {
+				// Use a debounced update to avoid constant refreshing
+				clearTimeout(scheduleUpdateTimeout);
+				scheduleUpdateTimeout = setTimeout(() => {
+					updateWeeklyScheduleView();
+				}, 500);
 			// Only update if schedule container exists (it's always visible now)
 			const container = document.getElementById('jct-weekly-schedule');
 			if (container) {
@@ -466,8 +594,10 @@
 			try {
 				// Try local first, then sync
 				chrome.storage.local.get({ courseSchedules: {} }, (res) => {
+				chrome.storage.local.get({ courseSchedules: {} }, (res) => {
 					if (chrome.runtime.lastError) {
 						// Try sync as fallback
+						chrome.storage.sync.get({ courseSchedules: {} }, (res2) => {
 						chrome.storage.sync.get({ courseSchedules: {} }, (res2) => {
 							if (chrome.runtime.lastError) {
 								console.error('Error loading schedules:', chrome.runtime.lastError);
@@ -544,11 +674,18 @@
 	function loadViewMode() {
 		return new Promise((resolve) => {
 			try {
-				chrome.storage.sync.get({ viewMode: 'grid', cardStyle: 'compact' }, (res) => {
+				chrome.storage.sync.get({
+					viewMode: 'grid',
+					cardStyle: 'compact',
+					darkMode: false,
+					pageAccentColor: '#667eea'
+				}, (res) => {
 					currentViewMode = res.viewMode || 'grid';
 					currentCardStyle = res.cardStyle || 'compact';
 					applyViewMode(currentViewMode);
 					applyCardStyle(currentCardStyle);
+					applyDarkMode(!!res.darkMode);
+					applyPageAccent(res.pageAccentColor || '#667eea');
 					resolve({ viewMode: currentViewMode, cardStyle: currentCardStyle });
 				});
 			} catch (_e) { resolve({ viewMode: 'grid', cardStyle: 'compact' }); }
@@ -1576,6 +1713,16 @@
 				}
 			}
 
+			// Skip "לימודי קודש" course (110102)
+			const link = card.querySelector('a[href*="/course/view.php"], .coursename a, .course-title a');
+			if (link) {
+				const courseName = link.textContent.trim();
+				if (courseName.includes('110102')) {
+					card.style.display = 'none';
+					return;
+				}
+			}
+
 			// Ensure base positioning for overlays
 			if (!card.style.position) card.style.position = 'relative';
 
@@ -1679,6 +1826,7 @@
 				const scheduleContainer = document.getElementById('jct-weekly-schedule');
 				if (scheduleContainer) {
 					// Schedule is always visible now, just scroll to it
+					// Schedule is always visible now, just scroll to it
 					setTimeout(() => {
 						scheduleContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 					}, 100);
@@ -1757,6 +1905,22 @@
 			document.querySelectorAll('.jct-carousel-container').forEach(reorderContainerByFavorites);
 		}
 		finally { isReordering = false; }
+	}
+
+	function removeUnwantedCourses() {
+		// Remove "לימודי קודש" course (any course with 110102 in the name) from DOM
+		const allCourseLinks = document.querySelectorAll('a[href*="/course/view.php"]');
+		allCourseLinks.forEach(link => {
+			const courseName = link.textContent.trim();
+			// Check if course name contains "110102" (לימודי קודש)
+			if (courseName.includes('110102')) {
+				// Find the course card parent
+				const courseCard = link.closest('.list-group-item, .coursebox, .card.course, li, .dashboard-card');
+				if (courseCard) {
+					courseCard.remove();
+				}
+			}
+		});
 	}
 
 	function removeUnwantedCourses() {
@@ -2059,6 +2223,7 @@
 	}
 
 	async function createWeeklyScheduleView() {
+	async function createWeeklyScheduleView() {
 		// Only show schedule on main page
 		const body = document.body;
 		if (!body || body.id !== 'page-site-index') return null;
@@ -2066,6 +2231,7 @@
 		// Check if schedule view already exists
 		let scheduleContainer = document.getElementById('jct-weekly-schedule');
 		if (scheduleContainer) {
+			await updateWeeklyScheduleView();
 			await updateWeeklyScheduleView();
 			return scheduleContainer;
 		}
@@ -2093,9 +2259,11 @@
 		}
 
 		await updateWeeklyScheduleView();
+		await updateWeeklyScheduleView();
 		return scheduleContainer;
 	}
 
+	async function updateWeeklyScheduleView() {
 	async function updateWeeklyScheduleView() {
 		const scheduleContainer = document.getElementById('jct-weekly-schedule');
 		if (!scheduleContainer) {
@@ -2232,6 +2400,7 @@
 		html += '<div class="jct-schedule-grid">';
 
 		// Day columns (Sun-Fri)
+		// Day columns (Sun-Fri)
 		DAYS_OF_WEEK.forEach((dayName, idx) => {
 			const dayKey = DAYS_OF_WEEK_EN[idx];
 			const sessions = sessionsByDay[dayKey] || [];
@@ -2241,11 +2410,22 @@
 			const dayDate = new Date(weekStart);
 			dayDate.setDate(weekStart.getDate() + idx);
 			const dateStr = `${dayDate.getDate()}/${dayDate.getMonth() + 1}`;
+			const dayAssignments = assignmentsByDay[dayKey] || [];
+			const dayEvents = eventsByDay[dayKey] || [];
+			const isToday = currentWeekOffset === 0 && idx === realToday.getDay();
+			const dayDate = new Date(weekStart);
+			dayDate.setDate(weekStart.getDate() + idx);
+			const dateStr = `${dayDate.getDate()}/${dayDate.getMonth() + 1}`;
 
+			html += `<div class="jct-schedule-day${isToday ? ' jct-schedule-today' : ''}" data-day="${dayKey}">
+				<div class="jct-schedule-day-header">${dayName}<span class="jct-day-date">${dateStr}</span></div>
 			html += `<div class="jct-schedule-day${isToday ? ' jct-schedule-today' : ''}" data-day="${dayKey}">
 				<div class="jct-schedule-day-header">${dayName}<span class="jct-day-date">${dateStr}</span></div>
 				<div class="jct-schedule-day-courses" data-day="${dayKey}">`;
 
+			// Courses
+			if (sessions.length === 0 && dayAssignments.length === 0 && dayEvents.length === 0) {
+				html += '<div class="jct-schedule-empty">-</div>';
 			// Courses
 			if (sessions.length === 0 && dayAssignments.length === 0 && dayEvents.length === 0) {
 				html += '<div class="jct-schedule-empty">-</div>';
@@ -2260,6 +2440,30 @@
 							${timeDisplay}
 						</div>
 						<button class="jct-schedule-edit-course" data-course-id="${sessionData.id}" title="ערוך מערכת">✏️</button>
+					</div>`;
+				});
+
+				// Separator if there are assignments or events
+				if ((dayAssignments.length > 0 || dayEvents.length > 0) && sessions.length > 0) {
+					html += '<div class="jct-schedule-separator"></div>';
+				}
+
+				// Assignments
+				dayAssignments.forEach(a => {
+					const isSubmitted = a.status === 'submitted';
+					const statusIcon = isSubmitted ? '✓' : '✗';
+					const statusClass = isSubmitted ? 'submitted' : 'not-submitted';
+					html += `<a href="${a.url}" class="jct-schedule-assignment-item ${statusClass}" target="_blank">
+						<span class="jct-assignment-status">${statusIcon}</span>
+						<span class="jct-assignment-name">${a.name}</span>
+					</a>`;
+				});
+
+				// Custom events
+				dayEvents.forEach(ev => {
+					html += `<div class="jct-schedule-event-item">
+						<span class="jct-event-dot" style="background:${ev.color}"></span>
+						<span class="jct-event-name">${ev.title}</span>
 					</div>`;
 				});
 
@@ -2303,8 +2507,37 @@
 			</div>
 		</div>`;
 
+		// TODO column (7th column)
+		html += `<div class="jct-schedule-day jct-todo-column">
+			<div class="jct-schedule-day-header">✓ TODO</div>
+			<div class="jct-todo-body">
+				<div class="jct-todo-input-row">
+					<input type="text" id="jct-todo-input" placeholder="משימה חדשה...">
+					<button id="jct-todo-add-btn">+</button>
+				</div>
+				<div id="jct-todo-list"></div>
+			</div>
+		</div>`;
+
 		html += '</div>';
 		scheduleContainer.innerHTML = html;
+
+		// Initialize TODO
+		initializeTodoList();
+
+		// Week navigation handlers
+		document.getElementById('jct-week-prev')?.addEventListener('click', () => {
+			currentWeekOffset--;
+			updateWeeklyScheduleView();
+		});
+		document.getElementById('jct-week-next')?.addEventListener('click', () => {
+			currentWeekOffset++;
+			updateWeeklyScheduleView();
+		});
+		document.getElementById('jct-week-today')?.addEventListener('click', () => {
+			currentWeekOffset = 0;
+			updateWeeklyScheduleView();
+		});
 
 		// Initialize TODO
 		initializeTodoList();
@@ -2360,6 +2593,9 @@
 		};
 
 		document.addEventListener('click', scheduleContainer._deleteAllHandler);
+
+		// Re-inject action buttons (they get destroyed by innerHTML rebuild)
+		addSettingsButton();
 
 		// Re-inject action buttons (they get destroyed by innerHTML rebuild)
 		addSettingsButton();
@@ -3004,6 +3240,11 @@
 					return false;
 				}
 
+				// Skip "לימודי קודש" course (110102)
+				if (courseName.includes('110102')) {
+					return false;
+				}
+
 				// Parse year and semester from course name
 				const { year, semIdx } = parseHebrewYearAndSemester(courseName);
 
@@ -3307,7 +3548,9 @@
 				paletteByYearHeb: null,
 				columnCount: DEFAULT_COLUMN_COUNT,
 				viewMode: 'grid',
-				cardStyle: 'compact'
+				cardStyle: 'compact',
+				darkMode: false,
+				pageAccentColor: '#667eea'
 			}, res => resolve(res));
 		});
 
@@ -3315,6 +3558,8 @@
 		const columnCount = settings.columnCount || DEFAULT_COLUMN_COUNT;
 		const viewMode = settings.viewMode || 'grid';
 		const cardStyle = settings.cardStyle || 'compact';
+		const darkMode = !!settings.darkMode;
+		const pageAccentColor = settings.pageAccentColor || '#667eea';
 
 		// Build color table HTML
 		let tableHtml = '<tr><th>שנה\\סמסטר</th>';
@@ -3333,7 +3578,7 @@
 		modal.className = 'jct-assignments-modal';
 		modal.innerHTML = `
 			<div class="jct-assignments-modal-content" style="max-width: 1200px; width: 90vw;">
-				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, var(--jct-page-accent, #667eea) 0%, var(--jct-page-accent-dark, #764ba2) 100%); color: white;">
 					<h3 style="color: white; margin: 0;">⚙️ הגדרות</h3>
 					<button class="jct-assignments-modal-close" style="color: white; opacity: 0.9;">✕</button>
 				</div>
@@ -3388,8 +3633,39 @@
 								<span style="display: block; margin-top: 6px; font-size: 12px; color: #64748b;">טווח: 3-6 עמודות</span>
 							</div>
 
+							<div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; border: 2px solid #cbd5e1; background: white;">
+								<label style="font-weight: 500; color: #334155; font-size: 14px; cursor: pointer;" for="jct-dark-mode-toggle">
+									🌙 מצב חשוך
+								</label>
+								<label class="jct-toggle-switch">
+									<input type="checkbox" id="jct-dark-mode-toggle" ${darkMode ? 'checked' : ''}>
+									<span class="jct-toggle-slider"></span>
+								</label>
+							</div>
+
+							<div style="margin-bottom: 20px;">
+								<label style="display: block; margin-bottom: 8px; font-weight: 500; color: #334155; font-size: 14px;">
+									🎨 צבע כללי
+								</label>
+								<div style="display: flex; align-items: center; gap: 10px;">
+									<input id="jct-page-accent-color" type="color" value="${pageAccentColor}"
+										style="width: 44px; height: 36px; border: 2px solid #cbd5e1; border-radius: 8px; background: white; cursor: pointer; padding: 2px;">
+									<span id="jct-accent-hex-label" style="font-size: 13px; color: #64748b;">${pageAccentColor}</span>
+								</div>
+								<div class="jct-accent-presets" style="margin-top: 8px;">
+									<div class="jct-accent-preset ${pageAccentColor === '#667eea' ? 'active' : ''}" data-color="#667eea" style="background: #667eea;" title="סגול-כחול"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#3b82f6' ? 'active' : ''}" data-color="#3b82f6" style="background: #3b82f6;" title="כחול"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#22c55e' ? 'active' : ''}" data-color="#22c55e" style="background: #22c55e;" title="ירוק"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#f97316' ? 'active' : ''}" data-color="#f97316" style="background: #f97316;" title="כתום"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#ef4444' ? 'active' : ''}" data-color="#ef4444" style="background: #ef4444;" title="אדום"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#a855f7' ? 'active' : ''}" data-color="#a855f7" style="background: #a855f7;" title="סגול"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#ec4899' ? 'active' : ''}" data-color="#ec4899" style="background: #ec4899;" title="ורוד"></div>
+									<div class="jct-accent-preset ${pageAccentColor === '#14b8a6' ? 'active' : ''}" data-color="#14b8a6" style="background: #14b8a6;" title="טורקיז"></div>
+								</div>
+							</div>
+
 							<div style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px;">
-								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.2s;">
+								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, var(--jct-page-accent, #667eea) 0%, var(--jct-page-accent-dark, #764ba2) 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); transition: all 0.2s;">
 									💾 שמור שינויים
 								</button>
 								<button id="jct-settings-reset" style="padding: 10px 20px; background: white; color: #475569; border: 2px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s;">
@@ -3403,9 +3679,15 @@
 		`;
 		document.body.appendChild(modal);
 
+		// Apply dark mode to the modal's inline styles if dark mode is active
+		if (currentDarkMode) {
+			applyDarkModeToInlineStyles(true);
+		}
+
 		// Close button
 		modal.querySelector('.jct-assignments-modal-close').addEventListener('click', () => {
 			modal.remove();
+			updateWeeklyScheduleView();
 			updateWeeklyScheduleView();
 		});
 
@@ -3413,6 +3695,7 @@
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
 				modal.remove();
+				updateWeeklyScheduleView();
 				updateWeeklyScheduleView();
 			}
 		});
@@ -3432,6 +3715,8 @@
 			const newColumnCount = Math.max(3, Math.min(6, parseInt(document.getElementById('jct-column-count').value || 3)));
 			const newViewMode = document.getElementById('jct-view-mode').value || 'grid';
 			const newCardStyle = document.getElementById('jct-card-style').value || 'compact';
+			const newDarkMode = document.getElementById('jct-dark-mode-toggle').checked;
+			const newPageAccentColor = document.getElementById('jct-page-accent-color').value || '#667eea';
 
 			// Save to storage
 			await new Promise(resolve => {
@@ -3439,13 +3724,17 @@
 					paletteByYearHeb: newPalette,
 					columnCount: newColumnCount,
 					viewMode: newViewMode,
-					cardStyle: newCardStyle
+					cardStyle: newCardStyle,
+					darkMode: newDarkMode,
+					pageAccentColor: newPageAccentColor
 				}, () => resolve());
 			});
 
 			// Apply view mode and card style immediately
 			applyViewMode(newViewMode);
 			applyCardStyle(newCardStyle);
+			applyDarkMode(newDarkMode);
+			applyPageAccent(newPageAccentColor);
 
 			// Show success message
 			const saveBtn = document.getElementById('jct-settings-save');
@@ -3454,7 +3743,7 @@
 			saveBtn.style.background = '#22c55e';
 			setTimeout(() => {
 				saveBtn.textContent = originalText;
-				saveBtn.style.background = '#2563eb';
+				saveBtn.style.background = '';
 			}, 2000);
 		});
 
@@ -3465,7 +3754,9 @@
 					paletteByYearHeb: DEFAULT_PALETTE,
 					columnCount: DEFAULT_COLUMN_COUNT,
 					viewMode: 'grid',
-					cardStyle: 'compact'
+					cardStyle: 'compact',
+					darkMode: false,
+					pageAccentColor: '#667eea'
 				}, () => resolve());
 			});
 
@@ -3478,8 +3769,12 @@
 			document.getElementById('jct-column-count').value = DEFAULT_COLUMN_COUNT;
 			document.getElementById('jct-view-mode').value = 'grid';
 			document.getElementById('jct-card-style').value = 'compact';
+			document.getElementById('jct-dark-mode-toggle').checked = false;
+			document.getElementById('jct-page-accent-color').value = '#667eea';
 			applyViewMode('grid');
 			applyCardStyle('compact');
+			applyDarkMode(false);
+			applyPageAccent('#667eea');
 		});
 
 		// Add hover effects to buttons
@@ -3496,21 +3791,23 @@
 		});
 
 		resetBtn.addEventListener('mouseenter', () => {
-			resetBtn.style.background = '#f1f5f9';
-			resetBtn.style.borderColor = '#94a3b8';
+			resetBtn.style.background = currentDarkMode ? '#334155' : '#f1f5f9';
+			resetBtn.style.borderColor = currentDarkMode ? '#60a5fa' : '#94a3b8';
 		});
 		resetBtn.addEventListener('mouseleave', () => {
-			resetBtn.style.background = 'white';
-			resetBtn.style.borderColor = '#cbd5e1';
+			resetBtn.style.background = currentDarkMode ? '#1e293b' : 'white';
+			resetBtn.style.borderColor = currentDarkMode ? '#475569' : '#cbd5e1';
 		});
 
 		// Add hover effects to select elements
 		const viewModeSelect = document.getElementById('jct-view-mode');
 		const cardStyleSelect = document.getElementById('jct-card-style');
 
-		[viewModeSelect, cardStyleSelect].forEach(select => {
+		const allSelects = [viewModeSelect, cardStyleSelect];
+		allSelects.forEach(select => {
+			if (!select) return;
 			select.addEventListener('mouseenter', () => {
-				select.style.borderColor = '#667eea';
+				select.style.borderColor = currentPageAccentColor || '#667eea';
 			});
 			select.addEventListener('mouseleave', () => {
 				select.style.borderColor = '#cbd5e1';
@@ -3556,7 +3853,7 @@
 					<!-- Calendar grid will be inserted here -->
 				</div>
 				<div style="padding: 12px; background: #f8fafc; border-top: 1px solid #e5e7eb; display: flex; justify-content: center;">
-					<button id="jct-add-event-btn" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); transition: all 0.2s ease;">
+					<button id="jct-add-event-btn" style="padding: 10px 20px; background: linear-gradient(135deg, var(--jct-page-accent, #667eea) 0%, var(--jct-page-accent-dark, #764ba2) 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); transition: all 0.2s ease;">
 						➕ הוסף אירוע חדש
 					</button>
 				</div>
@@ -3564,9 +3861,15 @@
 		`;
 		document.body.appendChild(modal);
 
+		// Apply dark mode to calendar modal if active
+		if (currentDarkMode) {
+			applyDarkModeToInlineStyles(true);
+		}
+
 		// Close button
 		modal.querySelector('.jct-calendar-modal-close').addEventListener('click', () => {
 			modal.remove();
+			updateWeeklyScheduleView();
 			updateWeeklyScheduleView();
 		});
 
@@ -3574,6 +3877,7 @@
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
 				modal.remove();
+				updateWeeklyScheduleView();
 				updateWeeklyScheduleView();
 			}
 		});
@@ -4160,6 +4464,7 @@
 				</div>
 				<div class="jct-filter-controls" style="padding: 10px 20px; background: linear-gradient(to bottom, #f8fafc, #ffffff); border-bottom: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
 					<!-- שורה ראשונה: שנה, סמסטר וכפתורי פעולה -->
+					<!-- שורה ראשונה: שנה, סמסטר וכפתורי פעולה -->
 					<div style="display: flex; gap: 12px; align-items: center; justify-content: space-between;">
 						<div style="display: flex; gap: 12px; align-items: center;">
 							<label style="display: flex; align-items: center; gap: 6px;">
@@ -4184,6 +4489,14 @@
 									<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
 								</select>
 							</label>
+						</div>
+						<div style="display: flex; gap: 4px;">
+							<button id="jct-refresh-assignments" style="padding: 6px 14px; background: #3b82f6; color: white; border: none; border-radius: 6px 0 0 6px; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="בדוק סטטוס הגשות מחדש">
+								🔄 בדוק הגשות
+							</button>
+							<button id="jct-rescan-assignments" style="padding: 6px 14px; background: #f59e0b; color: white; border: none; border-radius: 0 6px 6px 0; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="סריקה מחדש - סורק את כל המטלות מחדש">
+								🔍 סרוק מחדש
+							</button>
 						</div>
 						<div style="display: flex; gap: 4px;">
 							<button id="jct-refresh-assignments" style="padding: 6px 14px; background: #3b82f6; color: white; border: none; border-radius: 6px 0 0 6px; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="בדוק סטטוס הגשות מחדש">
@@ -4222,6 +4535,11 @@
 		document.body.appendChild(modal);
 		isModalOpening = false; // Modal is now in DOM
 
+		// Apply dark mode to assignments modal if active
+		if (currentDarkMode) {
+			applyDarkModeToInlineStyles(true);
+		}
+
 		// Track if scanning is in progress
 		let isScanning = false;
 
@@ -4232,6 +4550,7 @@
 				window.jctStopScanning = true;
 				isModalOpening = false;
 				updateWeeklyScheduleView();
+				updateWeeklyScheduleView();
 			}
 		});
 
@@ -4241,6 +4560,7 @@
 				modal.remove();
 				isModalOpening = false;
 				window.jctStopScanning = true;
+				updateWeeklyScheduleView();
 				updateWeeklyScheduleView();
 			}
 		});
@@ -4390,6 +4710,7 @@
 						<div style="text-align: center; padding: 20px;">
 							<p style="font-size: 1rem; color: #ef4444; margin-bottom: 12px;">⚠️ יש לבחור שנה וסמסטר לפני הסריקה</p>
 							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "סרוק מחדש"</p>
+							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "סרוק מחדש"</p>
 						</div>
 					`;
 				}
@@ -4429,7 +4750,9 @@
 			const filterSemesterSelect = document.getElementById('jct-filter-semester');
 			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 			const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
+			const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
 			const refreshBtn = document.getElementById('jct-refresh-assignments');
+			const rescanBtn = document.getElementById('jct-rescan-assignments');
 			const rescanBtn = document.getElementById('jct-rescan-assignments');
 			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
 			const scanningNotice = document.getElementById('jct-scanning-notice');
@@ -4438,7 +4761,9 @@
 			if (filterSemesterSelect) filterSemesterSelect.disabled = true;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
 			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
+			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
+			if (rescanBtn) rescanBtn.disabled = true;
 			if (rescanBtn) rescanBtn.disabled = true;
 			if (closeBtn) closeBtn.style.display = 'none';
 			if (scanningNotice) scanningNotice.style.display = 'block';
@@ -4530,7 +4855,9 @@
 			if (filterSemesterSelect) filterSemesterSelect.disabled = false;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
 			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
+			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
 			if (refreshBtn) refreshBtn.disabled = false;
+			if (rescanBtn) rescanBtn.disabled = false;
 			if (rescanBtn) rescanBtn.disabled = false;
 			if (closeBtn) closeBtn.style.display = '';
 			if (scanningNotice) scanningNotice.style.display = 'none';
@@ -4639,6 +4966,22 @@
 					.jct-scan-warning-proceed:hover {
 						background: #2563eb;
 					}
+					body.jct-dark-mode .jct-scan-warning-content {
+						background: #1e293b !important;
+					}
+					body.jct-dark-mode .jct-scan-warning-content h3 {
+						color: #f1f5f9 !important;
+					}
+					body.jct-dark-mode .jct-scan-warning-content p {
+						color: #94a3b8 !important;
+					}
+					body.jct-dark-mode .jct-scan-warning-cancel {
+						background: #334155 !important;
+						color: #e2e8f0 !important;
+					}
+					body.jct-dark-mode .jct-scan-warning-cancel:hover {
+						background: #475569 !important;
+					}
 				`;
 				document.head.appendChild(style);
 
@@ -4708,6 +5051,7 @@
 				}
 			} else {
 				// Refreshing status - clear and re-display with updated status
+				// Refreshing status - clear and re-display with updated status
 			}
 
 			// Filter assignments by year and semester first
@@ -4717,8 +5061,12 @@
 			});
 
 			// Fetch due dates (from cache only) and submission status for filtered assignments
+			// Fetch due dates (from cache only) and submission status for filtered assignments
 			const assignmentsWithData = await Promise.all(
 				yearFiltered.map(async (assign) => {
+					// Due dates: always from cache, never re-fetch during status check
+					const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId, false);
+					// Submission status: re-fetch if forceRefreshStatus is true
 					// Due dates: always from cache, never re-fetch during status check
 					const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId, false);
 					// Submission status: re-fetch if forceRefreshStatus is true
@@ -4847,7 +5195,40 @@
 				return;
 			}
 
+		// "Check submissions" button - ONLY refreshes submission status, no course scan
+		refreshBtn?.addEventListener('click', async () => {
+			// Must have cached data to check status against
+			const { cache } = await getAssignmentsCache();
+			if (!cache || !cache.assignments || cache.assignments.length === 0) {
+				const statusEl = document.getElementById('jct-loading-status');
+				if (statusEl) {
+					statusEl.innerHTML = `<span style="color: #f59e0b;">⚠️ אין נתונים במטמון. יש ללחוץ על "סרוק מחדש" קודם.</span>`;
+				}
+				return;
+			}
+
 			isScanning = true;
+			refreshBtn.innerHTML = '⏳ בודק...';
+			refreshBtn.disabled = true;
+			const rescanBtn = document.getElementById('jct-rescan-assignments');
+			if (rescanBtn) rescanBtn.disabled = true;
+			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
+			if (closeBtn) closeBtn.style.display = 'none';
+			const scanningNotice = document.getElementById('jct-scanning-notice');
+			if (scanningNotice) scanningNotice.style.display = 'block';
+
+			// Clear only submission status cache so it re-checks
+			await new Promise(resolve => {
+				chrome.storage.local.set({ submissionStatusCache: {} }, () => resolve());
+			});
+
+			// Get current filter values from UI
+			const filterYear = document.getElementById('jct-filter-year')?.value || '';
+			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
+			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+			const hideSubmitted = document.getElementById('jct-hide-submitted')?.checked || false;
+
+			hasRefreshedStatusGlobal = false;
 			refreshBtn.innerHTML = '⏳ בודק...';
 			refreshBtn.disabled = true;
 			const rescanBtn = document.getElementById('jct-rescan-assignments');
@@ -4888,10 +5269,40 @@
 			rescanBtn.innerHTML = '⏳ סורק...';
 			rescanBtn.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
+			// Directly refilter from cache with forceRefreshStatus=true — no scan, no warning
+			await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, true, hideSubmitted);
+
+			isScanning = false;
+			refreshBtn.innerHTML = '🔄 בדוק הגשות';
+			refreshBtn.disabled = false;
+			if (rescanBtn) rescanBtn.disabled = false;
+			if (closeBtn) closeBtn.style.display = '';
+			if (scanningNotice) scanningNotice.style.display = 'none';
+		});
+
+		// "Rescan" button - clears all caches and forces a full new scan (with warning)
+		const rescanBtn = document.getElementById('jct-rescan-assignments');
+		rescanBtn?.addEventListener('click', async () => {
+			isScanning = true;
+			rescanBtn.innerHTML = '⏳ סורק...';
+			rescanBtn.disabled = true;
+			if (refreshBtn) refreshBtn.disabled = true;
 			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
 			const scanningNotice = document.getElementById('jct-scanning-notice');
 			if (closeBtn) closeBtn.style.display = 'none';
 			if (scanningNotice) scanningNotice.style.display = 'block';
+			if (closeBtn) closeBtn.style.display = 'none';
+			if (scanningNotice) scanningNotice.style.display = 'block';
+
+			// Clear ALL caches to force a full rescan
+			await new Promise(resolve => {
+				chrome.storage.local.set({
+					assignmentsCache: null,
+					assignmentsCacheTimestamp: 0,
+					dueDateCache: {},
+					submissionStatusCache: {}
+				}, () => resolve());
+			});
 
 			// Clear ALL caches to force a full rescan
 			await new Promise(resolve => {
@@ -4918,6 +5329,11 @@
 			if (refreshBtn) refreshBtn.disabled = false;
 			if (closeBtn) closeBtn.style.display = '';
 			if (scanningNotice) scanningNotice.style.display = 'none';
+			rescanBtn.innerHTML = '🔍 סרוק מחדש';
+			rescanBtn.disabled = false;
+			if (refreshBtn) refreshBtn.disabled = false;
+			if (closeBtn) closeBtn.style.display = '';
+			if (scanningNotice) scanningNotice.style.display = 'none';
 		});
 
 		// Check if we have cached data to display
@@ -4931,6 +5347,7 @@
 			if (statusEl) {
 				statusEl.innerHTML = `
 					<div style="text-align: center; padding: 20px;">
+						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "סרוק מחדש" כדי לסרוק מטלות</p>
 						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "סרוק מחדש" כדי לסרוק מטלות</p>
 					</div>
 				`;
@@ -4948,6 +5365,7 @@
 			return;
 		}
 
+		// Find the main page header
 		// Find the main page header
 		const pageHeader = document.querySelector('#page-header, .page-header');
 
@@ -5182,10 +5600,12 @@
 		if (html.dir === 'rtl') html.classList.add('jct-rtl');
 		await Promise.all([loadPaletteHeb(), loadFavorites(), loadCourseSchedules(), loadCourseAssignments(), loadViewMode()]);
 		removeUnwantedCourses();
+		removeUnwantedCourses();
 		markCoursesContainers();
 		ensureStructureAndColor();
 		relocateTopBlocksAfterCourses();
 		hideFrontClutter();
+		await createWeeklyScheduleView();
 		await createWeeklyScheduleView();
 		addSettingsButton();
 		applyCoursePageColors();
@@ -5234,6 +5654,12 @@
 				if (area === 'sync' && changes.cardStyle) {
 					currentCardStyle = changes.cardStyle.newValue || 'compact';
 					applyCardStyle(currentCardStyle);
+				}
+				if (area === 'sync' && changes.darkMode) {
+					applyDarkMode(!!changes.darkMode.newValue);
+				}
+				if (area === 'sync' && changes.pageAccentColor) {
+					applyPageAccent(changes.pageAccentColor.newValue || '#667eea');
 				}
 			});
 		}
