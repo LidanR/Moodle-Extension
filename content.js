@@ -30,7 +30,6 @@
 	let currentViewMode = 'grid'; // Default view mode
 	let currentCardStyle = 'compact'; // Default card style
 	let currentWeekOffset = 0; // 0 = this week, -1 = last week, +1 = next week
-	let currentWeekOffset = 0; // 0 = this week, -1 = last week, +1 = next week
 
 	// Function to apply card style
 	function applyCardStyle(style) {
@@ -41,109 +40,6 @@
 
 		// Add the selected style class
 		document.body.classList.add(`jct-style-${style}`);
-	}
-
-	// Function to apply dark mode
-	function applyDarkMode(enabled) {
-		currentDarkMode = enabled;
-		if (enabled) {
-			document.body.classList.add('jct-dark-mode');
-		} else {
-			document.body.classList.remove('jct-dark-mode');
-		}
-		// Also update any open extension modals/elements with inline styles
-		applyDarkModeToInlineStyles(enabled);
-	}
-
-	function applyDarkModeToInlineStyles(enabled) {
-		const darkBg = '#1e293b';
-		const darkBgAlt = '#253349';
-		const darkText = '#e2e8f0';
-		const darkBorder = '#334155';
-
-		// Settings modal table
-		const settingsTable = document.querySelector('.jct-assignments-modal-body table[style*="background:#fff"], .jct-assignments-modal-body table[style*="background: #fff"]');
-		if (settingsTable) {
-			settingsTable.style.background = enabled ? darkBg : '#fff';
-		}
-
-		// Settings modal wrapper div with gradient background
-		const settingsWrapper = document.querySelector('.jct-assignments-modal-body [style*="background: linear-gradient"]');
-		if (settingsWrapper) {
-			settingsWrapper.style.background = enabled ? darkBg : '';
-		}
-
-		// All select/input elements in settings with white backgrounds
-		document.querySelectorAll('.jct-assignments-modal-body select, .jct-assignments-modal-body input').forEach(el => {
-			if (el.type !== 'color' && el.type !== 'checkbox' && el.type !== 'radio') {
-				el.style.background = enabled ? darkBg : 'white';
-				el.style.color = enabled ? darkText : '';
-				el.style.borderColor = enabled ? '#475569' : '#cbd5e1';
-			}
-		});
-
-		// Dark mode toggle container
-		const toggleContainer = document.querySelector('.jct-assignments-modal-body [style*="justify-content: space-between"][style*="border: 2px"]');
-		if (toggleContainer) {
-			toggleContainer.style.background = enabled ? darkBg : 'white';
-			toggleContainer.style.borderColor = enabled ? '#475569' : '#cbd5e1';
-		}
-
-		// Calendar modal panels
-		document.querySelectorAll('.jct-calendar-modal-content [style*="background: #f8fafc"]').forEach(el => {
-			el.style.background = enabled ? darkBg : '#f8fafc';
-		});
-		document.querySelectorAll('.jct-calendar-modal-content [style*="background: #e0e7ff"]').forEach(el => {
-			el.style.background = enabled ? darkBgAlt : '#e0e7ff';
-			el.style.color = enabled ? darkText : '';
-		});
-
-		// Event detail/edit modals
-		document.querySelectorAll('.jct-event-edit-content[style*="background: white"], [style*="background: white"][style*="border-radius: 12px"][style*="max-width"]').forEach(el => {
-			el.style.background = enabled ? darkBg : 'white';
-			el.style.color = enabled ? darkText : '';
-		});
-
-		// Assignments modal filter controls
-		const filterControls = document.querySelector('.jct-filter-controls[style]');
-		if (filterControls) {
-			filterControls.style.background = enabled ? darkBg : '';
-			filterControls.style.borderColor = enabled ? darkBorder : '';
-		}
-
-		// Modal status bar
-		const statusBar = document.querySelector('.jct-modal-status[style]');
-		if (statusBar) {
-			statusBar.style.background = enabled ? darkBgAlt : '#f8fafc';
-			statusBar.style.borderColor = enabled ? darkBorder : '';
-		}
-
-		// Reset button
-		const resetBtn = document.getElementById('jct-settings-reset');
-		if (resetBtn) {
-			resetBtn.style.background = enabled ? darkBg : 'white';
-			resetBtn.style.color = enabled ? darkText : '#475569';
-			resetBtn.style.borderColor = enabled ? '#475569' : '#cbd5e1';
-		}
-	}
-
-	// Function to apply decorative pattern
-	// Function to apply page accent color
-	function applyPageAccent(color) {
-		currentPageAccentColor = color;
-		document.documentElement.style.setProperty('--jct-page-accent', color);
-		// Generate a darker shade for gradients
-		const darkerColor = adjustColorBrightness(color, -30);
-		document.documentElement.style.setProperty('--jct-page-accent-dark', darkerColor);
-	}
-
-	// Helper: adjust hex color brightness
-	function adjustColorBrightness(hex, amount) {
-		hex = hex.replace('#', '');
-		const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
-		const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
-		const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
-		return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 	}
 
 	// Function to apply view mode
@@ -648,18 +544,11 @@
 	function loadViewMode() {
 		return new Promise((resolve) => {
 			try {
-				chrome.storage.sync.get({
-					viewMode: 'grid',
-					cardStyle: 'compact',
-					darkMode: false,
-					pageAccentColor: '#667eea'
-				}, (res) => {
+				chrome.storage.sync.get({ viewMode: 'grid', cardStyle: 'compact' }, (res) => {
 					currentViewMode = res.viewMode || 'grid';
 					currentCardStyle = res.cardStyle || 'compact';
 					applyViewMode(currentViewMode);
 					applyCardStyle(currentCardStyle);
-					applyDarkMode(!!res.darkMode);
-					applyPageAccent(res.pageAccentColor || '#667eea');
 					resolve({ viewMode: currentViewMode, cardStyle: currentCardStyle });
 				});
 			} catch (_e) { resolve({ viewMode: 'grid', cardStyle: 'compact' }); }
@@ -2185,20 +2074,9 @@
 		if (!region) return null;
 
 		// Create schedule container (always visible)
-		// Create schedule container (always visible)
 		scheduleContainer = document.createElement('div');
 		scheduleContainer.id = 'jct-weekly-schedule';
 		scheduleContainer.className = 'jct-weekly-schedule';
-
-		// Insert right after page header
-		const pageHeader = document.querySelector('#page-header, .page-header');
-		if (pageHeader && pageHeader.parentElement) {
-			pageHeader.parentElement.insertBefore(scheduleContainer, pageHeader.nextSibling);
-		} else {
-			// Fallback: Insert before courses
-			const coursesHeading = region.querySelector('#frontpage-course-list h2');
-			if (coursesHeading && coursesHeading.parentElement) {
-				coursesHeading.parentElement.insertBefore(scheduleContainer, coursesHeading);
 
 		// Insert right after page header
 		const pageHeader = document.querySelector('#page-header, .page-header');
@@ -2257,100 +2135,6 @@
 			});
 		});
 
-		// Load assignments & events for this week
-		const assignmentsByDay = {};
-		const eventsByDay = {};
-		DAYS_OF_WEEK_EN.forEach(day => { assignmentsByDay[day] = []; eventsByDay[day] = []; });
-
-		// Calculate week boundaries (Sunday to Friday), with offset for navigation
-		const realToday = new Date();
-		const now = new Date(realToday);
-		now.setDate(now.getDate() + (currentWeekOffset * 7));
-		const currentDayIdx = now.getDay(); // 0=Sunday
-		const weekStart = new Date(now);
-		weekStart.setDate(now.getDate() - currentDayIdx);
-		weekStart.setHours(0, 0, 0, 0);
-		const weekEnd = new Date(weekStart);
-		weekEnd.setDate(weekStart.getDate() + 6);
-		weekEnd.setHours(23, 59, 59, 999);
-
-		try {
-			// Load assignment data
-			const { cache } = await getAssignmentsCache();
-			const dueDateCacheData = await new Promise(resolve => {
-				chrome.storage.local.get({ dueDateCache: {} }, res => resolve(res.dueDateCache || {}));
-			});
-			const submissionStatusCacheData = await new Promise(resolve => {
-				chrome.storage.local.get({ submissionStatusCache: {} }, res => resolve(res.submissionStatusCache || {}));
-			});
-
-			if (cache && cache.assignments && Array.isArray(cache.assignments)) {
-				cache.assignments.forEach(assignment => {
-					const ts = dueDateCacheData[assignment.assignmentId];
-					if (!ts) return;
-					const dueDate = new Date(ts);
-					if (dueDate >= weekStart && dueDate <= weekEnd) {
-						const dayIdx = dueDate.getDay(); // 0=Sunday
-						if (dayIdx >= 0 && dayIdx <= 5) {
-							const dayKey = DAYS_OF_WEEK_EN[dayIdx];
-							const cacheKey = `submission_status_${assignment.assignmentId}`;
-							const statusEntry = submissionStatusCacheData[cacheKey];
-							const status = statusEntry ? statusEntry.status : 'unknown';
-							assignmentsByDay[dayKey].push({
-								name: assignment.assignmentName,
-								course: assignment.courseName,
-								url: assignment.assignmentUrl,
-								status: status
-							});
-						}
-					}
-				});
-			}
-
-			// Load custom events
-			const customEvents = await new Promise(resolve => {
-				chrome.storage.local.get({ customEvents: [] }, res => resolve(res.customEvents || []));
-			});
-			customEvents.forEach(event => {
-				const eventDate = new Date(event.startDate || event.date);
-				if (isNaN(eventDate.getTime())) return;
-				eventDate.setHours(0, 0, 0, 0);
-				if (eventDate >= weekStart && eventDate <= weekEnd) {
-					const dayIdx = eventDate.getDay();
-					if (dayIdx >= 0 && dayIdx <= 5) {
-						const dayKey = DAYS_OF_WEEK_EN[dayIdx];
-						eventsByDay[dayKey].push({
-							title: event.title,
-							description: event.description || '',
-							color: event.color || '#f59e0b'
-						});
-					}
-				}
-			});
-		} catch (err) {
-			console.error('[JCT Schedule] Error loading assignments/events:', err);
-		}
-
-		// Format week label
-		const weekStartLabel = `${weekStart.getDate()}/${weekStart.getMonth() + 1}`;
-		const weekEndDate = new Date(weekStart);
-		weekEndDate.setDate(weekStart.getDate() + 5); // Friday
-		const weekEndLabel = `${weekEndDate.getDate()}/${weekEndDate.getMonth() + 1}`;
-		const todayBtnStyle = currentWeekOffset === 0 ? ' style="visibility:hidden"' : '';
-
-		// Build HTML - header with action buttons + week navigation
-		let html = '<div class="jct-schedule-header">';
-		html += '<div class="jct-schedule-actions" id="jct-schedule-actions"></div>';
-		html += '<div class="jct-week-nav">';
-		html += '<button class="jct-week-nav-btn" id="jct-week-prev">▶</button>';
-		html += `<span class="jct-week-nav-label">${weekStartLabel} - ${weekEndLabel}</span>`;
-		html += '<button class="jct-week-nav-btn" id="jct-week-next">◀</button>';
-		html += `<button class="jct-week-nav-btn jct-week-today-btn" id="jct-week-today"${todayBtnStyle}>היום</button>`;
-		html += '</div>';
-		html += '<div class="jct-schedule-header-right">';
-		html += '<span class="jct-schedule-hint">גררו את ה 📅 מהקורס למערכת או לחצו עליו</span>';
-		html += '<button class="jct-schedule-delete-all-btn" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button>';
-		html += '</div></div>';
 		// Load assignments & events for this week
 		const assignmentsByDay = {};
 		const eventsByDay = {};
@@ -2583,7 +2367,6 @@
 		// Setup drag and drop
 		setupScheduleDragAndDrop();
 
-		scheduleContainer.style.display = 'block';
 		scheduleContainer.style.display = 'block';
 	}
 
@@ -3524,9 +3307,7 @@
 				paletteByYearHeb: null,
 				columnCount: DEFAULT_COLUMN_COUNT,
 				viewMode: 'grid',
-				cardStyle: 'compact',
-				darkMode: false,
-				pageAccentColor: '#667eea'
+				cardStyle: 'compact'
 			}, res => resolve(res));
 		});
 
@@ -3534,8 +3315,6 @@
 		const columnCount = settings.columnCount || DEFAULT_COLUMN_COUNT;
 		const viewMode = settings.viewMode || 'grid';
 		const cardStyle = settings.cardStyle || 'compact';
-		const darkMode = !!settings.darkMode;
-		const pageAccentColor = settings.pageAccentColor || '#667eea';
 
 		// Build color table HTML
 		let tableHtml = '<tr><th>שנה\\סמסטר</th>';
@@ -3554,7 +3333,7 @@
 		modal.className = 'jct-assignments-modal';
 		modal.innerHTML = `
 			<div class="jct-assignments-modal-content" style="max-width: 1200px; width: 90vw;">
-				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, var(--jct-page-accent, #667eea) 0%, var(--jct-page-accent-dark, #764ba2) 100%); color: white;">
+				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
 					<h3 style="color: white; margin: 0;">⚙️ הגדרות</h3>
 					<button class="jct-assignments-modal-close" style="color: white; opacity: 0.9;">✕</button>
 				</div>
@@ -3609,39 +3388,8 @@
 								<span style="display: block; margin-top: 6px; font-size: 12px; color: #64748b;">טווח: 3-6 עמודות</span>
 							</div>
 
-							<div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; border: 2px solid #cbd5e1; background: white;">
-								<label style="font-weight: 500; color: #334155; font-size: 14px; cursor: pointer;" for="jct-dark-mode-toggle">
-									🌙 מצב חשוך
-								</label>
-								<label class="jct-toggle-switch">
-									<input type="checkbox" id="jct-dark-mode-toggle" ${darkMode ? 'checked' : ''}>
-									<span class="jct-toggle-slider"></span>
-								</label>
-							</div>
-
-							<div style="margin-bottom: 20px;">
-								<label style="display: block; margin-bottom: 8px; font-weight: 500; color: #334155; font-size: 14px;">
-									🎨 צבע כללי
-								</label>
-								<div style="display: flex; align-items: center; gap: 10px;">
-									<input id="jct-page-accent-color" type="color" value="${pageAccentColor}"
-										style="width: 44px; height: 36px; border: 2px solid #cbd5e1; border-radius: 8px; background: white; cursor: pointer; padding: 2px;">
-									<span id="jct-accent-hex-label" style="font-size: 13px; color: #64748b;">${pageAccentColor}</span>
-								</div>
-								<div class="jct-accent-presets" style="margin-top: 8px;">
-									<div class="jct-accent-preset ${pageAccentColor === '#667eea' ? 'active' : ''}" data-color="#667eea" style="background: #667eea;" title="סגול-כחול"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#3b82f6' ? 'active' : ''}" data-color="#3b82f6" style="background: #3b82f6;" title="כחול"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#22c55e' ? 'active' : ''}" data-color="#22c55e" style="background: #22c55e;" title="ירוק"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#f97316' ? 'active' : ''}" data-color="#f97316" style="background: #f97316;" title="כתום"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#ef4444' ? 'active' : ''}" data-color="#ef4444" style="background: #ef4444;" title="אדום"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#a855f7' ? 'active' : ''}" data-color="#a855f7" style="background: #a855f7;" title="סגול"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#ec4899' ? 'active' : ''}" data-color="#ec4899" style="background: #ec4899;" title="ורוד"></div>
-									<div class="jct-accent-preset ${pageAccentColor === '#14b8a6' ? 'active' : ''}" data-color="#14b8a6" style="background: #14b8a6;" title="טורקיז"></div>
-								</div>
-							</div>
-
 							<div style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px;">
-								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, var(--jct-page-accent, #667eea) 0%, var(--jct-page-accent-dark, #764ba2) 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); transition: all 0.2s;">
+								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.2s;">
 									💾 שמור שינויים
 								</button>
 								<button id="jct-settings-reset" style="padding: 10px 20px; background: white; color: #475569; border: 2px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s;">
@@ -3654,11 +3402,6 @@
 			</div>
 		`;
 		document.body.appendChild(modal);
-
-		// Apply dark mode to the modal's inline styles if dark mode is active
-		if (currentDarkMode) {
-			applyDarkModeToInlineStyles(true);
-		}
 
 		// Close button
 		modal.querySelector('.jct-assignments-modal-close').addEventListener('click', () => {
@@ -3689,8 +3432,6 @@
 			const newColumnCount = Math.max(3, Math.min(6, parseInt(document.getElementById('jct-column-count').value || 3)));
 			const newViewMode = document.getElementById('jct-view-mode').value || 'grid';
 			const newCardStyle = document.getElementById('jct-card-style').value || 'compact';
-			const newDarkMode = document.getElementById('jct-dark-mode-toggle').checked;
-			const newPageAccentColor = document.getElementById('jct-page-accent-color').value || '#667eea';
 
 			// Save to storage
 			await new Promise(resolve => {
@@ -3698,17 +3439,13 @@
 					paletteByYearHeb: newPalette,
 					columnCount: newColumnCount,
 					viewMode: newViewMode,
-					cardStyle: newCardStyle,
-					darkMode: newDarkMode,
-					pageAccentColor: newPageAccentColor
+					cardStyle: newCardStyle
 				}, () => resolve());
 			});
 
 			// Apply view mode and card style immediately
 			applyViewMode(newViewMode);
 			applyCardStyle(newCardStyle);
-			applyDarkMode(newDarkMode);
-			applyPageAccent(newPageAccentColor);
 
 			// Show success message
 			const saveBtn = document.getElementById('jct-settings-save');
@@ -3717,7 +3454,7 @@
 			saveBtn.style.background = '#22c55e';
 			setTimeout(() => {
 				saveBtn.textContent = originalText;
-				saveBtn.style.background = '';
+				saveBtn.style.background = '#2563eb';
 			}, 2000);
 		});
 
@@ -3728,9 +3465,7 @@
 					paletteByYearHeb: DEFAULT_PALETTE,
 					columnCount: DEFAULT_COLUMN_COUNT,
 					viewMode: 'grid',
-					cardStyle: 'compact',
-					darkMode: false,
-					pageAccentColor: '#667eea'
+					cardStyle: 'compact'
 				}, () => resolve());
 			});
 
@@ -3743,12 +3478,8 @@
 			document.getElementById('jct-column-count').value = DEFAULT_COLUMN_COUNT;
 			document.getElementById('jct-view-mode').value = 'grid';
 			document.getElementById('jct-card-style').value = 'compact';
-			document.getElementById('jct-dark-mode-toggle').checked = false;
-			document.getElementById('jct-page-accent-color').value = '#667eea';
 			applyViewMode('grid');
 			applyCardStyle('compact');
-			applyDarkMode(false);
-			applyPageAccent('#667eea');
 		});
 
 		// Add hover effects to buttons
@@ -3765,23 +3496,21 @@
 		});
 
 		resetBtn.addEventListener('mouseenter', () => {
-			resetBtn.style.background = currentDarkMode ? '#334155' : '#f1f5f9';
-			resetBtn.style.borderColor = currentDarkMode ? '#60a5fa' : '#94a3b8';
+			resetBtn.style.background = '#f1f5f9';
+			resetBtn.style.borderColor = '#94a3b8';
 		});
 		resetBtn.addEventListener('mouseleave', () => {
-			resetBtn.style.background = currentDarkMode ? '#1e293b' : 'white';
-			resetBtn.style.borderColor = currentDarkMode ? '#475569' : '#cbd5e1';
+			resetBtn.style.background = 'white';
+			resetBtn.style.borderColor = '#cbd5e1';
 		});
 
 		// Add hover effects to select elements
 		const viewModeSelect = document.getElementById('jct-view-mode');
 		const cardStyleSelect = document.getElementById('jct-card-style');
 
-		const allSelects = [viewModeSelect, cardStyleSelect];
-		allSelects.forEach(select => {
-			if (!select) return;
+		[viewModeSelect, cardStyleSelect].forEach(select => {
 			select.addEventListener('mouseenter', () => {
-				select.style.borderColor = currentPageAccentColor || '#667eea';
+				select.style.borderColor = '#667eea';
 			});
 			select.addEventListener('mouseleave', () => {
 				select.style.borderColor = '#cbd5e1';
@@ -3827,18 +3556,13 @@
 					<!-- Calendar grid will be inserted here -->
 				</div>
 				<div style="padding: 12px; background: #f8fafc; border-top: 1px solid #e5e7eb; display: flex; justify-content: center;">
-					<button id="jct-add-event-btn" style="padding: 10px 20px; background: linear-gradient(135deg, var(--jct-page-accent, #667eea) 0%, var(--jct-page-accent-dark, #764ba2) 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); transition: all 0.2s ease;">
+					<button id="jct-add-event-btn" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); transition: all 0.2s ease;">
 						➕ הוסף אירוע חדש
 					</button>
 				</div>
 			</div>
 		`;
 		document.body.appendChild(modal);
-
-		// Apply dark mode to calendar modal if active
-		if (currentDarkMode) {
-			applyDarkModeToInlineStyles(true);
-		}
 
 		// Close button
 		modal.querySelector('.jct-calendar-modal-close').addEventListener('click', () => {
@@ -4498,11 +4222,6 @@
 		document.body.appendChild(modal);
 		isModalOpening = false; // Modal is now in DOM
 
-		// Apply dark mode to assignments modal if active
-		if (currentDarkMode) {
-			applyDarkModeToInlineStyles(true);
-		}
-
 		// Track if scanning is in progress
 		let isScanning = false;
 
@@ -4920,22 +4639,6 @@
 					.jct-scan-warning-proceed:hover {
 						background: #2563eb;
 					}
-					body.jct-dark-mode .jct-scan-warning-content {
-						background: #1e293b !important;
-					}
-					body.jct-dark-mode .jct-scan-warning-content h3 {
-						color: #f1f5f9 !important;
-					}
-					body.jct-dark-mode .jct-scan-warning-content p {
-						color: #94a3b8 !important;
-					}
-					body.jct-dark-mode .jct-scan-warning-cancel {
-						background: #334155 !important;
-						color: #e2e8f0 !important;
-					}
-					body.jct-dark-mode .jct-scan-warning-cancel:hover {
-						background: #475569 !important;
-					}
 				`;
 				document.head.appendChild(style);
 
@@ -4966,24 +4669,6 @@
 		// Function to refilter and display from cache without scanning
 		async function refilterAndDisplayFromCache(cachedData, maxOverdueDays, filterYear, filterSemester, forceRefreshStatus = false, hideSubmitted = false) {
 			const statusEl = document.getElementById('jct-loading-status');
-
-			// Get filter controls
-			const filterYearSelect = document.getElementById('jct-filter-year');
-			const filterSemesterSelect = document.getElementById('jct-filter-semester');
-			const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
-			const hideSubmittedCheckbox = document.getElementById('jct-hide-submitted');
-			const refreshBtn = document.getElementById('jct-refresh-assignments');
-			const rescanBtn = document.getElementById('jct-rescan-assignments');
-
-			// Disable controls if checking status
-			if (forceRefreshStatus) {
-				if (filterYearSelect) filterYearSelect.disabled = true;
-				if (filterSemesterSelect) filterSemesterSelect.disabled = true;
-				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = true;
-				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
-				if (refreshBtn) refreshBtn.disabled = true;
-				if (rescanBtn) rescanBtn.disabled = true;
-			}
 
 			// Get filter controls
 			const filterYearSelect = document.getElementById('jct-filter-year');
@@ -5088,15 +4773,6 @@
 				statusEl.innerHTML = statusText;
 			}
 
-			// Re-enable controls if we disabled them during status check
-			if (forceRefreshStatus) {
-				if (filterYearSelect) filterYearSelect.disabled = false;
-				if (filterSemesterSelect) filterSemesterSelect.disabled = false;
-				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
-				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
-				if (refreshBtn) refreshBtn.disabled = false;
-				if (rescanBtn) rescanBtn.disabled = false;
-			}
 			// Re-enable controls if we disabled them during status check
 			if (forceRefreshStatus) {
 				if (filterYearSelect) filterYearSelect.disabled = false;
@@ -5213,7 +4889,6 @@
 			rescanBtn.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
 			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
-			if (closeBtn) closeBtn.style.display = 'none';
 			const scanningNotice = document.getElementById('jct-scanning-notice');
 			if (closeBtn) closeBtn.style.display = 'none';
 			if (scanningNotice) scanningNotice.style.display = 'block';
@@ -5455,117 +5130,6 @@
 
 		// Initial render
 		renderTodos();
-		// Inject buttons into the schedule header actions area
-		const actionsContainer = document.getElementById('jct-schedule-actions');
-		if (actionsContainer) {
-			actionsContainer.appendChild(calendarBtn);
-			actionsContainer.appendChild(assignmentsBtn);
-			actionsContainer.appendChild(settingsBtn);
-		} else {
-			// Fallback: insert buttons after page header if schedule not ready yet
-			const btnRow = document.createElement('div');
-			btnRow.className = 'jct-schedule-actions';
-			btnRow.appendChild(calendarBtn);
-			btnRow.appendChild(assignmentsBtn);
-			btnRow.appendChild(settingsBtn);
-			if (pageHeader) {
-				pageHeader.parentElement.insertBefore(btnRow, pageHeader.nextSibling);
-			}
-		}
-
-		// Show scan hint bubble if user never scanned
-		getAssignmentsCache().then(({ cache }) => {
-			if (cache && cache.assignments && cache.assignments.length > 0) return;
-			// No cache — show hint
-			const wrapper = assignmentsBtn.parentElement;
-			if (!wrapper) return;
-			wrapper.style.position = 'relative';
-
-			const bubble = document.createElement('div');
-			bubble.className = 'jct-scan-hint-bubble';
-			bubble.textContent = 'לחץ כאן כדי לסרוק את המטלות שלך';
-			wrapper.appendChild(bubble);
-
-			// Dismiss on click
-			assignmentsBtn.addEventListener('click', () => {
-				bubble.remove();
-			}, { once: true });
-		});
-	}
-
-	// Initialize TODO list functionality
-	async function initializeTodoList() {
-		const todoInput = document.getElementById('jct-todo-input');
-		const todoAddBtn = document.getElementById('jct-todo-add-btn');
-		const todoList = document.getElementById('jct-todo-list');
-
-		if (!todoInput || !todoAddBtn || !todoList) return;
-
-		// Load todos from storage
-		let todos = await new Promise(resolve => {
-			chrome.storage.local.get({ todoList: [] }, res => resolve(res.todoList));
-		});
-
-		// Render todos
-		function renderTodos() {
-			if (todos.length === 0) {
-				todoList.innerHTML = `
-					<div style="text-align: center; padding: 30px 10px; color: #94a3b8;">
-						<div style="font-size: 2rem; margin-bottom: 8px;">📝</div>
-						<p style="font-size: 0.8125rem; margin: 0;">אין משימות</p>
-					</div>
-				`;
-				return;
-			}
-
-			todoList.innerHTML = todos.map((todo, index) => `
-				<div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: ${todo.completed ? '#f1f5f9' : 'white'}; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 6px;">
-					<input type="checkbox" ${todo.completed ? 'checked' : ''} data-index="${index}" class="jct-todo-check" style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
-					<span style="flex: 1; ${todo.completed ? 'text-decoration: line-through; color: #94a3b8;' : 'color: #1e293b;'} font-size: 0.8125rem; word-break: break-word;">${todo.text}</span>
-					<button data-index="${index}" class="jct-todo-del" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; opacity: 0.7; flex-shrink: 0;">🗑️</button>
-				</div>
-			`).join('');
-
-			// Add event listeners
-			todoList.querySelectorAll('.jct-todo-check').forEach(checkbox => {
-				checkbox.addEventListener('change', async (e) => {
-					const index = parseInt(e.target.dataset.index);
-					todos[index].completed = e.target.checked;
-					await chrome.storage.local.set({ todoList: todos });
-					renderTodos();
-				});
-			});
-
-			todoList.querySelectorAll('.jct-todo-del').forEach(btn => {
-				btn.addEventListener('click', async (e) => {
-					const index = parseInt(e.target.dataset.index);
-					todos.splice(index, 1);
-					await chrome.storage.local.set({ todoList: todos });
-					renderTodos();
-				});
-				btn.addEventListener('mouseenter', () => btn.style.opacity = '1');
-				btn.addEventListener('mouseleave', () => btn.style.opacity = '0.7');
-			});
-		}
-
-		// Add todo
-		async function addTodo() {
-			const text = todoInput.value.trim();
-			if (!text) return;
-
-			todos.push({ text, completed: false });
-			await chrome.storage.local.set({ todoList: todos });
-			todoInput.value = '';
-			renderTodos();
-		}
-
-		todoAddBtn.addEventListener('click', addTodo);
-		todoInput.addEventListener('keypress', (e) => {
-			if (e.key === 'Enter') addTodo();
-		});
-
-		// Initial render
-		renderTodos();
 	}
 
 	function applyCoursePageColors() {
@@ -5670,12 +5234,6 @@
 				if (area === 'sync' && changes.cardStyle) {
 					currentCardStyle = changes.cardStyle.newValue || 'compact';
 					applyCardStyle(currentCardStyle);
-				}
-				if (area === 'sync' && changes.darkMode) {
-					applyDarkMode(!!changes.darkMode.newValue);
-				}
-				if (area === 'sync' && changes.pageAccentColor) {
-					applyPageAccent(changes.pageAccentColor.newValue || '#667eea');
 				}
 			});
 		}
