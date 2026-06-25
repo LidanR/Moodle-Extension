@@ -31,10 +31,10 @@ A Chrome extension that modernizes and improves the usability of `moodle.jct.ac.
 
 ### Customization Options
 
-#### Year & Semester Color Palette �
+#### Year & Semester Color Palette
 1. Right-click the extension icon → **Options**, or open the extension card and click **Extension options**.
-2. The color table shows Hebrew years (rows) and semesters (columns).
-3. Pick colors for each combination. The extension automatically detects the year and semester from course titles.
+2. The palette editor lets you choose how many Hebrew years ahead to manage.
+3. Pick colors per year + semester. The extension automatically detects the year and semester from course titles.
 4. Click **Save**, then reload the Moodle page to see your changes.
 5. Click **Reset** to restore default colors.
 
@@ -77,8 +77,8 @@ Remove the extension from `chrome://extensions/` or toggle it off.
 
 #### פלטת צבעים לשנה וסמסטר 🎨
 1. לחץ לחיצה ימנית על אייקון התוסף ← **אפשרויות** (Options), או פתח את כרטיס התוסף ולחץ **אפשרויות הרחבה**.
-2. טבלת הצבעים מציגה שנים עבריות (שורות) וסמסטרים (עמודות).
-3. בחר צבעים לכל שילוב. התוסף מזהה אוטומטית את השנה והסמסטר מכותרות הקורסים.
+2. עורך הצבעים מאפשר לבחור כמה שנים קדימה להציג ולערוך.
+3. בחר צבעים לכל שילוב של שנה + סמסטר. התוסף מזהה אוטומטית את השנה והסמסטר מכותרות הקורסים.
 4. לחץ **שמירה**, ואז רענן את דף Moodle כדי לראות את השינויים.
 5. לחץ **איפוס לברירת מחדל** כדי לחזור לצבעי ברירת המחדל.
 

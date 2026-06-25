@@ -8,8 +8,12 @@
 		}
 	};
 
-	const HEBREW_YEARS = [5784, 5785, 5786, 5787, 5788, 5789, 5790];
+	const BASE_HEBREW_YEAR = 5784;
+	const DEFAULT_PALETTE_YEARS_AHEAD = 10;
+	const MIN_PALETTE_YEARS_AHEAD = 3;
+	const MAX_PALETTE_YEARS_AHEAD = 30;
 	const SEM_TO_IDX = { 'אלול': 0, '1': 0, 'א': 1, '2': 1, 'ב': 2, '3': 2 };
+	const SEMESTERS = ["אלול", "א", "ב"];
 	const DEFAULT_PALETTE = [
 		["#3b82f6", "#818cf8", "#bae6fd"], // 5784
 		["#22c55e", "#4ade80", "#bbf7d0"], // 5785
@@ -19,6 +23,25 @@
 		["#2563eb", "#60a5fa", "#dbeafe"], // 5789
 		["#b45309", "#f59e42", "#fde68a"]  // 5790
 	];
+	const HEBREW_YEAR_NAMES = {
+		5784: 'תשפ"ד',
+		5785: 'תשפ"ה',
+		5786: 'תשפ"ו',
+		5787: 'תשפ"ז',
+		5788: 'תשפ"ח',
+		5789: 'תשפ"ט',
+		5790: 'תש"צ',
+		5791: 'תשצ"א',
+		5792: 'תשצ"ב',
+		5793: 'תשצ"ג',
+		5794: 'תשצ"ד',
+		5795: 'תשצ"ה',
+		5796: 'תשצ"ו',
+		5797: 'תשצ"ז',
+		5798: 'תשצ"ח',
+		5799: 'תשצ"ט',
+		5800: 'תש"ס'
+	};
 	let paletteByYearHeb = null;
 	let favoriteCourseIds = new Set();
 	let courseSchedules = {};
@@ -30,6 +53,57 @@
 	let currentViewMode = 'grid'; // Default view mode
 	let currentCardStyle = 'compact'; // Default card style
 	let currentWeekOffset = 0; // 0 = this week, -1 = last week, +1 = next week
+
+	function clampInt(value, min, max, fallback) {
+		const parsed = parseInt(value, 10);
+		if (Number.isNaN(parsed)) return fallback;
+		return Math.max(min, Math.min(max, parsed));
+	}
+
+	function getHebrewYearName(year) {
+		if (!year) return '';
+		return HEBREW_YEAR_NAMES[year] || String(year);
+	}
+
+	function getDefaultColorForYearSemester(year, semIdx) {
+		if (semIdx == null || semIdx < 0 || semIdx >= SEMESTERS.length) return '#cccccc';
+		const len = DEFAULT_PALETTE.length;
+		const idx = ((year - BASE_HEBREW_YEAR) % len + len) % len;
+		return (DEFAULT_PALETTE[idx] && DEFAULT_PALETTE[idx][semIdx]) || '#cccccc';
+	}
+
+	function normalizePaletteByYear(rawPalette, yearsAhead = DEFAULT_PALETTE_YEARS_AHEAD) {
+		const endYear = BASE_HEBREW_YEAR + Math.max(0, yearsAhead);
+		const map = {};
+
+		if (Array.isArray(rawPalette)) {
+			for (let i = 0; i < rawPalette.length; i++) {
+				const row = Array.isArray(rawPalette[i]) ? rawPalette[i] : [];
+				const year = BASE_HEBREW_YEAR + i;
+				map[year] = SEMESTERS.map((_, semIdx) => row[semIdx] || getDefaultColorForYearSemester(year, semIdx));
+			}
+		} else if (rawPalette && typeof rawPalette === 'object') {
+			Object.keys(rawPalette).forEach((key) => {
+				const year = parseInt(key, 10);
+				if (Number.isNaN(year)) return;
+				const row = Array.isArray(rawPalette[key]) ? rawPalette[key] : [];
+				map[year] = SEMESTERS.map((_, semIdx) => row[semIdx] || getDefaultColorForYearSemester(year, semIdx));
+			});
+		}
+
+		for (let year = BASE_HEBREW_YEAR; year <= endYear; year++) {
+			if (!Array.isArray(map[year])) {
+				map[year] = SEMESTERS.map((_, semIdx) => getDefaultColorForYearSemester(year, semIdx));
+			}
+		}
+
+		return map;
+	}
+
+	function hashToFallbackYear(hash) {
+		const span = DEFAULT_PALETTE_YEARS_AHEAD + 1;
+		return BASE_HEBREW_YEAR + (Math.abs(hash) % span);
+	}
 
 	// Function to apply card style
 	function applyCardStyle(style) {
@@ -319,19 +393,7 @@
 	function getSemesterName(year, semIdx) {
 		if (!year || semIdx == null) return 'קורסים';
 		const semesterNames = ['סמסטר אלול', 'סמסטר א׳', 'סמסטר ב׳'];
-
-		// Convert Hebrew year to readable format
-		const hebrewYearNames = {
-			5784: 'תשפ״ד',
-			5785: 'תשפ״ה',
-			5786: 'תשפ״ו',
-			5787: 'תשפ״ז',
-			5788: 'תשפ״ח',
-			5789: 'תשפ״ט',
-			5790: 'תש״ץ'
-		};
-
-		const yearName = hebrewYearNames[year] || year;
+		const yearName = getHebrewYearName(year);
 		return `${semesterNames[semIdx] || 'סמסטר'} ${yearName}`;
 	}
 
@@ -555,6 +617,20 @@
 		});
 	}
 
+	const ASSIGNMENT_MODNAMES = new Set(['assign', 'vpl']);
+
+	function getAssignmentModnameFromUrl(url) {
+		if (!url) return null;
+		if (url.includes('/mod/vpl/view.php')) return 'vpl';
+		if (url.includes('/mod/assign/view.php')) return 'assign';
+		return null;
+	}
+
+	function buildAssignmentViewUrl(baseUrl, assignmentId, modname) {
+		const safeModname = modname === 'vpl' ? 'vpl' : 'assign';
+		return `${baseUrl}/mod/${safeModname}/view.php?id=${assignmentId}`;
+	}
+
 	async function fetchAssignmentsForCourse(courseId) {
 		if (!courseId) {
 			return [];
@@ -645,7 +721,8 @@
 						sections.forEach(section => {
 							if (section.modules && Array.isArray(section.modules)) {
 								section.modules.forEach(module => {
-									if (module.modname === 'assign' && module.id) {
+									if (ASSIGNMENT_MODNAMES.has(module.modname) && module.id) {
+										const assignmentModname = module.modname;
 										// Find due date
 										let dueDate = null;
 										if (module.dates && Array.isArray(module.dates)) {
@@ -672,9 +749,9 @@
 										}
 
 										// Ensure URL points to assignment view
-										let moduleUrl = module.url || `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
-										if (!moduleUrl.includes('/mod/assign/view.php')) {
-											moduleUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
+										let moduleUrl = module.url || buildAssignmentViewUrl(moodleCfg.wwwroot, module.id, assignmentModname);
+										if (!moduleUrl.includes(`/mod/${assignmentModname}/view.php`)) {
+											moduleUrl = buildAssignmentViewUrl(moodleCfg.wwwroot, module.id, assignmentModname);
 										}
 
 										// Check if assignment is submitted
@@ -690,6 +767,7 @@
 											name: module.name || 'מטלה ללא שם',
 											duedate: dueDate,
 											url: moduleUrl,
+											modname: assignmentModname,
 											submission: isSubmitted ? { status: 'submitted' } : null
 										});
 									}
@@ -724,8 +802,8 @@
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, 'text/html');
 
-					// Find assignment links
-					const assignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+					// Find assignment links (assign and VPL)
+					const assignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"], a[href*="/mod/vpl/view.php"]');
 					const assignments = [];
 
 					assignmentLinks.forEach(link => {
@@ -733,13 +811,14 @@
 						const match = href.match(/[?&]id=(\d+)/);
 						if (match) {
 							const assignId = match[1];
+							const assignmentModname = href.includes('/mod/vpl/view.php') ? 'vpl' : 'assign';
 							const name = link.textContent.trim() || link.innerText.trim();
 
 							// Try to find due date - multiple approaches
 							let dueDate = null;
 
 							// Approach 1: Look in parent elements
-							const parent = link.closest('.activity, .modtype_assign, li, .course-content, .activityinstance, .activity-item');
+							const parent = link.closest('.activity, .modtype_assign, .modtype_vpl, li, .course-content, .activityinstance, .activity-item');
 							if (parent) {
 								// Try to find date in various formats
 								const dateText = parent.textContent || parent.innerText || '';
@@ -793,7 +872,7 @@
 							// This will be done in background and cached for next time
 							if (assignId) {
 								// Fetch in background and update cache
-								fetch(`${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`, {
+								fetch(buildAssignmentViewUrl(moodleCfg.wwwroot, assignId, assignmentModname), {
 									method: 'GET',
 									credentials: 'include'
 								}).then(response => {
@@ -865,13 +944,13 @@
 							}
 
 							// Ensure URL points to assignment view, not course
-							if (!finalUrl.includes('/mod/assign/view.php')) {
-								finalUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`;
+							if (!finalUrl.includes('/mod/assign/view.php') && !finalUrl.includes('/mod/vpl/view.php')) {
+								finalUrl = buildAssignmentViewUrl(moodleCfg.wwwroot, assignId, assignmentModname);
 							}
 
 							// Check if assignment is submitted by looking at the link or parent element
 							let isSubmitted = false;
-							const parentEl = link.closest('.activity, .modtype_assign, li, .course-content, .activityinstance, .activity-item');
+							const parentEl = link.closest('.activity, .modtype_assign, .modtype_vpl, li, .course-content, .activityinstance, .activity-item');
 							if (parentEl) {
 								const parentText = parentEl.textContent || parentEl.innerText || '';
 								// Look for Hebrew indicators of submission
@@ -888,6 +967,7 @@
 								name: name,
 								duedate: dueDate,
 								url: finalUrl,
+								modname: assignmentModname,
 								submission: isSubmitted ? { status: 'submitted' } : null
 							});
 						}
@@ -1034,7 +1114,8 @@
 	function loadPaletteHeb() {
 		return new Promise((resolve) => {
 			chrome.storage.sync.get({ paletteByYearHeb: null }, res => {
-				if (Array.isArray(res.paletteByYearHeb)) paletteByYearHeb = res.paletteByYearHeb;
+				const raw = res.paletteByYearHeb;
+				if (Array.isArray(raw) || (raw && typeof raw === 'object')) paletteByYearHeb = raw;
 				else paletteByYearHeb = null;
 				resolve(paletteByYearHeb);
 			});
@@ -1044,14 +1125,32 @@
 	function parseHebrewYearAndSemester(txt) {
 		let y, s;
 		// Detect Hebrew year
-		const yMatch = txt.match(/תש[פצ]["']?[דוהזחטצ]/);
+		const yMatch = txt.match(/תש[פצ]["']?[א-ת]{1,2}/);
 		if (yMatch) {
-			const lookup = { 'תשפ"ד': 5784, 'תשפ"ה': 5785, 'תשפ"ו': 5786, 'תשפ"ז': 5787, 'תשפ"ח': 5788, 'תשפ"ט': 5789, 'תש"צ': 5790 };
+			const lookup = {
+				'תשפ"ד': 5784,
+				'תשפ"ה': 5785,
+				'תשפ"ו': 5786,
+				'תשפ"ז': 5787,
+				'תשפ"ח': 5788,
+				'תשפ"ט': 5789,
+				'תש"צ': 5790,
+				'תשצ"א': 5791,
+				'תשצ"ב': 5792,
+				'תשצ"ג': 5793,
+				'תשצ"ד': 5794,
+				'תשצ"ה': 5795,
+				'תשצ"ו': 5796,
+				'תשצ"ז': 5797,
+				'תשצ"ח': 5798,
+				'תשצ"ט': 5799,
+				'תש"ס': 5800
+			};
 			const cy = yMatch[0].replace("'", '"');
 			y = lookup[cy];
 		}
 		if (!y) {
-			const nMatch = txt.match(/57[8-9][0-9]/);
+			const nMatch = txt.match(/5\d{3}/);
 			y = nMatch ? parseInt(nMatch[0], 10) : null;
 		}
 		// Detect semester
@@ -1063,11 +1162,10 @@
 	}
 
 	function colorFor(year, semIdx) {
-		// Use DEFAULT_PALETTE if paletteByYearHeb is not loaded yet
-		const palette = Array.isArray(paletteByYearHeb) ? paletteByYearHeb : DEFAULT_PALETTE;
-		const row = HEBREW_YEARS.indexOf(year);
-		if (row === -1 || semIdx == null) return { h: 220, s: 60, l: 60 };
-		let hex = palette[row] && palette[row][semIdx];
+		if (semIdx == null) return { h: 220, s: 60, l: 60 };
+		const paletteMap = normalizePaletteByYear(paletteByYearHeb, DEFAULT_PALETTE_YEARS_AHEAD);
+		let hex = year != null && paletteMap[year] ? paletteMap[year][semIdx] : null;
+		if (!hex && year != null) hex = getDefaultColorForYearSemester(year, semIdx);
 		if (!hex) hex = "#cccccc";
 		return hexToHsl(hex);
 	}
@@ -1234,7 +1332,18 @@
 					}
 
 					const safeName = (assign.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-					const safeUrl = assign.url || '';
+					const assignmentModname = assign.modname || getAssignmentModnameFromUrl(assign.url);
+					let safeUrl = assign.url || '';
+					if (safeUrl && !safeUrl.includes('/mod/assign/view.php') && !safeUrl.includes('/mod/vpl/view.php')) {
+						const urlMatch = safeUrl.match(/[?&]id=(\d+)/);
+						if (urlMatch && urlMatch[1]) {
+							safeUrl = buildAssignmentViewUrl(window.location.origin, urlMatch[1], assignmentModname);
+						} else if (assign.id) {
+							safeUrl = buildAssignmentViewUrl(window.location.origin, assign.id, assignmentModname);
+						}
+					} else if (!safeUrl && assign.id) {
+						safeUrl = buildAssignmentViewUrl(window.location.origin, assign.id, assignmentModname);
+					}
 
 					html += `<div class="jct-assignment-item ${statusClass}" data-assignment-url="${safeUrl ? safeUrl.replace(/"/g, '&quot;') : ''}">`;
 					html += `<div class="jct-assignment-name">${safeName}</div>`;
@@ -1245,7 +1354,7 @@
 					html += `<span class="jct-assignment-status">${statusText}</span>`;
 					html += `</div>`;
 					if (safeUrl) {
-						html += `<a href="${safeUrl}" class="jct-assignment-link" target="_blank" data-href="${safeUrl}">פתח →</a>`;
+						html += `<a href="${safeUrl}" class="jct-assignment-link" target="_blank" data-href="${safeUrl}" data-modname="${assignmentModname || ''}">פתח →</a>`;
 					}
 					html += `</div>`;
 				} catch (e) {
@@ -1266,20 +1375,21 @@
 			// Add click handlers to all links in initial HTML
 			const allLinks = assignmentsContainer.querySelectorAll('.jct-assignment-link');
 			allLinks.forEach(link => {
-				link.addEventListener('click', (e) => {
-					e.stopPropagation();
-					e.preventDefault();
-					let href = link.getAttribute('href') || link.getAttribute('data-href');
-					// Fix URL if needed
-					if (href && !href.includes('/mod/assign/view.php')) {
-						const urlMatch = href.match(/[?&]id=(\d+)/);
-						if (urlMatch) {
-							href = `${window.location.origin}/mod/assign/view.php?id=${urlMatch[1]}`;
+					link.addEventListener('click', (e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						let href = link.getAttribute('href') || link.getAttribute('data-href');
+						// Fix URL if needed
+						if (href && !href.includes('/mod/assign/view.php') && !href.includes('/mod/vpl/view.php')) {
+							const modname = link.getAttribute('data-modname') || getAssignmentModnameFromUrl(href);
+							const urlMatch = href.match(/[?&]id=(\d+)/);
+							if (urlMatch) {
+								href = buildAssignmentViewUrl(window.location.origin, urlMatch[1], modname);
+							}
 						}
-					}
-					if (href) {
-						window.location.href = href;
-					}
+						if (href) {
+							window.location.href = href;
+						}
 				});
 			});
 
@@ -1332,17 +1442,18 @@
 				const safeName = (assign.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 				// Fix URL - ensure it points to assignment view
+				const assignmentModname = assign.modname || getAssignmentModnameFromUrl(assign.url);
 				let safeUrl = assign.url || '';
-				if (safeUrl && !safeUrl.includes('/mod/assign/view.php')) {
+				if (safeUrl && !safeUrl.includes('/mod/assign/view.php') && !safeUrl.includes('/mod/vpl/view.php')) {
 					// Try to extract assignment ID from URL
 					const urlMatch = safeUrl.match(/[?&]id=(\d+)/);
 					if (urlMatch && urlMatch[1]) {
-						safeUrl = `${window.location.origin}/mod/assign/view.php?id=${urlMatch[1]}`;
+						safeUrl = buildAssignmentViewUrl(window.location.origin, urlMatch[1], assignmentModname);
 					} else if (assign.id) {
-						safeUrl = `${window.location.origin}/mod/assign/view.php?id=${assign.id}`;
+						safeUrl = buildAssignmentViewUrl(window.location.origin, assign.id, assignmentModname);
 					}
 				} else if (!safeUrl && assign.id) {
-					safeUrl = `${window.location.origin}/mod/assign/view.php?id=${assign.id}`;
+					safeUrl = buildAssignmentViewUrl(window.location.origin, assign.id, assignmentModname);
 				}
 
 				div.className = `jct-assignment-item ${statusClass}`;
@@ -1606,8 +1717,7 @@
 				// Fallback: derive stable indices from course id so colors vary and use options palette
 				const cid = getCourseIdFromCard(card) || '';
 				let hash = 0; for (let i = 0; i < cid.length; i++) { hash = ((hash << 5) - hash) + cid.charCodeAt(i); hash |= 0; }
-				const row = Math.abs(hash) % HEBREW_YEARS.length;
-				year = HEBREW_YEARS[row];
+				year = hashToFallbackYear(hash);
 				const sems = [0, 1, 2];
 				semIdx = sems[Math.abs(hash >> 3) % sems.length];
 			}
@@ -2670,11 +2780,12 @@
 			// Pattern: <strong>מסתיים:</strong> יום רביעי, 30 אפריל 2025, 11:59 PM
 			const bodyText = doc.body ? doc.body.innerHTML : html;
 
-			// Look for "מסתיים:" or "Due date:" in the entire body
-			if (bodyText.includes('מסתיים:') || bodyText.includes('Due date:')) {
+			// Look for due date labels in the entire body
+			if (bodyText.includes('מסתיים:') || bodyText.includes('Due date:') || bodyText.includes('Due Date:') ||
+				bodyText.includes('תאריך סיום') || bodyText.includes('תאריך הגשה') || bodyText.includes('Deadline:')) {
 				// Use regex directly on the body text to extract the date
 				// Pattern: <strong>מסתיים:</strong> יום חמישי, 20 נובמבר 2025, 11:00 PM
-				const dateRegex = /(?:מסתיים:|Due date:)<\/strong>\s*([^<]+)/;
+				const dateRegex = /(?:מסתיים:|Due date:|Due Date:|תאריך סיום:|תאריך הגשה:|Deadline:)<\/strong>\s*([^<]+)/;
 				const match = bodyText.match(dateRegex);
 
 				if (match) {
@@ -3117,7 +3228,7 @@
 									const sectionDoc = sectionParser.parseFromString(sectionHtml, 'text/html');
 
 									// Find assignment links in this section
-									const assignmentLinks = sectionDoc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+									const assignmentLinks = sectionDoc.querySelectorAll('a[href*="/mod/assign/view.php"], a[href*="/mod/vpl/view.php"]');
 
 									assignmentLinks.forEach(link => {
 										const assignHref = link.getAttribute('href');
@@ -3130,6 +3241,7 @@
 										const assignMatch = assignHref.match(/[?&]id=(\d+)/);
 										if (assignMatch) {
 											const assignId = assignMatch[1];
+											const assignmentModname = assignHref.includes('/mod/vpl/view.php') ? 'vpl' : 'assign';
 
 											// Skip if we've already seen this assignment ID
 											if (seenAssignmentIds.has(assignId)) {
@@ -3169,6 +3281,7 @@
 												assignmentId: assignId,
 												assignmentName: name,
 												assignmentUrl: finalUrl,
+												assignmentType: assignmentModname,
 												courseUrl: courseUrl
 											};
 											allAssignments.push(assignment);
@@ -3183,7 +3296,7 @@
 
 						// Step 3: Also look for assignments directly in the course page
 						// (some courses have assignments both in sections and on the main page)
-						const directAssignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+						const directAssignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"], a[href*="/mod/vpl/view.php"]');
 
 						directAssignmentLinks.forEach(link => {
 							const assignHref = link.getAttribute('href');
@@ -3196,6 +3309,7 @@
 							const assignMatch = assignHref.match(/[?&]id=(\d+)/);
 							if (assignMatch) {
 								const assignId = assignMatch[1];
+								const assignmentModname = assignHref.includes('/mod/vpl/view.php') ? 'vpl' : 'assign';
 
 								// Skip if we've already seen this assignment ID
 								if (seenAssignmentIds.has(assignId)) {
@@ -3235,6 +3349,7 @@
 									assignmentId: assignId,
 									assignmentName: name,
 									assignmentUrl: finalUrl,
+									assignmentType: assignmentModname,
 									courseUrl: courseUrl
 								};
 								allAssignments.push(assignment);
@@ -3284,56 +3399,50 @@
 
 	// Function to show settings modal
 	async function showSettingsModal() {
-		// Hebrew years and semesters
-		const HEBREW_YEARS = [
-			{ str: "תשפ\"ד", num: 5784 }, { str: "תשפ\"ה", num: 5785 }, { str: "תשפ\"ו", num: 5786 },
-			{ str: "תשפ\"ז", num: 5787 }, { str: "תשפ\"ח", num: 5788 }, { str: "תשפ\"ט", num: 5789 }, { str: "תש\"צ", num: 5790 }
-		];
-		const SEMESTERS = ["אלול", "א", "ב"];
-		const DEFAULT_PALETTE = [
-			["#3b82f6", "#818cf8", "#bae6fd"], // 5784
-			["#22c55e", "#4ade80", "#bbf7d0"], // 5785
-			["#f97316", "#fbbf24", "#fed7aa"], // 5786
-			["#f43f5e", "#fda4af", "#fecdd3"], // 5787
-			["#a21caf", "#f472b6", "#f3e8ff"], // 5788
-			["#2563eb", "#60a5fa", "#dbeafe"], // 5789
-			["#b45309", "#f59e42", "#fde68a"]  // 5790
-		];
 		const DEFAULT_COLUMN_COUNT = 3;
 
 		// Get current settings
 		const settings = await new Promise(resolve => {
 			chrome.storage.sync.get({
 				paletteByYearHeb: null,
+				paletteYearsAhead: DEFAULT_PALETTE_YEARS_AHEAD,
 				columnCount: DEFAULT_COLUMN_COUNT,
 				viewMode: 'grid',
 				cardStyle: 'compact'
 			}, res => resolve(res));
 		});
 
-		const palette = Array.isArray(settings.paletteByYearHeb) ? settings.paletteByYearHeb : DEFAULT_PALETTE;
+		let yearsAhead = clampInt(
+			settings.paletteYearsAhead,
+			MIN_PALETTE_YEARS_AHEAD,
+			MAX_PALETTE_YEARS_AHEAD,
+			DEFAULT_PALETTE_YEARS_AHEAD
+		);
+		let workingPalette = normalizePaletteByYear(settings.paletteByYearHeb, yearsAhead);
 		const columnCount = settings.columnCount || DEFAULT_COLUMN_COUNT;
 		const viewMode = settings.viewMode || 'grid';
 		const cardStyle = settings.cardStyle || 'compact';
 
-		// Build color table HTML
-		let tableHtml = '<tr><th>שנה\\סמסטר</th>';
-		for (let sem of SEMESTERS) tableHtml += `<th>${sem}</th>`;
-		tableHtml += '</tr>';
-		for (let r = 0; r < HEBREW_YEARS.length; ++r) {
-			tableHtml += `<tr><td><b>${HEBREW_YEARS[r].str}</b></td>`;
-			for (let c = 0; c < SEMESTERS.length; ++c) {
-				tableHtml += `<td><input type="color" id="jct-color-${r}-${c}" value="${palette[r][c]}" style="border:none;width:42px;height:32px;background:none;cursor:pointer;"></td>`;
-			}
-			tableHtml += '</tr>';
-		}
+		const collectPaletteFromUI = () => {
+			const nextPalette = normalizePaletteByYear(workingPalette, yearsAhead);
+			document.querySelectorAll('.jct-color-input').forEach((input) => {
+				const year = parseInt(input.getAttribute('data-year') || '', 10);
+				const semIdx = parseInt(input.getAttribute('data-sem') || '', 10);
+				if (Number.isNaN(year) || Number.isNaN(semIdx)) return;
+				if (!Array.isArray(nextPalette[year])) {
+					nextPalette[year] = SEMESTERS.map((_, idx) => getDefaultColorForYearSemester(year, idx));
+				}
+				nextPalette[year][semIdx] = input.value || getDefaultColorForYearSemester(year, semIdx);
+			});
+			return nextPalette;
+		};
 
 		// Create modal
 		const modal = document.createElement('div');
 		modal.className = 'jct-assignments-modal';
 		modal.innerHTML = `
 			<div class="jct-assignments-modal-content" style="max-width: 1200px; width: 90vw;">
-				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+				<div class="jct-assignments-modal-header" style="background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%); color: white;">
 					<h3 style="color: white; margin: 0;">⚙️ הגדרות</h3>
 					<button class="jct-assignments-modal-close" style="color: white; opacity: 0.9;">✕</button>
 				</div>
@@ -3341,12 +3450,16 @@
 					<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start;">
 						<!-- Right side: Color palette -->
 						<div>
-							<h4 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #1e293b;">🎨 צבעים לכל שנה וסמסטר</h4>
-							<table style="border-collapse:collapse;background:#fff;width:100%;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">
-								${tableHtml}
-							</table>
+							<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 14px;">
+								<h4 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a;">🎨 צבעים לפי שנה וסמסטר</h4>
+								<label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#334155; white-space:nowrap;">
+									שנים קדימה
+									<input id="jct-palette-years-ahead" type="number" min="${MIN_PALETTE_YEARS_AHEAD}" max="${MAX_PALETTE_YEARS_AHEAD}" value="${yearsAhead}" style="width:72px; padding:6px 8px; border-radius:8px; border:1px solid #94a3b8; font-size:13px;">
+								</label>
+							</div>
+							<div id="jct-palette-rows" style="display:grid; gap:8px;"></div>
 							<p style="color: #64748b; font-size: 13px; margin-top: 12px; line-height: 1.5;">
-								💡 כל שנה היא שורה, כל סמסטר הוא עמודה. לחץ על צבע כדי לשנות.
+								💡 בחר כמה שנים קדימה להציג. השמירה היא לכל שנה בנפרד, כולל שנים עתידיות.
 							</p>
 						</div>
 
@@ -3389,7 +3502,7 @@
 							</div>
 
 							<div style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px;">
-								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.2s;">
+								<button id="jct-settings-save" style="padding: 12px 24px; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); transition: all 0.2s;">
 									💾 שמור שינויים
 								</button>
 								<button id="jct-settings-reset" style="padding: 10px 20px; background: white; color: #475569; border: 2px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s;">
@@ -3402,6 +3515,38 @@
 			</div>
 		`;
 		document.body.appendChild(modal);
+
+		const renderPaletteRows = () => {
+			const rowsEl = document.getElementById('jct-palette-rows');
+			if (!rowsEl) return;
+			rowsEl.innerHTML = '';
+
+			const header = document.createElement('div');
+			header.style.cssText = 'display:grid; grid-template-columns: 1.1fr repeat(3, 1fr); gap: 8px; padding: 0 4px; font-size: 12px; color: #475569; font-weight: 700;';
+			header.innerHTML = `<div>שנה</div>${SEMESTERS.map(sem => `<div style="text-align:center;">סמסטר ${sem}</div>`).join('')}`;
+			rowsEl.appendChild(header);
+
+			workingPalette = normalizePaletteByYear(workingPalette, yearsAhead);
+			for (let year = BASE_HEBREW_YEAR; year <= BASE_HEBREW_YEAR + yearsAhead; year++) {
+				const row = document.createElement('div');
+				row.style.cssText = 'display:grid; grid-template-columns: 1.1fr repeat(3, 1fr); gap: 8px; align-items: center; background:#ffffff; border:1px solid #e2e8f0; border-radius: 10px; padding: 8px;';
+				const colors = workingPalette[year] || SEMESTERS.map((_, semIdx) => getDefaultColorForYearSemester(year, semIdx));
+				row.innerHTML = `
+					<div style="font-weight: 600; color:#0f172a; font-size: 13px; display:flex; flex-direction:column;">
+						<span>${getHebrewYearName(year)}</span>
+						<span style="font-size:11px; color:#64748b; font-weight:500;">${year}</span>
+					</div>
+					${SEMESTERS.map((sem, semIdx) => `
+						<label style="display:flex; justify-content:center; align-items:center;">
+							<input class="jct-color-input" type="color" data-year="${year}" data-sem="${semIdx}" value="${colors[semIdx] || getDefaultColorForYearSemester(year, semIdx)}" style="width:48px; height:34px; border:none; background:none; cursor:pointer;">
+						</label>
+					`).join('')}
+				`;
+				rowsEl.appendChild(row);
+			}
+		};
+
+		renderPaletteRows();
 
 		// Close button
 		modal.querySelector('.jct-assignments-modal-close').addEventListener('click', () => {
@@ -3419,29 +3564,30 @@
 
 		// Save button
 		document.getElementById('jct-settings-save').addEventListener('click', async () => {
-			// Read palette from UI
-			const newPalette = [];
-			for (let r = 0; r < HEBREW_YEARS.length; ++r) {
-				newPalette[r] = [];
-				for (let c = 0; c < SEMESTERS.length; ++c) {
-					newPalette[r][c] = document.getElementById(`jct-color-${r}-${c}`).value || "#cccccc";
-				}
-			}
+			workingPalette = collectPaletteFromUI();
 
 			// Read column count, view mode, and card style
 			const newColumnCount = Math.max(3, Math.min(6, parseInt(document.getElementById('jct-column-count').value || 3)));
 			const newViewMode = document.getElementById('jct-view-mode').value || 'grid';
 			const newCardStyle = document.getElementById('jct-card-style').value || 'compact';
+			yearsAhead = clampInt(
+				document.getElementById('jct-palette-years-ahead').value,
+				MIN_PALETTE_YEARS_AHEAD,
+				MAX_PALETTE_YEARS_AHEAD,
+				yearsAhead
+			);
 
 			// Save to storage
 			await new Promise(resolve => {
 				chrome.storage.sync.set({
-					paletteByYearHeb: newPalette,
+					paletteByYearHeb: normalizePaletteByYear(workingPalette, yearsAhead),
+					paletteYearsAhead: yearsAhead,
 					columnCount: newColumnCount,
 					viewMode: newViewMode,
 					cardStyle: newCardStyle
 				}, () => resolve());
 			});
+			paletteByYearHeb = normalizePaletteByYear(workingPalette, yearsAhead);
 
 			// Apply view mode and card style immediately
 			applyViewMode(newViewMode);
@@ -3454,27 +3600,28 @@
 			saveBtn.style.background = '#22c55e';
 			setTimeout(() => {
 				saveBtn.textContent = originalText;
-				saveBtn.style.background = '#2563eb';
+				saveBtn.style.background = 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)';
 			}, 2000);
 		});
 
 		// Reset button
 		document.getElementById('jct-settings-reset').addEventListener('click', async () => {
+			yearsAhead = DEFAULT_PALETTE_YEARS_AHEAD;
+			workingPalette = normalizePaletteByYear(null, yearsAhead);
 			await new Promise(resolve => {
 				chrome.storage.sync.set({
-					paletteByYearHeb: DEFAULT_PALETTE,
+					paletteByYearHeb: workingPalette,
+					paletteYearsAhead: yearsAhead,
 					columnCount: DEFAULT_COLUMN_COUNT,
 					viewMode: 'grid',
 					cardStyle: 'compact'
 				}, () => resolve());
 			});
+			paletteByYearHeb = workingPalette;
 
 			// Update UI
-			for (let r = 0; r < HEBREW_YEARS.length; ++r) {
-				for (let c = 0; c < SEMESTERS.length; ++c) {
-					document.getElementById(`jct-color-${r}-${c}`).value = DEFAULT_PALETTE[r][c];
-				}
-			}
+			document.getElementById('jct-palette-years-ahead').value = yearsAhead;
+			renderPaletteRows();
 			document.getElementById('jct-column-count').value = DEFAULT_COLUMN_COUNT;
 			document.getElementById('jct-view-mode').value = 'grid';
 			document.getElementById('jct-card-style').value = 'compact';
@@ -3485,14 +3632,27 @@
 		// Add hover effects to buttons
 		const saveBtn = document.getElementById('jct-settings-save');
 		const resetBtn = document.getElementById('jct-settings-reset');
+		const yearsAheadInput = document.getElementById('jct-palette-years-ahead');
+
+		yearsAheadInput.addEventListener('change', () => {
+			workingPalette = collectPaletteFromUI();
+			yearsAhead = clampInt(
+				yearsAheadInput.value,
+				MIN_PALETTE_YEARS_AHEAD,
+				MAX_PALETTE_YEARS_AHEAD,
+				yearsAhead
+			);
+			yearsAheadInput.value = yearsAhead;
+			renderPaletteRows();
+		});
 
 		saveBtn.addEventListener('mouseenter', () => {
 			saveBtn.style.transform = 'translateY(-2px)';
-			saveBtn.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.5)';
+			saveBtn.style.boxShadow = '0 6px 16px rgba(37, 99, 235, 0.45)';
 		});
 		saveBtn.addEventListener('mouseleave', () => {
 			saveBtn.style.transform = 'translateY(0)';
-			saveBtn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+			saveBtn.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.35)';
 		});
 
 		resetBtn.addEventListener('mouseenter', () => {
@@ -5158,8 +5318,7 @@
 				hash = ((hash << 5) - hash) + cid.charCodeAt(i);
 				hash |= 0;
 			}
-			const row = Math.abs(hash) % HEBREW_YEARS.length;
-			year = HEBREW_YEARS[row];
+			year = hashToFallbackYear(hash);
 			const sems = [0, 1, 2];
 			semIdx = sems[Math.abs(hash >> 3) % sems.length];
 		}
@@ -5191,7 +5350,7 @@
 		applyCoursePageColors();
 
 		// Clear assignment submission cache if we're on an assignment page
-		if (window.location.href.includes('/mod/assign/view.php')) {
+		if (/\/mod\/(assign|vpl)\/view\.php/.test(window.location.href)) {
 			const urlParams = new URLSearchParams(window.location.search);
 			const assignmentId = urlParams.get('id');
 			if (assignmentId) {
