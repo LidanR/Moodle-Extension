@@ -645,7 +645,7 @@
 						sections.forEach(section => {
 							if (section.modules && Array.isArray(section.modules)) {
 								section.modules.forEach(module => {
-									if (module.modname === 'assign' && module.id) {
+									if ((module.modname === 'assign' || module.modname === 'vpl') && module.id) {
 										// Find due date
 										let dueDate = null;
 										if (module.dates && Array.isArray(module.dates)) {
@@ -672,9 +672,10 @@
 										}
 
 										// Ensure URL points to assignment view
-										let moduleUrl = module.url || `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
-										if (!moduleUrl.includes('/mod/assign/view.php')) {
-											moduleUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${module.id}`;
+										let modulePath = module.modname === 'vpl' ? 'vpl' : 'assign';
+										let moduleUrl = module.url || `${moodleCfg.wwwroot}/mod/${modulePath}/view.php?id=${module.id}`;
+										if (!moduleUrl.includes('/mod/assign/view.php') && !moduleUrl.includes('/mod/vpl/view.php')) {
+											moduleUrl = `${moodleCfg.wwwroot}/mod/${modulePath}/view.php?id=${module.id}`;
 										}
 
 										// Check if assignment is submitted
@@ -725,7 +726,7 @@
 					const doc = parser.parseFromString(html, 'text/html');
 
 					// Find assignment links
-					const assignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
+					const assignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"], a[href*="/mod/vpl/view.php"]');
 					const assignments = [];
 
 					assignmentLinks.forEach(link => {
@@ -793,7 +794,8 @@
 							// This will be done in background and cached for next time
 							if (assignId) {
 								// Fetch in background and update cache
-								fetch(`${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`, {
+								const modulePath = href.includes('vpl') ? 'vpl' : 'assign';
+								fetch(`${moodleCfg.wwwroot}/mod/${modulePath}/view.php?id=${assignId}`, {
 									method: 'GET',
 									credentials: 'include'
 								}).then(response => {
@@ -865,8 +867,9 @@
 							}
 
 							// Ensure URL points to assignment view, not course
-							if (!finalUrl.includes('/mod/assign/view.php')) {
-								finalUrl = `${moodleCfg.wwwroot}/mod/assign/view.php?id=${assignId}`;
+							const modulePath2 = href.includes('vpl') ? 'vpl' : 'assign';
+							if (!finalUrl.includes('/mod/assign/view.php') && !finalUrl.includes('/mod/vpl/view.php')) {
+								finalUrl = `${moodleCfg.wwwroot}/mod/${modulePath2}/view.php?id=${assignId}`;
 							}
 
 							// Check if assignment is submitted by looking at the link or parent element
@@ -1121,12 +1124,12 @@
 			const sevenDaysFromNow = now + (7 * 24 * 60 * 60); // Show only next 7 days
 
 			// Get max days for overdue assignments from settings
-			let maxOverdueDays = 30; // Default: 30 days
+			let maxOverdueDays = 0; // Default: 0 days
 			try {
 				const settings = await new Promise(resolve => {
-					chrome.storage.sync.get({ maxOverdueDays: 30 }, res => resolve(res));
+					chrome.storage.sync.get({ maxOverdueDays: 0 }, res => resolve(res));
 				});
-				maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 30;
+				maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 0;
 			} catch (e) {
 				// Use default
 			}
@@ -1271,10 +1274,11 @@
 					e.preventDefault();
 					let href = link.getAttribute('href') || link.getAttribute('data-href');
 					// Fix URL if needed
-					if (href && !href.includes('/mod/assign/view.php')) {
+					if (href && !href.includes('/mod/assign/view.php') && !href.includes('/mod/vpl/view.php')) {
 						const urlMatch = href.match(/[?&]id=(\d+)/);
 						if (urlMatch) {
-							href = `${window.location.origin}/mod/assign/view.php?id=${urlMatch[1]}`;
+							const modPath = href.includes('vpl') ? 'vpl' : 'assign';
+							href = `${window.location.origin}/mod/${modPath}/view.php?id=${urlMatch[1]}`;
 						}
 					}
 					if (href) {
@@ -1333,13 +1337,14 @@
 
 				// Fix URL - ensure it points to assignment view
 				let safeUrl = assign.url || '';
-				if (safeUrl && !safeUrl.includes('/mod/assign/view.php')) {
+				if (safeUrl && !safeUrl.includes('/mod/assign/view.php') && !safeUrl.includes('/mod/vpl/view.php')) {
 					// Try to extract assignment ID from URL
+					const modPath = safeUrl.includes('vpl') || assign.url?.includes('vpl') ? 'vpl' : 'assign';
 					const urlMatch = safeUrl.match(/[?&]id=(\d+)/);
 					if (urlMatch && urlMatch[1]) {
-						safeUrl = `${window.location.origin}/mod/assign/view.php?id=${urlMatch[1]}`;
+						safeUrl = `${window.location.origin}/mod/${modPath}/view.php?id=${urlMatch[1]}`;
 					} else if (assign.id) {
-						safeUrl = `${window.location.origin}/mod/assign/view.php?id=${assign.id}`;
+						safeUrl = `${window.location.origin}/mod/${modPath}/view.php?id=${assign.id}`;
 					}
 				} else if (!safeUrl && assign.id) {
 					safeUrl = `${window.location.origin}/mod/assign/view.php?id=${assign.id}`;
@@ -2667,23 +2672,20 @@
 			const doc = parser.parseFromString(html, 'text/html');
 
 			// Look for the due date in the HTML
-			// Pattern: <strong>מסתיים:</strong> יום רביעי, 30 אפריל 2025, 11:59 PM
-			const bodyText = doc.body ? doc.body.innerHTML : html;
+			// Convert to plain text to avoid dealing with HTML tags
+			const bodyText = doc.body ? (doc.body.textContent || doc.body.innerText) : html.replace(/<[^>]+>/g, ' ');
 
-			// Look for "מסתיים:" or "Due date:" in the entire body
-			if (bodyText.includes('מסתיים:') || bodyText.includes('Due date:')) {
-				// Use regex directly on the body text to extract the date
-				// Pattern: <strong>מסתיים:</strong> יום חמישי, 20 נובמבר 2025, 11:00 PM
-				const dateRegex = /(?:מסתיים:|Due date:)<\/strong>\s*([^<]+)/;
-				const match = bodyText.match(dateRegex);
+			// Pattern: "מסתיים: יום חמישי, 20 נובמבר 2025, 11:00 PM"
+			// Also support VPL formats like "סגירה יום חמישי, 22 מאי 2025"
+			const dateRegex = /(?:מסתיים|Due date|מועד הגשה|תאריך סיום|מועד סיום|עד תאריך|סגירה|מוגש עד)[\s\S]{0,30}?((?:יום [א-ת]+,\s*)?\d{1,2}\s+[א-ת]+\s+\d{4}(?:,\s+\d{1,2}:\d{2}\s*(?:AM|PM)?)?)/;
+			const match = bodyText.match(dateRegex);
 
-				if (match) {
-					const dateStr = match[1].trim();
-					const dueDate = parseDueDate(dateStr);
-					if (dueDate) {
-						await saveDueDateToCache(assignmentId, dueDate);
-						return dueDate;
-					}
+			if (match) {
+				const dateStr = match[1].trim();
+				const dueDate = parseDueDate(dateStr);
+				if (dueDate) {
+					await saveDueDateToCache(assignmentId, dueDate);
+					return dueDate;
 				}
 			}
 
@@ -2772,6 +2774,75 @@
 		return daysOverdue <= maxOverdueDays;
 	}
 
+	const courseGradesMemCache = new Map();
+	async function getCourseGrades(courseId, forceRefresh = false) {
+		if (!courseId) return {};
+
+		if (!forceRefresh && courseGradesMemCache.has(courseId)) {
+			return courseGradesMemCache.get(courseId);
+		}
+
+		const cacheKey = `course_grades_v2_${courseId}`;
+		if (!forceRefresh) {
+			const cached = await new Promise(resolve => {
+				chrome.storage.local.get([cacheKey], res => resolve(res[cacheKey]));
+			});
+			if (cached && cached.timestamp && isCacheValid(cached.timestamp)) {
+				courseGradesMemCache.set(courseId, cached.grades);
+				return cached.grades;
+			}
+		}
+
+		let grades = {};
+		try {
+			const url = `${window.M?.cfg?.wwwroot || window.location.origin}/grade/report/user/index.php?id=${courseId}`;
+			const response = await fetch(url);
+			if (response.ok) {
+				const html = await response.text();
+				const parser = new DOMParser();
+				const doc = parser.parseFromString(html, 'text/html');
+
+				const rows = doc.querySelectorAll('table.user-grade tr, table tr');
+				rows.forEach(row => {
+					const a = row.querySelector('th a, td a');
+					if (!a) return;
+					const href = a.getAttribute('href');
+					if (!href || !href.includes('id=')) return;
+
+					const match = href.match(/[?&]id=(\d+)/);
+					if (!match) return;
+					const assignId = match[1];
+
+					const gradeCells = row.querySelectorAll('td');
+					let gradeCell = row.querySelector('td.column-grade, td.grade');
+					if (!gradeCell) {
+						for (const cell of gradeCells) {
+							const text = cell.textContent.trim();
+							if (text && text !== '-' && /^[\d\.]+/.test(text) && !text.includes('%') && text.length < 10) {
+								gradeCell = cell;
+								break;
+							}
+						}
+					}
+
+					if (gradeCell) {
+						let gradeText = gradeCell.textContent.trim();
+						if (gradeText && gradeText !== '-' && gradeText !== '') {
+							grades[assignId] = gradeText;
+						}
+					}
+				});
+			}
+		} catch (e) {
+			console.error(`Error fetching grades for course ${courseId}:`, e);
+		}
+
+		courseGradesMemCache.set(courseId, grades);
+		chrome.storage.local.set({ [cacheKey]: { timestamp: new Date().getTime(), grades } });
+
+		return grades;
+	}
+
 	// Function to get assignment submission status (cache only, no fetch)
 	async function getAssignmentSubmissionStatus(assignmentUrl, assignmentId, forceRefresh = false) {
 		if (!assignmentUrl) return null;
@@ -2790,7 +2861,7 @@
 				const age = Date.now() - cached.timestamp;
 				const oneWeek = 7 * 24 * 60 * 60 * 1000;
 				if (age < oneWeek) {
-					return cached.status;
+					return { status: cached.status, grade: cached.grade || null };
 				}
 			}
 		} catch (e) {
@@ -2844,6 +2915,25 @@
 						status = 'not_submitted';
 					}
 
+					let grade = null;
+					let gradeRow = Array.from(doc.querySelectorAll('table.generaltable tr')).find(r => {
+						const th = r.querySelector('th');
+						return th && th.textContent.includes('ציון');
+					});
+					if (!gradeRow) {
+						gradeRow = Array.from(doc.querySelectorAll('table tr')).find(r => {
+							const th = r.querySelector('th');
+							return th && th.textContent.includes('ציון');
+						});
+					}
+					if (gradeRow) {
+						const gradeCell = gradeRow.querySelector('td');
+						if (gradeCell) {
+							grade = gradeCell.textContent.trim();
+							if (grade === '-' || grade === '') grade = null;
+						}
+					}
+
 					// Cache the result
 					try {
 						await new Promise(resolve => {
@@ -2851,6 +2941,7 @@
 								const cache = res.submissionStatusCache || {};
 								cache[cacheKey] = {
 									status: status,
+									grade: grade,
 									timestamp: Date.now()
 								};
 								chrome.storage.local.set({ submissionStatusCache: cache }, () => resolve());
@@ -2860,7 +2951,7 @@
 						console.error('Error saving submission status cache:', e);
 					}
 
-					return status;
+					return { status, grade };
 				}
 			}
 
@@ -2914,7 +3005,7 @@
 	}
 
 	// Function to scan all courses and collect all assignments
-	async function scanAllCoursesForAssignments(forceRefresh = false, filterYear = '', filterSemester = '') {
+	async function scanAllCoursesForAssignments(forceRefresh = false, filterYear = '', filterSemester = '', excludedCourseIds = new Set()) {
 		// Check if already scanning
 		const { cache, timestamp, scanningInProgress } = await getAssignmentsCache();
 
@@ -2998,7 +3089,7 @@
 			console.log(`Found ${uniqueCoursesMap.size} unique courses`);
 
 			// Filter courses by year and semester BEFORE processing
-			const filteredCourses = Array.from(uniqueCoursesMap.values()).filter(({ courseName }) => {
+			const filteredCourses = Array.from(uniqueCoursesMap.values()).filter(({ href, courseName }) => {
 				// Skip "לימודי קודש" course (110102)
 				if (courseName.includes('110102')) {
 					return false;
@@ -3014,6 +3105,13 @@
 
 				// Check semester filter (required)
 				if (semIdx !== parseInt(filterSemester)) {
+					return false;
+				}
+
+				const match = href.match(/[?&]id=(\d+)/);
+				const courseId = match ? match[1] : null;
+
+				if (courseId && excludedCourseIds && excludedCourseIds.has(courseId)) {
 					return false;
 				}
 
@@ -3072,161 +3170,36 @@
 						// Track assignments for THIS course only
 						const courseAssignments = [];
 
-						// Step 1: Find section links (course sections with images/topics)
-						// Look for: <a href="https://moodle.jct.ac.il/course/section.php?id=327980">
-						// AND also: <a href="https://moodle.jct.ac.il/course/view.php?id=73462&section=1#tabs-tree-start">
-						const sectionLinks = doc.querySelectorAll('a[href*="/course/section.php"]');
-						const tabSectionLinks = doc.querySelectorAll('a[href*="/course/view.php"][href*="section="][href*="#tabs-tree-start"]');
+						// Step 1: Find all interesting links in exact DOM order
+						// This ensures we preserve the exact order they appear in the course (e.g. general assignments before section assignments)
+						const allInterestingLinks = doc.querySelectorAll('a[href*="/course/section.php"], a[href*="/course/view.php"][href*="section="][href*="#tabs-tree-start"], a[href*="/mod/assign/view.php"], a[href*="/mod/vpl/view.php"]');
+						const seenSectionUrls = new Set();
 
-						console.log(`Found ${sectionLinks.length} section.php links and ${tabSectionLinks.length} tab section links in ${courseName}`);
+						for (const link of allInterestingLinks) {
+							const href = link.getAttribute('href');
+							if (!href || href === '#') continue;
 
-						// Combine both types of section links
-						const allSectionLinks = [...sectionLinks, ...tabSectionLinks];
-
-						// Step 2: Fetch each section and look for assignments inside
-						for (const sectionLink of allSectionLinks) {
-							const sectionHref = sectionLink.getAttribute('href');
-							if (!sectionHref || sectionHref === '#') continue;
-
-							const sectionMatch = sectionHref.match(/[?&]id=(\d+)/);
-							if (!sectionMatch) continue;
-
-							const sectionId = sectionMatch[1];
-
-							try {
-								// Build absolute URL for section
-								let sectionUrl = sectionHref;
-								if (!sectionHref.startsWith('http')) {
-									if (sectionHref.startsWith('/')) {
-										sectionUrl = `${wwwroot}${sectionHref}`;
-									} else {
-										sectionUrl = `${wwwroot}/${sectionHref}`;
-									}
-								}
-
-								console.log(`  Fetching section ${sectionId} from ${courseName}`);
-
-								const sectionResponse = await fetch(sectionUrl, {
-									method: 'GET',
-									credentials: 'include'
-								});
-
-								if (sectionResponse.ok) {
-									const sectionHtml = await sectionResponse.text();
-									const sectionParser = new DOMParser();
-									const sectionDoc = sectionParser.parseFromString(sectionHtml, 'text/html');
-
-									// Find assignment links in this section
-									const assignmentLinks = sectionDoc.querySelectorAll('a[href*="/mod/assign/view.php"]');
-
-									assignmentLinks.forEach(link => {
-										const assignHref = link.getAttribute('href');
-
-										// Skip if href is not valid
-										if (!assignHref || assignHref === '#') {
-											return;
-										}
-
-										const assignMatch = assignHref.match(/[?&]id=(\d+)/);
-										if (assignMatch) {
-											const assignId = assignMatch[1];
-
-											// Skip if we've already seen this assignment ID
-											if (seenAssignmentIds.has(assignId)) {
-												return;
-											}
-
-											seenAssignmentIds.add(assignId);
-
-											// Get assignment name from instancename span or link text
-											const instanceNameEl = link.querySelector('.instancename');
-											let name = instanceNameEl
-												? instanceNameEl.textContent.trim()
-												: link.textContent.trim() || '';
-
-											// Skip if name is empty or too short
-											if (!name || name.length < 3) {
-												seenAssignmentIds.delete(assignId);
-												return;
-											}
-
-											// Clean up name - remove extra whitespace
-											name = name.replace(/\s+/g, ' ').trim();
-
-											// Make sure URL is absolute
-											let finalUrl = assignHref;
-											if (!assignHref.startsWith('http')) {
-												if (assignHref.startsWith('/')) {
-													finalUrl = `${wwwroot}${assignHref}`;
-												} else {
-													finalUrl = `${wwwroot}/${assignHref}`;
-												}
-											}
-
-											const assignment = {
-												courseId: courseId,
-												courseName: courseName,
-												assignmentId: assignId,
-												assignmentName: name,
-												assignmentUrl: finalUrl,
-												courseUrl: courseUrl
-											};
-											allAssignments.push(assignment);
-											courseAssignments.push(assignment);
-										}
-									});
-								}
-							} catch (sectionError) {
-								console.error(`Error fetching section ${sectionId}:`, sectionError);
-							}
-						}
-
-						// Step 3: Also look for assignments directly in the course page
-						// (some courses have assignments both in sections and on the main page)
-						const directAssignmentLinks = doc.querySelectorAll('a[href*="/mod/assign/view.php"]');
-
-						directAssignmentLinks.forEach(link => {
-							const assignHref = link.getAttribute('href');
-
-							// Skip if href is not valid
-							if (!assignHref || assignHref === '#') {
-								return;
-							}
-
-							const assignMatch = assignHref.match(/[?&]id=(\d+)/);
-							if (assignMatch) {
+							if (href.includes('/mod/assign/view.php') || href.includes('/mod/vpl/view.php')) {
+								// Handle direct assignment link
+								const assignMatch = href.match(/[?&]id=(\d+)/);
+								if (!assignMatch) continue;
+								
 								const assignId = assignMatch[1];
-
-								// Skip if we've already seen this assignment ID
-								if (seenAssignmentIds.has(assignId)) {
-									return;
-								}
-
+								if (seenAssignmentIds.has(assignId)) continue;
 								seenAssignmentIds.add(assignId);
 
-								// Get assignment name from instancename span or link text
 								const instanceNameEl = link.querySelector('.instancename');
-								let name = instanceNameEl
-									? instanceNameEl.textContent.trim()
-									: link.textContent.trim() || '';
+								let name = instanceNameEl ? instanceNameEl.textContent.trim() : link.textContent.trim() || '';
 
-								// Skip if name is empty or too short
 								if (!name || name.length < 3) {
 									seenAssignmentIds.delete(assignId);
-									return;
+									continue;
 								}
-
-								// Clean up name - remove extra whitespace
 								name = name.replace(/\s+/g, ' ').trim();
 
-								// Make sure URL is absolute
-								let finalUrl = assignHref;
-								if (!assignHref.startsWith('http')) {
-									if (assignHref.startsWith('/')) {
-										finalUrl = `${wwwroot}${assignHref}`;
-									} else {
-										finalUrl = `${wwwroot}/${assignHref}`;
-									}
+								let finalUrl = href;
+								if (!href.startsWith('http')) {
+									finalUrl = href.startsWith('/') ? `${wwwroot}${href}` : `${wwwroot}/${href}`;
 								}
 
 								const assignment = {
@@ -3239,8 +3212,70 @@
 								};
 								allAssignments.push(assignment);
 								courseAssignments.push(assignment);
+							} else {
+								// Handle section link
+								const sectionMatch = href.match(/[?&]id=(\d+)/);
+								if (!sectionMatch) continue;
+								const sectionId = sectionMatch[1];
+
+								let sectionUrl = href;
+								if (!href.startsWith('http')) {
+									sectionUrl = href.startsWith('/') ? `${wwwroot}${href}` : `${wwwroot}/${href}`;
+								}
+
+								if (seenSectionUrls.has(sectionUrl)) continue;
+								seenSectionUrls.add(sectionUrl);
+
+								console.log(`  Fetching section ${sectionId} from ${courseName}`);
+								try {
+									const sectionResponse = await fetch(sectionUrl, { method: 'GET', credentials: 'include' });
+									if (sectionResponse.ok) {
+										const sectionHtml = await sectionResponse.text();
+										const sectionDoc = new DOMParser().parseFromString(sectionHtml, 'text/html');
+										const assignmentLinks = sectionDoc.querySelectorAll('a[href*="/mod/assign/view.php"], a[href*="/mod/vpl/view.php"]');
+
+										assignmentLinks.forEach(assignLink => {
+											const assignHref = assignLink.getAttribute('href');
+											if (!assignHref || assignHref === '#') return;
+
+											const aMatch = assignHref.match(/[?&]id=(\d+)/);
+											if (aMatch) {
+												const aId = aMatch[1];
+												if (seenAssignmentIds.has(aId)) return;
+												seenAssignmentIds.add(aId);
+
+												const instanceNameEl = assignLink.querySelector('.instancename');
+												let aName = instanceNameEl ? instanceNameEl.textContent.trim() : assignLink.textContent.trim() || '';
+
+												if (!aName || aName.length < 3) {
+													seenAssignmentIds.delete(aId);
+													return;
+												}
+												aName = aName.replace(/\s+/g, ' ').trim();
+
+												let finalUrl = assignHref;
+												if (!assignHref.startsWith('http')) {
+													finalUrl = assignHref.startsWith('/') ? `${wwwroot}${assignHref}` : `${wwwroot}/${assignHref}`;
+												}
+
+												const assignment = {
+													courseId: courseId,
+													courseName: courseName,
+													assignmentId: aId,
+													assignmentName: aName,
+													assignmentUrl: finalUrl,
+													courseUrl: courseUrl
+												};
+												allAssignments.push(assignment);
+												courseAssignments.push(assignment);
+											}
+										});
+									}
+								} catch (sectionError) {
+									console.error(`Error fetching section ${sectionId}:`, sectionError);
+								}
 							}
-						});
+						}
 
 						console.log(`Added ${seenAssignmentIds.size} unique assignments from ${courseName}`);
 
@@ -4136,12 +4171,12 @@
 		// Get settings including filter preferences
 		const settings = await new Promise(resolve => {
 			chrome.storage.sync.get({
-				maxOverdueDays: 30,
+				maxOverdueDays: 0,
 				assignmentFilterYear: '',
 				assignmentFilterSemester: ''
 			}, res => resolve(res));
 		});
-		const maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 30;
+		const maxOverdueDays = settings.maxOverdueDays !== undefined ? settings.maxOverdueDays : 0;
 		const savedFilterYear = settings.assignmentFilterYear || '';
 		const savedFilterSemester = settings.assignmentFilterSemester || '';
 		const hideSubmitted = settings.hideSubmittedAssignments !== undefined ? settings.hideSubmittedAssignments : false;
@@ -4150,77 +4185,108 @@
 		const modal = document.createElement('div');
 		modal.className = 'jct-assignments-modal';
 		modal.innerHTML = `
-			<div class="jct-assignments-modal-content jct-assignments-modal-large">
-				<div class="jct-assignments-modal-header">
-					<h3 id="jct-modal-title">טוען קורסים...</h3>
+			<div class="jct-assignments-modal-content jct-assignments-modal-large" style="display: flex; flex-direction: column; max-height: 85vh; width: 95vw; max-width: 1000px; box-sizing: border-box; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+				<div class="jct-assignments-modal-header" style="box-sizing: border-box;">
+					<h3 id="jct-modal-title">טוענים קורסים...</h3>
 					<div id="jct-scanning-notice" style="display: none;">
-						⏳ סורק... נא להמתין
+						⏳ סורקים... נא להמתין
 					</div>
 					<button class="jct-assignments-modal-close">✕</button>
 				</div>
-				<div class="jct-filter-controls" style="padding: 10px 20px; background: linear-gradient(to bottom, #f8fafc, #ffffff); border-bottom: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 8px;">
-					<!-- שורה ראשונה: שנה, סמסטר וכפתורי פעולה -->
-					<div style="display: flex; gap: 12px; align-items: center; justify-content: space-between;">
-						<div style="display: flex; gap: 12px; align-items: center;">
-							<label style="display: flex; align-items: center; gap: 6px;">
-								<span style="font-weight: 500; font-size: 0.875rem; color: #64748b;">שנה:</span>
-								<select id="jct-filter-year" style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
-									<option value="" ${savedFilterYear === '' ? 'selected' : ''}>בחר...</option>
-									<option value="5784" ${savedFilterYear === '5784' ? 'selected' : ''}>תשפ"ד</option>
-									<option value="5785" ${savedFilterYear === '5785' ? 'selected' : ''}>תשפ"ה</option>
-									<option value="5786" ${savedFilterYear === '5786' ? 'selected' : ''}>תשפ"ו</option>
-									<option value="5787" ${savedFilterYear === '5787' ? 'selected' : ''}>תשפ"ז</option>
-									<option value="5788" ${savedFilterYear === '5788' ? 'selected' : ''}>תשפ"ח</option>
-									<option value="5789" ${savedFilterYear === '5789' ? 'selected' : ''}>תשפ"ט</option>
-									<option value="5790" ${savedFilterYear === '5790' ? 'selected' : ''}>תש"צ</option>
-								</select>
+				
+				<!-- MAIN BODY GRID/FLEX -->
+				<div style="display: flex; flex: 1; overflow: hidden; background: #ffffff; min-height: 600px; box-sizing: border-box;">
+					
+					<!-- RIGHT SIDEBAR (OPTIONS) -->
+					<div class="jct-filter-controls" style="width: 280px; min-width: 280px; flex-shrink: 0; padding: 16px; background: #f8fafc; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 12px; overflow: hidden; box-sizing: border-box;">
+						
+						<!-- Year & Semester -->
+						<div style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; flex-shrink: 0;">
+							<div style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">סינון תקופה</div>
+							<div style="display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
+								<label style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+									<span style="font-weight: 500; font-size: 0.8125rem; color: #64748b;">שנה:</span>
+									<select id="jct-filter-year" style="width: 120px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-size: 0.8125rem; box-sizing: border-box;">
+										<option value="" ${savedFilterYear === '' ? 'selected' : ''}>בחרו...</option>
+										<option value="5784" ${savedFilterYear === '5784' ? 'selected' : ''}>תשפ"ד</option>
+										<option value="5785" ${savedFilterYear === '5785' ? 'selected' : ''}>תשפ"ה</option>
+										<option value="5786" ${savedFilterYear === '5786' ? 'selected' : ''}>תשפ"ו</option>
+										<option value="5787" ${savedFilterYear === '5787' ? 'selected' : ''}>תשפ"ז</option>
+										<option value="5788" ${savedFilterYear === '5788' ? 'selected' : ''}>תשפ"ח</option>
+										<option value="5789" ${savedFilterYear === '5789' ? 'selected' : ''}>תשפ"ט</option>
+										<option value="5790" ${savedFilterYear === '5790' ? 'selected' : ''}>תש"צ</option>
+									</select>
+								</label>
+								<label style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+									<span style="font-weight: 500; font-size: 0.8125rem; color: #64748b;">סמסטר:</span>
+									<select id="jct-filter-semester" style="width: 120px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-size: 0.8125rem; box-sizing: border-box;">
+										<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>בחרו...</option>
+										<option value="0" ${savedFilterSemester === '0' ? 'selected' : ''}>אלול</option>
+										<option value="1" ${savedFilterSemester === '1' ? 'selected' : ''}>א'</option>
+										<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
+									</select>
+								</label>
+							</div>
+						</div>
+
+						<div style="height: 1px; background: #e5e7eb; width: 100%; flex-shrink: 0;"></div>
+
+						<!-- Filters -->
+						<div style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; flex-shrink: 0;">
+							<div style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">הגדרות תצוגה</div>
+							<label style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+								<span style="font-weight: 500; font-size: 0.8125rem; color: #475569; line-height: 1.2;">הסתירו איחור מעל (ימים):</span>
+								<input id="jct-max-overdue-days" type="number" min="0" step="1" value="${maxOverdueDays}" style="width: 60px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; font-size: 0.8125rem; text-align: center; box-sizing: border-box;">
 							</label>
-							<label style="display: flex; align-items: center; gap: 6px;">
-								<span style="font-weight: 500; font-size: 0.875rem; color: #64748b;">סמסטר:</span>
-								<select id="jct-filter-semester" style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-size: 0.875rem;">
-									<option value="" ${savedFilterSemester === '' ? 'selected' : ''}>בחר...</option>
-									<option value="0" ${savedFilterSemester === '0' ? 'selected' : ''}>אלול</option>
-									<option value="1" ${savedFilterSemester === '1' ? 'selected' : ''}>א'</option>
-									<option value="2" ${savedFilterSemester === '2' ? 'selected' : ''}>ב'</option>
-								</select>
+							<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+								<input type="checkbox" id="jct-hide-submitted" ${hideSubmitted ? 'checked' : ''} style="width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
+								<span style="font-weight: 500; font-size: 0.8125rem; color: #475569; line-height: 1.2;">הסתירו מטלות שהוגשו</span>
 							</label>
 						</div>
-						<div style="display: flex; gap: 4px;">
-							<button id="jct-refresh-assignments" style="padding: 6px 14px; background: #3b82f6; color: white; border: none; border-radius: 6px 0 0 6px; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="בדוק סטטוס הגשות מחדש">
-								🔄 בדוק הגשות
+
+						<div style="height: 1px; background: #e5e7eb; width: 100%; flex-shrink: 0;"></div>
+
+						<!-- Course Selection -->
+						<div id="jct-course-selection-container" style="display: none; flex-direction: column; flex: 1; min-height: 100px; overflow: hidden; box-sizing: border-box;">
+							<div style="font-size: 0.9rem; font-weight: 600; color: #1e293b; margin-bottom: 10px; flex-shrink: 0;">בחרו קורסים לסריקה:</div>
+							<div id="jct-course-checkboxes" style="display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-left: 5px; padding-bottom: 5px; box-sizing: border-box;">
+							</div>
+						</div>
+
+						<div style="height: 1px; background: #e5e7eb; width: 100%; margin-top: auto; flex-shrink: 0;"></div>
+
+						<!-- Action Buttons -->
+						<div style="display: flex; flex-direction: column; gap: 10px; padding-top: 4px; box-sizing: border-box; flex-shrink: 0;">
+							<button id="jct-refresh-assignments" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2); box-sizing: border-box;" title="בדקו סטטוס הגשות מחדש">
+								<span>🔄</span> בדקו הגשות
 							</button>
-							<button id="jct-rescan-assignments" style="padding: 6px 14px; background: #f59e0b; color: white; border: none; border-radius: 0 6px 6px 0; cursor: pointer; font-weight: 500; font-size: 0.8125rem; transition: all 0.2s;" title="סריקה מחדש - סורק את כל המטלות מחדש">
-								🔍 סרוק מחדש
+							<button id="jct-rescan-assignments" style="padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2); box-sizing: border-box;" title="סריקה מחדש - סורקים את כל המטלות מחדש">
+								<span>🔍</span> סרקו מחדש
 							</button>
 						</div>
 					</div>
 
-					<!-- שורה שנייה: מסננים קומפקטיים -->
-					<div style="display: flex; gap: 12px; align-items: center; padding: 6px 10px; background: #f1f5f9; border-radius: 6px;">
-						<label style="display: flex; align-items: center; gap: 5px;">
-							<span style="font-weight: 500; font-size: 0.8125rem; color: #475569;">הסתר איחור מעל</span>
-							<input id="jct-max-overdue-days" type="number" min="0" step="1" value="${maxOverdueDays}" style="width: 55px; padding: 3px 6px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; font-size: 0.8125rem; text-align: center;">
-							<span style="font-size: 0.75rem; color: #94a3b8;">ימים</span>
-						</label>
-						<div style="width: 1px; height: 20px; background: #cbd5e1;"></div>
-						<label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-							<input type="checkbox" id="jct-hide-submitted" ${hideSubmitted ? 'checked' : ''} style="width: 15px; height: 15px; cursor: pointer;">
-							<span style="font-weight: 500; font-size: 0.8125rem; color: #475569;">הסתר מטלות שהוגשו</span>
-						</label>
+					<!-- LEFT MAIN AREA (RESULTS & STATUS) -->
+					<div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #ffffff; box-sizing: border-box;">
+						<div class="jct-modal-status" style="padding: 16px 24px; background: #f1f5f9; border-bottom: 1px solid #e5e7eb; min-height: 52px; display: flex; align-items: center; box-sizing: border-box;">
+							<div id="jct-loading-status" style="font-size: 0.875rem; color: #64748b; font-weight: 500;">
+								<span class="jct-loading-spinner-small"></span> מתחילים סריקה...
+							</div>
+						</div>
+						<div class="jct-assignments-modal-body" id="jct-results-container" style="flex: 1; overflow-y: auto; padding: 24px; box-sizing: border-box;">
+							<!-- Results will be added here dynamically -->
+						</div>
 					</div>
-				</div>
-				<div class="jct-modal-status" style="padding: 12px 24px; background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
-					<div id="jct-loading-status" style="font-size: 0.875rem; color: #64748b;">
-						<span class="jct-loading-spinner-small"></span> מתחיל סריקה...
-					</div>
-				</div>
-				<div class="jct-assignments-modal-body" id="jct-results-container">
-					<!-- Results will be added here dynamically -->
 				</div>
 			</div>
 		`;
 		document.body.appendChild(modal);
 		isModalOpening = false; // Modal is now in DOM
+
+		// Initial call to populate course checkboxes based on default saved year/semester
+		if (typeof updateCourseSelectionUI === 'function') {
+			updateCourseSelectionUI();
+		}
 
 		// Track if scanning is in progress
 		let isScanning = false;
@@ -4335,20 +4401,35 @@
 
 					// Add submission status indicator
 					let statusHtml = '';
+					let gradeHtml = '';
+					if (assign.grade) {
+						gradeHtml = `<span style="background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 4px; font-weight: 600;">ציון: ${assign.grade}</span>`;
+					}
+
 					if (assign.submissionStatus === 'submitted') {
 						statusHtml = `
-							<div class="jct-assignment-status submitted" style="font-size: 0.75rem; color: #16a34a; margin-top: 4px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-								<span>✓</span>
-								<span>הוגש</span>
+							<div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+								<div class="jct-assignment-status submitted" style="font-size: 0.75rem; color: #16a34a; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+									<span>✓</span>
+									<span>הוגש</span>
+								</div>
+								${gradeHtml}
 							</div>
 						`;
 					} else if (assign.submissionStatus === 'not_submitted') {
 						statusHtml = `
-							<div class="jct-assignment-status not-submitted" style="font-size: 0.75rem; color: #dc2626; margin-top: 4px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-								<span>✗</span>
-								<span>לא הוגש</span>
+							<div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+								<div class="jct-assignment-status not-submitted" style="font-size: 0.75rem; color: #dc2626; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+									<span>✗</span>
+									<span>לא הוגש</span>
+								</div>
+								${gradeHtml}
 							</div>
 						`;
+					} else {
+						if (gradeHtml) {
+							statusHtml = `<div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">${gradeHtml}</div>`;
+						}
 					}
 
 					html += `
@@ -4379,17 +4460,20 @@
 			// Get filter values from the UI
 			const filterYear = document.getElementById('jct-filter-year')?.value || '';
 			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
-			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '0');
 			const hideSubmitted = document.getElementById('jct-hide-submitted')?.checked || false;
 
 			// Check if year and semester are selected (required)
 			if (!filterYear || !filterSemester) {
 				const statusEl = document.getElementById('jct-loading-status');
-				if (statusEl) {
-					statusEl.innerHTML = `
-						<div style="text-align: center; padding: 20px;">
-							<p style="font-size: 1rem; color: #ef4444; margin-bottom: 12px;">⚠️ יש לבחור שנה וסמסטר לפני הסריקה</p>
-							<p style="font-size: 0.875rem; color: #94a3b8;">בחר שנה וסמסטר מהתפריט למעלה ולחץ על "סרוק מחדש"</p>
+				const resultsContainer = document.getElementById('jct-results-container');
+				if (statusEl) statusEl.innerHTML = 'ממתינים לבחירת סמסטר...';
+				if (resultsContainer) {
+					resultsContainer.innerHTML = `
+						<div style="text-align: center; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+							<div style="font-size: 3rem; margin-bottom: 16px;">📅</div>
+							<h3 style="font-size: 1.25rem; color: #ef4444; margin-bottom: 12px; margin-top: 0;">יש לבחור שנה וסמסטר לפני הסריקה</h3>
+							<p style="font-size: 1rem; color: #64748b; margin-top: 0;">בחרו שנה וסמסטר מהתפריט למעלה ולחצו על "סרקו מחדש"</p>
 						</div>
 					`;
 				}
@@ -4409,9 +4493,10 @@
 			if (cacheValid && !yearSemesterChanged) {
 				// We have cache - first display immediately with cached status
 				await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, false, hideSubmitted);
-
-				// Then update status in background ONLY if we haven't done it yet in this modal session OR if explicitly requested (forceRefresh)
-				if (!hasRefreshedStatusGlobal || forceRefresh) {
+				
+				// Automatically checking statuses in background on modal open was disabled by user request.
+				// If forceRefresh is requested explicitly, we do run it.
+				if (forceRefresh) {
 					hasRefreshedStatusGlobal = true;
 					refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, true, hideSubmitted);
 				}
@@ -4440,6 +4525,7 @@
 			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
 			if (rescanBtn) rescanBtn.disabled = true;
+			document.querySelectorAll('.jct-course-checkbox').forEach(cb => cb.disabled = true);
 			if (closeBtn) closeBtn.style.display = 'none';
 			if (scanningNotice) scanningNotice.style.display = 'block';
 
@@ -4463,7 +4549,11 @@
 
 			// Scan all courses
 			window.jctStopScanning = false;
-			const result = await scanAllCoursesForAssignments(forceRefresh, filterYear, filterSemester);
+			const excludedCourseIds = new Set();
+			document.querySelectorAll('.jct-course-checkbox:not(:checked)').forEach(cb => {
+				excludedCourseIds.add(cb.value);
+			});
+			const result = await scanAllCoursesForAssignments(forceRefresh, filterYear, filterSemester, excludedCourseIds);
 
 			// Display results (either from cache or fresh scan)
 			if (result) {
@@ -4475,8 +4565,10 @@
 				const assignmentsWithData = await Promise.all(
 					result.assignments.map(async (assign) => {
 						const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId);
-						const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, true);
-						return { ...assign, dueDate, submissionStatus };
+						const statusData = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, true);
+						const courseGrades = await getCourseGrades(assign.courseId, true);
+						const gradeFromGradebook = courseGrades[assign.assignmentId];
+						return { ...assign, dueDate, submissionStatus: statusData?.status || null, grade: gradeFromGradebook || statusData?.grade || null };
 					})
 				);
 
@@ -4530,6 +4622,7 @@
 			if (filterSemesterSelect) filterSemesterSelect.disabled = false;
 			if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
 			if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
+			document.querySelectorAll('.jct-course-checkbox').forEach(cb => cb.disabled = false);
 			if (refreshBtn) refreshBtn.disabled = false;
 			if (rescanBtn) rescanBtn.disabled = false;
 			if (closeBtn) closeBtn.style.display = '';
@@ -4722,8 +4815,10 @@
 					// Due dates: always from cache, never re-fetch during status check
 					const dueDate = await getAssignmentDueDate(assign.assignmentUrl, assign.assignmentId, false);
 					// Submission status: re-fetch if forceRefreshStatus is true
-					const submissionStatus = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, forceRefreshStatus);
-					return { ...assign, dueDate, submissionStatus };
+					const statusData = await getAssignmentSubmissionStatus(assign.assignmentUrl, assign.assignmentId, forceRefreshStatus);
+					const courseGrades = await getCourseGrades(assign.courseId, forceRefreshStatus);
+					const gradeFromGradebook = courseGrades[assign.assignmentId];
+					return { ...assign, dueDate, submissionStatus: statusData?.status || null, grade: gradeFromGradebook || statusData?.grade || null };
 				})
 			);
 
@@ -4779,6 +4874,7 @@
 				if (filterSemesterSelect) filterSemesterSelect.disabled = false;
 				if (maxOverdueDaysInput) maxOverdueDaysInput.disabled = false;
 				if (hideSubmittedCheckbox) hideSubmittedCheckbox.disabled = false;
+				document.querySelectorAll('.jct-course-checkbox').forEach(cb => cb.disabled = false);
 				if (refreshBtn) refreshBtn.disabled = false;
 				if (rescanBtn) rescanBtn.disabled = false;
 			}
@@ -4790,19 +4886,96 @@
 		const maxOverdueDaysInput = document.getElementById('jct-max-overdue-days');
 		const refreshBtn = document.getElementById('jct-refresh-assignments');
 
+		// Update course selection UI function
+		async function updateCourseSelectionUI() {
+			const container = document.getElementById('jct-course-selection-container');
+			const checkboxesDiv = document.getElementById('jct-course-checkboxes');
+			const filterYear = document.getElementById('jct-filter-year')?.value;
+			const filterSemester = document.getElementById('jct-filter-semester')?.value;
+
+			if (!container || !checkboxesDiv) return;
+
+			if (!filterYear || !filterSemester) {
+				container.style.display = 'none';
+				return;
+			}
+
+			// Load saved exclusions
+			const excluded = await new Promise(resolve => {
+				chrome.storage.sync.get({ excludedCourseIds: [] }, res => {
+					resolve(new Set(res.excludedCourseIds || []));
+				});
+			});
+
+			// Find courses in DOM
+			const allCourseLinks = document.querySelectorAll('a[href*="/course/view.php"]');
+			const uniqueCoursesMap = new Map();
+			for (const link of allCourseLinks) {
+				const href = link.getAttribute('href');
+				const match = href.match(/[?&]id=(\d+)/);
+				if (!match) continue;
+				const courseId = match[1];
+				const courseName = link.textContent.trim() || link.innerText.trim();
+				if (!uniqueCoursesMap.has(courseId)) {
+					uniqueCoursesMap.set(courseId, courseName);
+				}
+			}
+
+			const matchingCourses = [];
+			for (const [courseId, courseName] of uniqueCoursesMap.entries()) {
+				if (courseName.includes('110102')) continue;
+				const { year, semIdx } = parseHebrewYearAndSemester(courseName);
+				if (year === parseInt(filterYear) && semIdx === parseInt(filterSemester)) {
+					let displayName = courseName.replace(/^[\d\.]+\s*-\s*/, '');
+					matchingCourses.push({ id: courseId, name: courseName, displayName: displayName });
+				}
+			}
+
+			if (matchingCourses.length > 0) {
+				container.style.display = 'flex';
+				checkboxesDiv.innerHTML = matchingCourses.map(c => `
+					<label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #475569; background: white; padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; cursor: pointer;">
+						<input type="checkbox" class="jct-course-checkbox" value="${c.id}" ${excluded.has(c.id) ? '' : 'checked'}>
+						<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;" title="${c.name}">${c.displayName}</span>
+					</label>
+				`).join('');
+
+				// Add event listeners to save state on change
+				checkboxesDiv.querySelectorAll('.jct-course-checkbox').forEach(cb => {
+					cb.addEventListener('change', async () => {
+						const currentExcluded = await new Promise(resolve => {
+							chrome.storage.sync.get({ excludedCourseIds: [] }, res => {
+								resolve(new Set(res.excludedCourseIds || []));
+							});
+						});
+
+						if (cb.checked) {
+							currentExcluded.delete(cb.value);
+						} else {
+							currentExcluded.add(cb.value);
+						}
+
+						chrome.storage.sync.set({ excludedCourseIds: Array.from(currentExcluded) });
+					});
+				});
+			} else {
+				container.style.display = 'none';
+			}
+		}
+
 		// When filter changes, don't save to storage yet - only save after successful scan
 		// This way we can detect if year/semester changed since last scan
 		filterYearSelect?.addEventListener('change', async () => {
-			// Just update the UI, don't save yet
+			updateCourseSelectionUI();
 		});
 
 		filterSemesterSelect?.addEventListener('change', async () => {
-			// Just update the UI, don't save yet
+			updateCourseSelectionUI();
 		});
 
 		// When maxOverdueDays changes, apply filter immediately without status refresh
 		maxOverdueDaysInput?.addEventListener('change', async () => {
-			const newValue = Math.max(0, parseInt(maxOverdueDaysInput.value || '30'));
+			const newValue = Math.max(0, parseInt(maxOverdueDaysInput.value || '0'));
 			await new Promise(resolve => {
 				chrome.storage.sync.set({ maxOverdueDays: newValue }, () => resolve());
 			});
@@ -4830,7 +5003,7 @@
 			if (cache && isCacheValid(timestamp)) {
 				const filterYear = document.getElementById('jct-filter-year')?.value || '';
 				const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
-				const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+				const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '0');
 				await refilterAndDisplayFromCache(cache, maxOverdueDays, filterYear, filterSemester, false, isChecked);
 			}
 		});
@@ -4865,7 +5038,7 @@
 			// Get current filter values from UI
 			const filterYear = document.getElementById('jct-filter-year')?.value || '';
 			const filterSemester = document.getElementById('jct-filter-semester')?.value || '';
-			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '30');
+			const maxOverdueDays = parseInt(document.getElementById('jct-max-overdue-days')?.value || '0');
 			const hideSubmitted = document.getElementById('jct-hide-submitted')?.checked || false;
 
 			hasRefreshedStatusGlobal = false;
@@ -4885,7 +5058,7 @@
 		const rescanBtn = document.getElementById('jct-rescan-assignments');
 		rescanBtn?.addEventListener('click', async () => {
 			isScanning = true;
-			rescanBtn.innerHTML = '⏳ סורק...';
+			rescanBtn.innerHTML = '⏳ סורקים...';
 			rescanBtn.disabled = true;
 			if (refreshBtn) refreshBtn.disabled = true;
 			const closeBtn = modal.querySelector('.jct-assignments-modal-close');
@@ -4928,10 +5101,14 @@
 		} else {
 			// No valid cache - show message to select year/semester and click refresh
 			const statusEl = document.getElementById('jct-loading-status');
-			if (statusEl) {
-				statusEl.innerHTML = `
-					<div style="text-align: center; padding: 20px;">
-						<p style="font-size: 1rem; color: #64748b; margin-bottom: 12px;">בחר שנה וסמסטר ולחץ על "סרוק מחדש" כדי לסרוק מטלות</p>
+			const resultsContainer = document.getElementById('jct-results-container');
+			if (statusEl) statusEl.innerHTML = 'ממתינים לבחירת סמסטר...';
+			if (resultsContainer) {
+				resultsContainer.innerHTML = `
+					<div style="text-align: center; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+						<div style="font-size: 3rem; margin-bottom: 16px;">👋</div>
+						<h3 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 12px; margin-top: 0;">מוכנים לסרוק את המטלות שלכם?</h3>
+						<p style="font-size: 1rem; color: #64748b; margin-top: 0;">בחרו שנה וסמסטר ולחצו על "סרקו מחדש" כדי לסרוק מטלות</p>
 					</div>
 				`;
 			}
@@ -5047,7 +5224,7 @@
 
 			const bubble = document.createElement('div');
 			bubble.className = 'jct-scan-hint-bubble';
-			bubble.textContent = 'לחץ כאן כדי לסרוק את המטלות שלך';
+			bubble.textContent = 'לחצו כאן כדי לסרוק את המטלות שלכם';
 			wrapper.appendChild(bubble);
 
 			// Dismiss on click
@@ -5191,7 +5368,7 @@
 		applyCoursePageColors();
 
 		// Clear assignment submission cache if we're on an assignment page
-		if (window.location.href.includes('/mod/assign/view.php')) {
+		if (window.location.href.includes('/mod/assign/view.php') || window.location.href.includes('/mod/vpl/view.php')) {
 			const urlParams = new URLSearchParams(window.location.search);
 			const assignmentId = urlParams.get('id');
 			if (assignmentId) {
