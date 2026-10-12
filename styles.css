@@ -594,7 +594,7 @@
 
 .jct-schedule-grid {
 	display: grid;
-	grid-template-columns: repeat(6, 1fr) minmax(140px, 1.2fr);
+	grid-template-columns: repeat(7, 1fr) minmax(160px, 1.5fr);
 	gap: 8px;
 }
 
@@ -1159,15 +1159,11 @@
 	.jct-schedule-grid {
 		grid-template-columns: repeat(4, 1fr);
 	}
-
-	.jct-todo-column {
-		grid-column: span 2;
-	}
 }
 
 @media (min-width: 1101px) {
 	.jct-schedule-grid {
-		grid-template-columns: repeat(6, 1fr) minmax(140px, 1.2fr);
+		grid-template-columns: repeat(7, 1fr) minmax(160px, 1.5fr);
 	}
 }
 

@@ -9,7 +9,8 @@
 	};
 
 	const HEBREW_YEARS = [5784, 5785, 5786, 5787, 5788, 5789, 5790];
-	const SEM_TO_IDX = { 'אלול': 0, '1': 0, 'א': 1, '2': 1, 'ב': 2, '3': 2 };
+	const SEM_TO_IDX = { 'אלול': 0, '1': 0, 'א': 1, '2': 1, 'ב': 2, '3': 2, '4': 4 };
+	const SEM_IDX_YEARLY = 4; // Special semIdx for yearly courses (both semesters א and ב)
 	const DEFAULT_PALETTE = [
 		["#3b82f6", "#818cf8", "#bae6fd"], // 5784
 		["#22c55e", "#4ade80", "#bbf7d0"], // 5785
@@ -332,6 +333,8 @@
 		};
 
 		const yearName = hebrewYearNames[year] || year;
+		// Handle yearly courses (semIdx 4)
+		if (semIdx === SEM_IDX_YEARLY) return `שנתי ${yearName}`;
 		return `${semesterNames[semIdx] || 'סמסטר'} ${yearName}`;
 	}
 
@@ -1059,10 +1062,24 @@
 		}
 		// Detect semester
 		let sMatch = null;
-		if (txt.includes('אלול')) s = 0;
+		// Check for yearly course pattern: .4. in course code (e.g., 150901.4.5787)
+		const yearlyMatch = txt.match(/\d+\.4\.\d+/);
+		if (yearlyMatch) {
+			s = SEM_IDX_YEARLY; // Yearly course - both semesters
+		} else if (txt.includes('אלול')) s = 0;
 		else if ((sMatch = txt.match(/(?<=^|\W)(א|ב|1|2|3)(?=\W|$)/))) s = SEM_TO_IDX[sMatch[1]];
 		else s = null;
 		return { year: y, semIdx: s };
+	}
+
+	// Helper: check if a course's semIdx matches a semester filter
+	// Yearly courses (semIdx === SEM_IDX_YEARLY) match both semester א (1) and ב (2)
+	function semesterMatches(semIdx, filterSemester) {
+		const fSem = parseInt(filterSemester);
+		if (semIdx === fSem) return true;
+		// Yearly courses match both semester א (1) and semester ב (2)
+		if (semIdx === SEM_IDX_YEARLY && (fSem === 1 || fSem === 2)) return true;
+		return false;
 	}
 
 	function colorFor(year, semIdx) {
@@ -1070,7 +1087,9 @@
 		const palette = Array.isArray(paletteByYearHeb) ? paletteByYearHeb : DEFAULT_PALETTE;
 		const row = HEBREW_YEARS.indexOf(year);
 		if (row === -1 || semIdx == null) return { h: 220, s: 60, l: 60 };
-		let hex = palette[row] && palette[row][semIdx];
+		// Yearly courses (semIdx 4) use semester א color (index 1)
+		const colorIdx = semIdx === SEM_IDX_YEARLY ? 1 : semIdx;
+		let hex = palette[row] && palette[row][colorIdx];
 		if (!hex) hex = "#cccccc";
 		return hexToHsl(hex);
 	}
@@ -1860,8 +1879,8 @@
 		});
 	}
 
-	const DAYS_OF_WEEK = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי'];
-	const DAYS_OF_WEEK_EN = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+	const DAYS_OF_WEEK = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+	const DAYS_OF_WEEK_EN = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 	function showScheduleDayPicker(courseId, card) {
 		const courseName = getCourseNameFromCard(card);
@@ -2174,7 +2193,7 @@
 					const dueDate = new Date(ts);
 					if (dueDate >= weekStart && dueDate <= weekEnd) {
 						const dayIdx = dueDate.getDay(); // 0=Sunday
-						if (dayIdx >= 0 && dayIdx <= 5) {
+						if (dayIdx >= 0 && dayIdx <= 6) {
 							const dayKey = DAYS_OF_WEEK_EN[dayIdx];
 							const cacheKey = `submission_status_${assignment.assignmentId}`;
 							const statusEntry = submissionStatusCacheData[cacheKey];
@@ -2200,7 +2219,7 @@
 				eventDate.setHours(0, 0, 0, 0);
 				if (eventDate >= weekStart && eventDate <= weekEnd) {
 					const dayIdx = eventDate.getDay();
-					if (dayIdx >= 0 && dayIdx <= 5) {
+					if (dayIdx >= 0 && dayIdx <= 6) {
 						const dayKey = DAYS_OF_WEEK_EN[dayIdx];
 						eventsByDay[dayKey].push({
 							title: event.title,
@@ -2217,7 +2236,7 @@
 		// Format week label
 		const weekStartLabel = `${weekStart.getDate()}/${weekStart.getMonth() + 1}`;
 		const weekEndDate = new Date(weekStart);
-		weekEndDate.setDate(weekStart.getDate() + 5); // Friday
+		weekEndDate.setDate(weekStart.getDate() + 6); // Saturday
 		const weekEndLabel = `${weekEndDate.getDate()}/${weekEndDate.getMonth() + 1}`;
 		const todayBtnStyle = currentWeekOffset === 0 ? ' style="visibility:hidden"' : '';
 
@@ -3104,7 +3123,8 @@
 				}
 
 				// Check semester filter (required)
-				if (semIdx !== parseInt(filterSemester)) {
+				// Yearly courses (semIdx === SEM_IDX_YEARLY) match both semesters
+				if (!semesterMatches(semIdx, filterSemester)) {
 					return false;
 				}
 
@@ -4185,7 +4205,7 @@
 		const modal = document.createElement('div');
 		modal.className = 'jct-assignments-modal';
 		modal.innerHTML = `
-			<div class="jct-assignments-modal-content jct-assignments-modal-large" style="display: flex; flex-direction: column; max-height: 85vh; width: 95vw; max-width: 1000px; box-sizing: border-box; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+			<div class="jct-assignments-modal-content jct-assignments-modal-large" style="display: flex; flex-direction: column; max-height: 85vh; height: 800px; width: 95vw; max-width: 1000px; box-sizing: border-box; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
 				<div class="jct-assignments-modal-header" style="box-sizing: border-box;">
 					<h3 id="jct-modal-title">טוענים קורסים...</h3>
 					<div id="jct-scanning-notice" style="display: none;">
@@ -4195,10 +4215,10 @@
 				</div>
 				
 				<!-- MAIN BODY GRID/FLEX -->
-				<div style="display: flex; flex: 1; overflow: hidden; background: #ffffff; min-height: 600px; box-sizing: border-box;">
+				<div style="display: flex; flex: 1; overflow: hidden; background: #ffffff; min-height: 0; box-sizing: border-box;">
 					
 					<!-- RIGHT SIDEBAR (OPTIONS) -->
-					<div class="jct-filter-controls" style="width: 280px; min-width: 280px; flex-shrink: 0; padding: 16px; background: #f8fafc; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 12px; overflow: hidden; box-sizing: border-box;">
+					<div class="jct-filter-controls" style="width: 280px; min-width: 280px; flex-shrink: 0; padding: 16px; background: #f8fafc; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
 						
 						<!-- Year & Semester -->
 						<div style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; flex-shrink: 0;">
@@ -4806,7 +4826,7 @@
 			// Filter assignments by year and semester first
 			const yearFiltered = cachedData.assignments.filter(assign => {
 				const { year, semIdx } = parseHebrewYearAndSemester(assign.courseName);
-				return year === parseInt(filterYear) && semIdx === parseInt(filterSemester);
+				return year === parseInt(filterYear) && semesterMatches(semIdx, filterSemester);
 			});
 
 			// Fetch due dates (from cache only) and submission status for filtered assignments
@@ -4925,7 +4945,7 @@
 			for (const [courseId, courseName] of uniqueCoursesMap.entries()) {
 				if (courseName.includes('110102')) continue;
 				const { year, semIdx } = parseHebrewYearAndSemester(courseName);
-				if (year === parseInt(filterYear) && semIdx === parseInt(filterSemester)) {
+				if (year === parseInt(filterYear) && semesterMatches(semIdx, filterSemester)) {
 					let displayName = courseName.replace(/^[\d\.]+\s*-\s*/, '');
 					matchingCourses.push({ id: courseId, name: courseName, displayName: displayName });
 				}
