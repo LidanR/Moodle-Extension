@@ -1,0 +1,217 @@
+/* ============================================
+   Base Typography, Layout & Page Header
+   ============================================ */
+
+:root {
+	--jct-brand-start: #667eea;
+	--jct-brand-end: #764ba2;
+	--jct-brand-gradient: linear-gradient(135deg, var(--jct-brand-start) 0%, var(--jct-brand-end) 100%);
+}
+
+/* Hide the giant Moodle JCT banner image immediately */
+.jct-moodle-redesign img[src*="Banner_Moodle"] {
+	display: none !important;
+}
+
+.jct-moodle-redesign body {
+	font-family: "Segoe UI", Inter, Roboto, Arial, "Helvetica Neue", "Noto Sans", sans-serif;
+	background: #fafafa;
+	color: #1f2937;
+	line-height: 1.55;
+}
+
+.jct-moodle-redesign a {
+	color: #1f4ed8;
+	text-decoration: none;
+}
+
+.jct-moodle-redesign a:hover {
+	text-decoration: underline;
+}
+
+.jct-moodle-redesign #page,
+.jct-moodle-redesign #region-main,
+.jct-moodle-redesign .container,
+.jct-moodle-redesign .pagelayout-course .container-fluid {
+	max-width: 100% !important;
+	width: 100% !important;
+	margin-inline: auto;
+	padding-inline: 12px;
+}
+
+.jct-moodle-redesign h1,
+.jct-moodle-redesign h2,
+.jct-moodle-redesign #page-header .page-context-header h1 {
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+
+.jct-moodle-redesign .btn,
+.jct-moodle-redesign input[type="submit"],
+.jct-moodle-redesign button {
+	border-radius: 8px !important;
+}
+
+.jct-moodle-redesign input[type="text"],
+.jct-moodle-redesign input[type="search"],
+.jct-moodle-redesign select,
+.jct-moodle-redesign textarea {
+	border-radius: 8px !important;
+	border: 1px solid #d1d5db !important;
+	background: #fff !important;
+	padding: 6px 10px !important;
+}
+
+.jct-moodle-redesign table th,
+.jct-moodle-redesign table td {
+	border-bottom: 1px solid #eaecef !important;
+	padding: 10px 12px !important;
+}
+
+.jct-moodle-redesign .breadcrumb {
+	background: transparent !important;
+}
+
+.jct-moodle-redesign #page-footer {
+	background: transparent;
+	color: #6b7280;
+}
+
+.jct-rtl {
+	direction: rtl;
+}
+
+/* ============================================
+   Modern Page Header
+   ============================================ */
+
+.jct-moodle-redesign #page-header {
+	background: var(--jct-brand-gradient) !important;
+	padding: 24px 32px !important;
+	border-radius: 0 0 24px 24px !important;
+	box-shadow: 0 4px 20px rgba(15, 23, 42, 0.18) !important;
+	margin-bottom: 0 !important;
+	position: relative !important;
+}
+
+.jct-moodle-redesign #page-header .w-100 {
+	width: 100% !important;
+}
+
+.jct-moodle-redesign #page-header .d-flex {
+	justify-content: center !important;
+	align-items: center !important;
+}
+
+.jct-moodle-redesign #page-header .mr-auto,
+.jct-moodle-redesign #page-header .ml-auto {
+	margin: 0 !important;
+	flex: 1 !important;
+	display: flex !important;
+	justify-content: center !important;
+}
+
+.jct-moodle-redesign #page-header .header-actions-container {
+	display: none !important;
+}
+
+.jct-moodle-redesign #page-header .page-context-header {
+	background: transparent !important;
+	width: 100% !important;
+	text-align: center !important;
+}
+
+.jct-moodle-redesign #page-header .page-header-headings {
+	width: 100% !important;
+	text-align: center !important;
+	margin: 0 auto !important;
+	display: block !important;
+}
+
+.jct-moodle-redesign #page-header .page-context-header h1,
+.jct-moodle-redesign #page-header .page-header-headings h1 {
+	color: white !important;
+	font-size: 2rem !important;
+	font-weight: 700 !important;
+	margin: 0 auto !important;
+	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+	text-align: center !important;
+	display: block !important;
+	width: 100% !important;
+}
+
+/* ============================================
+   Shared Animations & Spinners
+   ============================================ */
+
+@keyframes jctFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes jctSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes jctSpin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes jctBubbleIn {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+	}
+}
+
+@keyframes jctGentlePulse {
+	0%,
+	100% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+	50% {
+		opacity: 0.9;
+		transform: translate(-50%, -50%) scale(1.02);
+	}
+}
+
+.jct-loading-spinner {
+	width: 48px;
+	height: 48px;
+	border: 4px solid #e5e7eb;
+	border-top-color: #3b82f6;
+	border-radius: 50%;
+	animation: jctSpin 0.8s linear infinite;
+	margin: 0 auto 16px;
+}
+
+.jct-loading-spinner-small {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid #cbd5e1;
+	border-top-color: #3b82f6;
+	border-radius: 50%;
+	animation: jctSpin 0.6s linear infinite;
+	vertical-align: middle;
+	margin-left: 6px;
+}
+

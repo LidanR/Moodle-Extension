@@ -1,0 +1,333 @@
+/* ============================================
+   Course Page (/course/view.php & activities)
+   Note: .jct-moodle-redesign & .jct-course-page-themed live on <html>,
+         while .pagelayout-* lives on <body>.
+   ============================================ */
+
+.jct-moodle-redesign body.pagelayout-course #region-main,
+.jct-moodle-redesign body.pagelayout-incourse #region-main,
+.jct-moodle-redesign .course-content {
+	max-width: 100% !important;
+	width: 100% !important;
+}
+
+.jct-moodle-redesign body.pagelayout-course .container-fluid,
+.jct-moodle-redesign body.pagelayout-incourse .container-fluid {
+	max-width: 100% !important;
+	width: 100% !important;
+	padding: 0 20px !important;
+}
+
+.jct-moodle-redesign body.pagelayout-course,
+.jct-moodle-redesign body.pagelayout-incourse {
+	background: #f8fafc !important;
+}
+
+.jct-course-page-themed body.pagelayout-course,
+.jct-course-page-themed body.pagelayout-incourse {
+	background: linear-gradient(
+		180deg,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 96%, 1) 0%,
+		#f8fafc 300px,
+		#ffffff 100%
+	) !important;
+}
+
+/* Course sections */
+.jct-moodle-redesign .course-content ul.topics,
+.jct-moodle-redesign .course-content ul.weeks,
+.jct-moodle-redesign .course-content ul.sections {
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.jct-moodle-redesign .course-content li.section {
+	background: #ffffff !important;
+	border-radius: 12px !important;
+	border: 1px solid #e5e7eb !important;
+	margin-bottom: 20px !important;
+	padding: 20px !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+	transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.jct-moodle-redesign .course-content li.section:hover {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.jct-course-page-themed .course-content li.section {
+	border-left: 4px solid hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), var(--jct-course-l, 55%)) !important;
+	border-top: 1px solid hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 85%, 1) !important;
+	border-right: 1px solid hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 85%, 1) !important;
+	border-bottom: 1px solid hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 85%, 1) !important;
+}
+
+.jct-course-page-themed .course-content li.section:hover {
+	box-shadow: 0 4px 16px hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 50%, 0.15) !important;
+	border-left-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 70%)), var(--jct-course-l, 50%)) !important;
+}
+
+/* Section headers */
+.jct-moodle-redesign .course-content .sectionname {
+	color: #1e293b !important;
+	font-weight: 700 !important;
+	font-size: 1.25rem !important;
+	margin-bottom: 16px !important;
+}
+
+.jct-course-page-themed .course-content .sectionname {
+	color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 70%)), 30%) !important;
+}
+
+/* Activities & resources */
+.jct-moodle-redesign .activity {
+	background: #f8fafc !important;
+	border-radius: 8px !important;
+	padding: 12px !important;
+	margin-bottom: 10px !important;
+	border: 1px solid #e5e7eb !important;
+	transition: all 0.2s ease !important;
+}
+
+.jct-moodle-redesign .activity:hover {
+	background: #f1f5f9 !important;
+	border-color: #cbd5e1 !important;
+	transform: translateX(-3px) !important;
+}
+
+.jct-rtl.jct-moodle-redesign .activity:hover {
+	transform: translateX(3px) !important;
+}
+
+.jct-course-page-themed .activity {
+	background: hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 40%)), 98%, 1) !important;
+	border-color: hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 88%, 1) !important;
+}
+
+.jct-course-page-themed .activity:hover {
+	background: hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 50%)), 96%, 1) !important;
+	border-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 70%) !important;
+	box-shadow: 0 2px 8px hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 50%, 0.1) !important;
+}
+
+/* Page header with course theme color */
+.jct-course-page-themed #page-header {
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), 92%, 1) 0%,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 55%)), 95%, 1) 100%
+	) !important;
+	border-bottom: 3px solid hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), var(--jct-course-l, 55%)) !important;
+	box-shadow: 0 4px 12px hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 60%)), 50%, 0.12) !important;
+}
+
+.jct-course-page-themed #page-header h1,
+.jct-course-page-themed #page-header .page-header-headings h1 {
+	color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 75%)), 25%) !important;
+	text-shadow: none !important;
+}
+
+/* Yearly course page dual-semester gradient header */
+.jct-course-page-themed.jct-course-yearly #page-header {
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), 92%, 1) 0%,
+		hsla(var(--jct-course-2-h, 145), calc(var(--jct-course-2-s, 60%)), 92%, 1) 100%
+	) !important;
+	border-bottom: 3px solid transparent !important;
+	border-image: linear-gradient(
+		90deg,
+		hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), var(--jct-course-l, 55%)),
+		hsl(var(--jct-course-2-h, 145), calc(var(--jct-course-2-s, 65%)), var(--jct-course-2-l, 50%))
+	) 1 !important;
+}
+
+/* ============================================
+   My Courses Page (/my/courses.php)
+   ============================================ */
+
+.jct-moodle-redesign body.pagelayout-mycourses {
+	background: #f8fafc !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses #page-header {
+	background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+	border-bottom: none !important;
+	padding: 28px 0 !important;
+	margin-bottom: 0 !important;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses #page-header h1,
+.jct-moodle-redesign body.pagelayout-mycourses #page-header .page-header-headings h1 {
+	color: #ffffff !important;
+	font-size: 1.75rem !important;
+	font-weight: 700 !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses #region-main {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 24px 0 !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses #region-main-box {
+	background: transparent !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview {
+	background: #ffffff !important;
+	border-radius: 16px !important;
+	border: 1px solid #e5e7eb !important;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+	padding: 20px 24px !important;
+	overflow: hidden !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .card-text h5,
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="courses-view"] h5 {
+	font-size: 1.1rem !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .d-flex.align-items-center,
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] {
+	gap: 8px !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .dropdown-toggle,
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .btn-outline-secondary {
+	border-radius: 8px !important;
+	font-size: 0.85rem !important;
+	padding: 6px 12px !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-deck,
+.jct-moodle-redesign body.pagelayout-mycourses .card-deck {
+	display: grid !important;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+	gap: 16px !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-deck .dashboard-card,
+.jct-moodle-redesign body.pagelayout-mycourses .card-deck .coursebox,
+.jct-moodle-redesign body.pagelayout-mycourses .card-deck .card {
+	border-radius: 12px !important;
+	border: 1px solid #e2e8f0 !important;
+	overflow: hidden !important;
+	box-shadow: none !important;
+	transition: all 0.15s ease !important;
+	margin: 0 !important;
+	background: #ffffff !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-deck .dashboard-card:hover,
+.jct-moodle-redesign body.pagelayout-mycourses .card-deck .coursebox:hover,
+.jct-moodle-redesign body.pagelayout-mycourses .card-deck .card:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+	transform: translateY(-2px) !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .course-summaryimage,
+.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-img {
+	height: 140px !important;
+	object-fit: cover !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .course-info-container,
+.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card .card-body {
+	padding: 14px 16px !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card .card-body .text-muted {
+	font-size: 0.8rem !important;
+	color: #64748b !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .coursename a,
+.jct-moodle-redesign body.pagelayout-mycourses .course-title a,
+.jct-moodle-redesign body.pagelayout-mycourses .multiline a {
+	font-size: 0.95rem !important;
+	font-weight: 600 !important;
+	color: #1e293b !important;
+	text-decoration: none !important;
+	line-height: 1.4 !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .coursename a:hover,
+.jct-moodle-redesign body.pagelayout-mycourses .course-title a:hover,
+.jct-moodle-redesign body.pagelayout-mycourses .multiline a:hover {
+	color: #2563eb !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .list-group-item {
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 10px !important;
+	margin-bottom: 8px !important;
+	padding: 12px 16px !important;
+	transition: all 0.15s ease !important;
+	background: #ffffff !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .list-group-item:hover {
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .summary .no-overflow,
+.jct-moodle-redesign body.pagelayout-mycourses .course-description {
+	font-size: 0.825rem !important;
+	color: #64748b !important;
+	line-height: 1.5 !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .progress {
+	height: 6px !important;
+	border-radius: 3px !important;
+	background: #e2e8f0 !important;
+	overflow: hidden !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .progress-bar {
+	border-radius: 3px !important;
+	background: #3b82f6 !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .paging-bar,
+.jct-moodle-redesign body.pagelayout-mycourses [data-region="paging-bar"] {
+	margin-top: 16px !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .page-link {
+	border-radius: 8px !important;
+	margin: 0 2px !important;
+	font-size: 0.85rem !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .card.block {
+	border: none !important;
+	box-shadow: none !important;
+	background: transparent !important;
+}
+
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .card-body,
+.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview > .card-body > .content {
+	padding: 0 !important;
+}
+
+@media (max-width: 768px) {
+	.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-deck,
+	.jct-moodle-redesign body.pagelayout-mycourses .card-deck {
+		grid-template-columns: 1fr !important;
+	}
+
+	.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview {
+		padding: 16px !important;
+		border-radius: 12px !important;
+	}
+}
+

@@ -1,0 +1,1144 @@
+/* ============================================
+   Weekly Schedule & TODO Dashboard
+   ============================================ */
+
+.jct-weekly-schedule {
+	margin: 24px 0;
+	padding: 24px;
+	background: #ffffff;
+	border-radius: 16px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+	border: 1px solid #e5e7eb;
+}
+
+.jct-schedule-header {
+	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #e5e7eb;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.jct-schedule-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	position: relative;
+}
+
+/* Action buttons in schedule header */
+.jct-settings-button {
+	background: #ffffff !important;
+	color: #334155 !important;
+	border: 1px solid #e2e8f0 !important;
+	padding: 6px 14px !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 5px !important;
+	margin: 0 !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	white-space: nowrap !important;
+}
+
+.jct-settings-button:hover {
+	background: #dbeafe !important;
+	border-color: #3b82f6 !important;
+	color: #1e293b !important;
+}
+
+.jct-settings-button:active {
+	background: #e2e8f0 !important;
+}
+
+/* Scan hint bubble */
+.jct-scan-hint-bubble {
+	position: absolute;
+	bottom: calc(100% + 10px);
+	left: 50%;
+	transform: translateX(-50%);
+	background: #1e293b;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 500;
+	padding: 8px 14px;
+	border-radius: 8px;
+	white-space: nowrap;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	animation: jctBubbleIn 0.3s ease;
+	z-index: 10;
+	pointer-events: none;
+}
+
+.jct-scan-hint-bubble::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border: 6px solid transparent;
+	border-top-color: #1e293b;
+}
+
+/* Week navigation */
+.jct-week-nav {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.jct-week-nav-btn {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	padding: 4px 10px;
+	cursor: pointer;
+	font-size: 13px;
+	color: #475569;
+	transition: all 0.15s ease;
+	line-height: 1;
+}
+
+.jct-week-nav-btn:hover {
+	background: #f1f5f9;
+	border-color: #cbd5e1;
+}
+
+.jct-week-nav-label {
+	font-size: 13px;
+	font-weight: 600;
+	color: #334155;
+	min-width: 90px;
+	text-align: center;
+	user-select: none;
+}
+
+.jct-week-today-btn {
+	background: #3b82f6 !important;
+	color: #ffffff !important;
+	border-color: #3b82f6 !important;
+	font-weight: 500;
+}
+
+.jct-week-today-btn:hover {
+	background: #2563eb !important;
+}
+
+.jct-day-date {
+	display: block;
+	font-size: 11px;
+	font-weight: 400;
+	opacity: 0.65;
+	margin-top: 1px;
+}
+
+.jct-schedule-header-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-right: auto;
+}
+
+.jct-schedule-hint {
+	font-size: 12px;
+	color: #64748b;
+	font-style: italic;
+	white-space: nowrap;
+}
+
+.jct-schedule-delete-all-btn {
+	padding: 6px 12px;
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	background: #fff;
+	color: #dc2626;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.jct-schedule-delete-all-btn:hover {
+	background: #fef2f2;
+	border-color: #fca5a5;
+}
+
+/* Schedule Grid (7 days + TODO column) */
+.jct-schedule-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr) minmax(160px, 1.5fr);
+	gap: 8px;
+}
+
+.jct-schedule-day {
+	background: #ffffff;
+	border-radius: 10px;
+	border: 1px solid #e2e8f0;
+	overflow: hidden;
+	transition: box-shadow 0.2s ease;
+}
+
+.jct-schedule-day:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.jct-schedule-day-header {
+	padding: 10px 8px;
+	background: #f1f5f9;
+	color: #334155;
+	font-weight: 600;
+	font-size: 13px;
+	text-align: center;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.jct-schedule-today {
+	border-color: #3b82f6;
+}
+
+.jct-schedule-today .jct-schedule-day-header {
+	background: #3b82f6;
+	color: #ffffff;
+	border-bottom-color: #3b82f6;
+}
+
+.jct-schedule-day-courses {
+	padding: 8px;
+	min-height: 100px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.jct-schedule-day-courses.jct-schedule-drag-over {
+	background: #dbeafe;
+	border: 2px dashed #2563eb;
+	border-radius: 8px;
+}
+
+.jct-schedule-empty {
+	padding: 20px 12px;
+	text-align: center;
+	color: #94a3b8;
+	font-size: 12px;
+	font-style: italic;
+}
+
+.jct-schedule-separator {
+	border-top: 1px dashed #cbd5e1;
+	margin: 4px 0;
+}
+
+/* Course items inside schedule */
+.jct-schedule-course-item {
+	padding: 8px 10px;
+	background: #ffffff;
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	color: #1e293b;
+	font-size: 12px;
+	font-weight: 500;
+	transition: all 0.15s ease;
+	text-align: center;
+	word-break: break-word;
+	position: relative;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.jct-schedule-course-item:hover {
+	background: #f1f5f9;
+	border-color: #2563eb;
+	transform: translateX(-2px);
+	box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.jct-rtl .jct-schedule-course-item:hover {
+	transform: translateX(2px);
+}
+
+.jct-schedule-course-item:active {
+	transform: translateX(-1px) scale(0.98);
+}
+
+.jct-schedule-course-item a.jct-schedule-course-link {
+	color: #1e293b;
+	text-decoration: none;
+	flex: 1;
+	pointer-events: auto;
+	cursor: pointer;
+	display: block;
+	width: 100%;
+}
+
+.jct-schedule-course-item:hover a.jct-schedule-course-link {
+	color: #2563eb;
+	text-decoration: underline;
+}
+
+.jct-session-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Scoped specifically to schedule cards so it does NOT collide with modal time inputs */
+.jct-schedule-course-item .jct-session-time {
+	font-size: 11px;
+	color: #64748b;
+	margin-top: 4px;
+	font-weight: 400;
+	direction: ltr;
+	unicode-bidi: isolate;
+}
+
+.jct-schedule-edit-course {
+	width: 24px;
+	height: 24px;
+	border-radius: 50% !important;
+	border: none;
+	background: #dbeafe;
+	color: #2563eb;
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	opacity: 0.75;
+	flex-shrink: 0;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.jct-schedule-edit-course:hover {
+	background: #2563eb;
+	color: #fff;
+	opacity: 1;
+	transform: scale(1.1);
+}
+
+/* Assignment items in schedule day columns */
+.jct-schedule-assignment-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	text-decoration: none !important;
+	color: #334155 !important;
+	background: #fffbeb;
+	border: 1px solid #fde68a;
+	transition: background 0.15s ease;
+	word-break: break-word;
+}
+
+.jct-schedule-assignment-item:hover {
+	background: #fef3c7;
+}
+
+.jct-schedule-assignment-item.submitted {
+	background: #f0fdf4;
+	border-color: #bbf7d0;
+}
+
+.jct-schedule-assignment-item.submitted:hover {
+	background: #dcfce7;
+}
+
+.jct-schedule-assignment-item.not-submitted {
+	background: #fef2f2;
+	border-color: #fecaca;
+}
+
+.jct-schedule-assignment-item.not-submitted:hover {
+	background: #fee2e2;
+}
+
+.jct-schedule-assignment-item .jct-assignment-status {
+	font-weight: 700;
+	font-size: 11px;
+	flex-shrink: 0;
+}
+
+.jct-schedule-assignment-item.submitted .jct-assignment-status {
+	color: #16a34a;
+}
+
+.jct-schedule-assignment-item.not-submitted .jct-assignment-status {
+	color: #dc2626;
+}
+
+.jct-schedule-assignment-item .jct-assignment-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Custom event items in schedule day columns */
+.jct-schedule-event-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	color: #475569;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+}
+
+.jct-event-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.jct-event-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ============================================
+   TODO Column (inside schedule)
+   ============================================ */
+
+.jct-todo-column {
+	background: #fafbff !important;
+	border-color: #e0e7ff !important;
+}
+
+.jct-todo-column .jct-schedule-day-header.jct-todo-header {
+	background: #eef2ff;
+	color: #4338ca;
+	border-bottom-color: #e0e7ff;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 10px;
+}
+
+.jct-todo-open-menu-btn {
+	width: 24px;
+	height: 24px;
+	padding: 0 !important;
+	border: none !important;
+	border-radius: 6px !important;
+	background: #6366f1 !important;
+	color: #ffffff !important;
+	font-size: 16px !important;
+	font-weight: 700 !important;
+	line-height: 1 !important;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.jct-todo-open-menu-btn:hover {
+	background: #4f46e5 !important;
+	transform: scale(1.08);
+}
+
+.jct-todo-body {
+	padding: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-height: 100px;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+#jct-todo-list {
+	flex: 1 !important;
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
+}
+
+.jct-todo-empty {
+	text-align: center;
+	padding: 20px 8px;
+	color: #94a3b8;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+}
+
+.jct-todo-empty-icon {
+	font-size: 1.6rem;
+}
+
+.jct-todo-empty p {
+	font-size: 0.78rem;
+	margin: 0;
+}
+
+.jct-todo-empty-add {
+	margin-top: 4px;
+	padding: 5px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #4f46e5;
+	background: #eef2ff;
+	border: 1px dashed #a5b4fc;
+	border-radius: 6px !important;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.jct-todo-empty-add:hover {
+	background: #e0e7ff;
+	border-color: #6366f1;
+}
+
+.jct-todo-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 8px;
+	background: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-right: 3px solid var(--todo-color, #6366f1);
+	border-radius: 6px;
+	margin-bottom: 6px;
+	transition: box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.jct-todo-item:hover {
+	box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.jct-todo-item.completed {
+	background: #f8fafc;
+	opacity: 0.72;
+}
+
+.jct-todo-item .jct-todo-check {
+	width: 15px;
+	height: 15px;
+	cursor: pointer;
+	flex-shrink: 0;
+	accent-color: var(--todo-color, #6366f1);
+}
+
+.jct-todo-item .jct-todo-icon {
+	font-size: 14px;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.jct-todo-item .jct-todo-content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	cursor: pointer;
+}
+
+.jct-todo-item .jct-todo-text {
+	color: #1e293b;
+	font-size: 0.8rem;
+	font-weight: 500;
+	word-break: break-word;
+	line-height: 1.3;
+}
+
+.jct-todo-item.completed .jct-todo-text {
+	text-decoration: line-through;
+	color: #94a3b8;
+}
+
+.jct-todo-prio-badge {
+	align-self: flex-start;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 1px 6px;
+	border-radius: 999px;
+	line-height: 1.4;
+}
+
+.jct-todo-item .jct-todo-del {
+	padding: 3px 6px;
+	background: transparent;
+	color: #94a3b8;
+	border: none;
+	border-radius: 4px !important;
+	cursor: pointer;
+	font-size: 0.75rem;
+	opacity: 0.65;
+	flex-shrink: 0;
+	transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.jct-todo-item .jct-todo-del:hover {
+	opacity: 1;
+	background: #fee2e2;
+	color: #dc2626;
+}
+
+/* ============================================
+   Rich TODO Creation / Edit Dialog
+   ============================================ */
+
+.jct-todo-modal {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.45);
+	backdrop-filter: blur(3px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10002;
+	padding: 16px;
+	animation: jctFadeIn 0.18s ease;
+}
+
+.jct-todo-modal-card {
+	background: #ffffff;
+	border-radius: 16px;
+	box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+	width: 100%;
+	max-width: 390px;
+	overflow: hidden;
+	animation: jctSlideUp 0.22s ease;
+}
+
+.jct-todo-modal-header {
+	padding: 14px 18px;
+	background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.jct-todo-modal-header h4 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 700;
+	color: #ffffff;
+}
+
+.jct-todo-modal-close {
+	width: 28px;
+	height: 28px;
+	border-radius: 50% !important;
+	border: none;
+	background: rgba(255, 255, 255, 0.2);
+	color: #ffffff;
+	font-size: 14px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.15s ease;
+}
+
+.jct-todo-modal-close:hover {
+	background: rgba(255, 255, 255, 0.32);
+}
+
+.jct-todo-modal-body {
+	padding: 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.jct-todo-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.jct-todo-field label {
+	font-size: 12.5px;
+	font-weight: 600;
+	color: #475569;
+	margin: 0;
+}
+
+.jct-todo-field input[type="text"] {
+	width: 100%;
+	padding: 9px 12px !important;
+	border: 1.5px solid #cbd5e1 !important;
+	border-radius: 8px !important;
+	font-size: 13.5px !important;
+	color: #1e293b;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.jct-todo-field input[type="text"]:focus {
+	outline: none;
+	border-color: #6366f1 !important;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.jct-todo-field input[type="text"].jct-input-error {
+	border-color: #ef4444 !important;
+	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.jct-todo-icon-picker {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 6px;
+}
+
+.jct-todo-icon-opt {
+	height: 34px;
+	border: 1.5px solid #e2e8f0;
+	background: #f8fafc;
+	border-radius: 8px !important;
+	font-size: 16px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.15s ease;
+}
+
+.jct-todo-icon-opt:hover {
+	background: #eef2ff;
+	border-color: #a5b4fc;
+}
+
+.jct-todo-icon-opt.active {
+	background: #eef2ff;
+	border-color: #6366f1;
+	box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+	transform: scale(1.05);
+}
+
+.jct-todo-color-picker {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.jct-todo-color-opt {
+	width: 26px;
+	height: 26px;
+	border-radius: 50% !important;
+	border: 2px solid transparent;
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.jct-todo-color-opt:hover {
+	transform: scale(1.12);
+}
+
+.jct-todo-color-opt.active {
+	border-color: #ffffff;
+	box-shadow: 0 0 0 2.5px #1e293b;
+	transform: scale(1.12);
+}
+
+.jct-todo-priority-picker {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+}
+
+.jct-todo-priority-opt {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 7px 10px;
+	border: 1.5px solid #e2e8f0;
+	border-radius: 8px !important;
+	background: #f8fafc;
+	color: #475569;
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.jct-todo-priority-opt:hover {
+	background: #f1f5f9;
+}
+
+.jct-todo-priority-opt.active {
+	border-color: var(--prio-color, #6366f1);
+	background: #ffffff;
+	color: #0f172a;
+	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.jct-prio-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.jct-todo-modal-footer {
+	padding: 12px 18px;
+	border-top: 1px solid #e2e8f0;
+	background: #f8fafc;
+	display: flex;
+	gap: 8px;
+	justify-content: flex-start;
+}
+
+.jct-todo-modal-save {
+	flex: 1;
+	padding: 9px 14px;
+	background: #6366f1;
+	color: #ffffff;
+	border: none;
+	border-radius: 8px !important;
+	font-size: 13.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.jct-todo-modal-save:hover {
+	background: #4f46e5;
+}
+
+.jct-todo-modal-cancel {
+	padding: 9px 14px;
+	background: #ffffff;
+	color: #475569;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px !important;
+	font-size: 13.5px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.jct-todo-modal-cancel:hover {
+	background: #f1f5f9;
+}
+
+/* ============================================
+   Schedule & Time Picker Modals
+   ============================================ */
+
+.jct-schedule-modal,
+.jct-time-picker-dialog {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(4px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	animation: jctFadeIn 0.2s ease;
+}
+
+.jct-schedule-modal {
+	z-index: 10000;
+}
+
+.jct-time-picker-dialog {
+	z-index: 10001;
+}
+
+.jct-schedule-modal-content,
+.jct-time-picker-content {
+	background: #ffffff;
+	border-radius: 16px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	width: 100%;
+	max-height: 90vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	animation: jctSlideUp 0.25s ease;
+}
+
+.jct-schedule-modal-content {
+	max-width: 500px;
+}
+
+.jct-time-picker-content {
+	max-width: 400px;
+}
+
+.jct-schedule-modal-header,
+.jct-time-picker-header {
+	padding: 20px 24px;
+	border-bottom: 1px solid #e5e7eb;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.jct-schedule-modal-header h3,
+.jct-time-picker-header h3 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.jct-schedule-modal-close,
+.jct-time-picker-close {
+	width: 32px;
+	height: 32px;
+	border-radius: 50% !important;
+	border: none;
+	background: #f1f5f9;
+	color: #64748b;
+	font-size: 18px;
+	cursor: pointer;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.jct-schedule-modal-close:hover,
+.jct-time-picker-close:hover {
+	background: #e2e8f0;
+	color: #1e293b;
+}
+
+.jct-schedule-modal-body {
+	padding: 24px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+.jct-sessions-container {
+	max-height: 400px;
+	overflow-y: auto;
+	margin-bottom: 12px;
+}
+
+.jct-session-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-bottom: 8px;
+}
+
+.jct-session-day {
+	padding: 8px 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	font-size: 14px;
+	background: white;
+	cursor: pointer;
+}
+
+input.jct-session-time {
+	padding: 8px 10px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	font-size: 14px;
+	background: white;
+}
+
+.jct-remove-session {
+	background: #fee2e2;
+	color: #dc2626;
+	border: none;
+	border-radius: 50% !important;
+	width: 32px;
+	height: 32px;
+	cursor: pointer;
+	font-size: 16px;
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+}
+
+.jct-remove-session:hover {
+	background: #dc2626;
+	color: white;
+	transform: scale(1.1);
+}
+
+.jct-add-session {
+	width: 100%;
+	padding: 12px;
+	background: #2563eb;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	margin-top: 12px;
+}
+
+.jct-add-session:hover {
+	background: #1d4ed8;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.jct-time-picker-body {
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.jct-time-picker-body label {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.jct-time-picker-body label span {
+	font-size: 14px;
+	font-weight: 500;
+	color: #475569;
+}
+
+.jct-time-picker-body input[type="time"] {
+	padding: 12px 16px;
+	border: 2px solid #e2e8f0;
+	border-radius: 8px;
+	font-size: 16px;
+	transition: all 0.2s ease;
+}
+
+.jct-time-picker-body input[type="time"]:focus {
+	outline: none;
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.jct-schedule-modal-footer,
+.jct-time-picker-footer {
+	padding: 16px 24px;
+	border-top: 1px solid #e5e7eb;
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+}
+
+.jct-rtl .jct-schedule-modal-footer,
+.jct-rtl .jct-time-picker-footer {
+	justify-content: flex-start;
+}
+
+.jct-schedule-modal-save,
+.jct-schedule-modal-remove,
+.jct-time-picker-save,
+.jct-time-picker-skip {
+	padding: 10px 20px;
+	border-radius: 8px;
+	border: none;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.jct-schedule-modal-save,
+.jct-time-picker-save {
+	background: #2563eb;
+	color: #ffffff;
+}
+
+.jct-schedule-modal-save:hover,
+.jct-time-picker-save:hover {
+	background: #1d4ed8;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.jct-schedule-modal-remove {
+	background: #fee2e2;
+	color: #dc2626;
+}
+
+.jct-schedule-modal-remove:hover {
+	background: #fecaca;
+	transform: translateY(-1px);
+}
+
+.jct-time-picker-skip {
+	background: #f1f5f9;
+	color: #64748b;
+}
+
+.jct-time-picker-skip:hover {
+	background: #e2e8f0;
+	color: #475569;
+}
+
+/* Responsive Schedule Grid */
+@media (max-width: 768px) {
+	.jct-schedule-grid {
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+	}
+
+	.jct-weekly-schedule {
+		padding: 12px;
+	}
+
+	.jct-schedule-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.jct-schedule-header-right {
+		justify-content: center;
+		margin-right: 0;
+	}
+
+	.jct-todo-column {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+	.jct-schedule-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+@media (min-width: 1101px) {
+	.jct-schedule-grid {
+		grid-template-columns: repeat(7, 1fr) minmax(160px, 1.5fr);
+	}
+}
+

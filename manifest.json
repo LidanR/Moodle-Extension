@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Moodle JCT Redesign",
   "description": "Improves the design and usability of moodle.jct.ac.il with modern styles and small layout tweaks.",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "permissions": [
     "storage"
   ],
@@ -33,10 +33,36 @@
         "https://moodle.jct.ac.il/*"
       ],
       "js": [
-        "content.js"
+        "src/js/theme-init.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://moodle.jct.ac.il/*"
+      ],
+      "js": [
+        "src/js/config.js",
+        "src/js/utils.js",
+        "src/js/storage.js",
+        "src/js/theme.js",
+        "src/js/courses.js",
+        "src/js/schedule.js",
+        "src/js/assignments.js",
+        "src/js/modals/settings-modal.js",
+        "src/js/modals/assignments-modal.js",
+        "src/js/modals/calendar-modal.js",
+        "src/js/modals/whats-new-modal.js",
+        "src/js/main.js"
       ],
       "css": [
-        "styles.css"
+        "src/css/base.css",
+        "src/css/navbar.css",
+        "src/css/courses.css",
+        "src/css/course-page.css",
+        "src/css/schedule.css",
+        "src/css/modals.css",
+        "src/css/dark-mode.css"
       ],
       "run_at": "document_end"
     }

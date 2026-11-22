@@ -1,0 +1,1869 @@
+/* ============================================
+   JCT Moodle Dark Mode (Moodle 4 / LearnR / Boost Union + All Extension Widgets)
+   Activated via html.jct-dark
+   Uses high-specificity html.jct-dark rules + Bootstrap 5 CSS variable overrides
+   so no LearnR / Bootstrap !important rule can override dark surfaces or text.
+   ============================================ */
+
+/* Navbar Quick Toggle Button (visible in both Light & Dark modes) */
+.jct-navbar-theme-toggle {
+	width: 34px !important;
+	height: 34px !important;
+	padding: 0 !important;
+	margin: 0 6px !important;
+	border-radius: 50% !important;
+	border: 1px solid rgba(148, 163, 184, 0.35) !important;
+	background: rgba(255, 255, 255, 0.85) !important;
+	color: #1e293b !important;
+	font-size: 16px !important;
+	line-height: 1 !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	align-self: center !important;
+	flex-shrink: 0 !important;
+	transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease !important;
+}
+
+.jct-navbar-theme-toggle:hover {
+	transform: scale(1.08);
+	background: #f1f5f9 !important;
+	border-color: #667eea !important;
+}
+
+html.jct-dark .jct-navbar-theme-toggle {
+	background: rgba(30, 41, 59, 0.95) !important;
+	border-color: rgba(148, 163, 184, 0.4) !important;
+	color: #fde68a !important;
+}
+
+html.jct-dark .jct-navbar-theme-toggle:hover {
+	background: #334155 !important;
+	border-color: #818cf8 !important;
+}
+
+/* ============================================
+   1. Theme Tokens & Bootstrap 5 Variable Overrides
+   ============================================ */
+
+html.jct-dark,
+html.jct-dark body {
+	--jct-dm-bg: #0f172a;
+	--jct-dm-bg-deep: #0b1220;
+	--jct-dm-surface: #1e293b;
+	--jct-dm-surface-2: #263348;
+	--jct-dm-surface-3: #334155;
+	--jct-dm-border: #334155;
+	--jct-dm-border-soft: #273549;
+	--jct-dm-text: #f1f5f9;
+	--jct-dm-text-secondary: #cbd5e1;
+	--jct-dm-text-muted: #94a3b8;
+	--jct-dm-link: #60a5fa;
+	--jct-dm-link-hover: #93c5fd;
+	--jct-dm-accent: #818cf8;
+
+	/* Bootstrap 5 / Moodle 4 / LearnR root variables */
+	--bs-body-bg: #0f172a;
+	--bs-body-bg-rgb: 15, 23, 42;
+	--bs-body-color: #f1f5f9;
+	--bs-body-color-rgb: 241, 245, 249;
+	--bs-emphasis-color: #ffffff;
+	--bs-emphasis-color-rgb: 255, 255, 255;
+	--bs-secondary-color: #cbd5e1;
+	--bs-secondary-color-rgb: 203, 213, 225;
+	--bs-secondary-bg: #1e293b;
+	--bs-secondary-bg-rgb: 30, 41, 59;
+	--bs-tertiary-color: #94a3b8;
+	--bs-tertiary-bg: #263348;
+	--bs-tertiary-bg-rgb: 38, 51, 72;
+	--bs-heading-color: #f1f5f9;
+	--bs-white: #1e293b;
+	--bs-white-rgb: 30, 41, 59;
+	--bs-light: #1e293b;
+	--bs-light-rgb: 30, 41, 59;
+	--bs-dark: #f1f5f9;
+	--bs-dark-rgb: 241, 245, 249;
+	--bs-gray-100: #162033;
+	--bs-gray-200: #1e293b;
+	--bs-gray-300: #334155;
+	--bs-gray-400: #475569;
+	--bs-gray-500: #64748b;
+	--bs-gray-600: #94a3b8;
+	--bs-gray-700: #cbd5e1;
+	--bs-gray-800: #e2e8f0;
+	--bs-gray-900: #f1f5f9;
+	--bs-border-color: #334155;
+	--bs-border-color-translucent: rgba(148, 163, 184, 0.22);
+	--bs-link-color: #60a5fa;
+	--bs-link-color-rgb: 96, 165, 250;
+	--bs-link-hover-color: #93c5fd;
+	--bs-card-bg: #1e293b;
+	--bs-card-color: #f1f5f9;
+	--bs-card-border-color: #334155;
+	--bs-card-cap-bg: #263348;
+	--bs-table-bg: #1e293b;
+	--bs-table-color: #f1f5f9;
+	--bs-table-striped-bg: #243146;
+	--bs-table-striped-color: #f1f5f9;
+	--bs-table-hover-bg: #2b3a52;
+	--bs-table-hover-color: #ffffff;
+	--bs-table-border-color: #334155;
+	--bs-dropdown-bg: #1e293b;
+	--bs-dropdown-color: #f1f5f9;
+	--bs-dropdown-border-color: #334155;
+	--bs-dropdown-link-color: #f1f5f9;
+	--bs-dropdown-link-hover-bg: #263348;
+	--bs-dropdown-link-hover-color: #ffffff;
+	--bs-dropdown-divider-bg: #334155;
+	--bs-navbar-color: #e2e8f0;
+	--bs-navbar-hover-color: #ffffff;
+	--bs-navbar-active-color: #ffffff;
+	--bs-navbar-brand-color: #ffffff;
+	--bs-nav-link-color: #cbd5e1;
+	--bs-nav-link-hover-color: #ffffff;
+	--bs-modal-bg: #1e293b;
+	--bs-modal-color: #f1f5f9;
+	--bs-modal-border-color: #334155;
+	--bs-popover-bg: #1e293b;
+	--bs-popover-header-bg: #263348;
+	--bs-popover-header-color: #f1f5f9;
+	--bs-popover-body-color: #f1f5f9;
+	--bs-popover-border-color: #334155;
+	--bs-list-group-bg: #1e293b;
+	--bs-list-group-color: #f1f5f9;
+	--bs-list-group-border-color: #334155;
+	--bs-pagination-bg: #1e293b;
+	--bs-pagination-color: #f1f5f9;
+	--bs-pagination-border-color: #334155;
+	--bs-btn-color: #f1f5f9;
+
+	background-color: #0f172a !important;
+	color: #f1f5f9 !important;
+	color-scheme: dark;
+}
+
+/* ============================================
+   2. Main Page Containers & LearnR Wrappers
+   ============================================ */
+
+html.jct-dark.jct-moodle-redesign body,
+html.jct-dark #page,
+html.jct-dark #page-wrapper,
+html.jct-dark #page #page-content,
+html.jct-dark #page-content,
+html.jct-dark #page #topofscroll,
+html.jct-dark #page #topofscroll.main-inner,
+html.jct-dark #topofscroll,
+html.jct-dark #topofscroll.main-inner,
+html.jct-dark #page #topofscroll #learnrpage,
+html.jct-dark #page #learnrpage,
+html.jct-dark #learnrpage,
+html.jct-dark #learnrpage.contentwrapper,
+html.jct-dark .contentwrapper,
+html.jct-dark .headerbuttons,
+html.jct-dark #page #region-main-box,
+html.jct-dark #region-main-box,
+html.jct-dark #page #region-main,
+html.jct-dark #region-main,
+html.jct-dark section#region-main,
+html.jct-dark [role="main"],
+html.jct-dark .main-inner,
+html.jct-dark.jct-moodle-redesign body.pagelayout-course,
+html.jct-dark.jct-moodle-redesign body.pagelayout-incourse,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses {
+	background: #0f172a !important;
+	background-color: #0f172a !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+	box-shadow: none !important;
+}
+
+/* Global Text Readability (eliminates dark/black inherited text across Moodle & LearnR) */
+html.jct-dark #page h1,
+html.jct-dark #page h2,
+html.jct-dark #page h3,
+html.jct-dark #page h4,
+html.jct-dark #page h5,
+html.jct-dark #page h6,
+html.jct-dark #page legend,
+html.jct-dark #page label,
+html.jct-dark #page .col-form-label,
+html.jct-dark #page .form-check-label,
+html.jct-dark #page .custom-control-label,
+html.jct-dark #page dt,
+html.jct-dark #page dd,
+html.jct-dark #page p,
+html.jct-dark #page .fitemtitle,
+html.jct-dark #page .felement,
+html.jct-dark #page .summarytext,
+html.jct-dark #page .no-overflow,
+html.jct-dark #page .card-title,
+html.jct-dark #page .instancename,
+html.jct-dark #page .activityname,
+html.jct-dark #page .course-description-item,
+html.jct-dark .empty-message,
+html.jct-dark .popover-region-header-text,
+html.jct-dark .popover-region-seeall-text {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark.jct-moodle-redesign a,
+html.jct-dark #page a:not(.btn):not(.jct-assignment-box-link):not(.jct-schedule-assignment-item):not(.jct-schedule-course-link):not(.dropdown-item):not(.nav-link),
+html.jct-dark #page .aalink,
+html.jct-dark #page .btn-link {
+	color: #60a5fa !important;
+}
+
+html.jct-dark.jct-moodle-redesign a:hover,
+html.jct-dark #page a:not(.btn):not(.jct-assignment-box-link):not(.jct-schedule-assignment-item):not(.jct-schedule-course-link):not(.dropdown-item):not(.nav-link):hover,
+html.jct-dark #page .aalink:hover,
+html.jct-dark #page .btn-link:hover {
+	color: #93c5fd !important;
+}
+
+html.jct-dark #page .icon.fa,
+html.jct-dark .navbar .icon.fa {
+	color: inherit;
+}
+
+html.jct-dark hr {
+	border-color: #334155 !important;
+	opacity: 0.7;
+}
+
+/* ============================================
+   3. Bootstrap & Moodle Generic Surfaces
+   ============================================ */
+
+html.jct-dark .bg-white,
+html.jct-dark .bg-light,
+html.jct-dark.jct-moodle-redesign .bg-white,
+html.jct-dark.jct-moodle-redesign .bg-light {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .bg-secondary {
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .text-dark,
+html.jct-dark .text-body,
+html.jct-dark .text-black,
+html.jct-dark.jct-moodle-redesign .text-dark,
+html.jct-dark.jct-moodle-redesign .text-body {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .text-muted,
+html.jct-dark .dimmed_text,
+html.jct-dark .dimmed {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .border,
+html.jct-dark .border-top,
+html.jct-dark .border-bottom,
+html.jct-dark .border-left,
+html.jct-dark .border-right,
+html.jct-dark .border-start,
+html.jct-dark .border-end {
+	border-color: #334155 !important;
+}
+
+html.jct-dark .card,
+html.jct-dark .well,
+html.jct-dark .generalbox,
+html.jct-dark .box.generalbox,
+html.jct-dark .card-body,
+html.jct-dark .block,
+html.jct-dark section.block {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .card-header,
+html.jct-dark .card-footer {
+	background-color: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .list-group-item {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .list-group-item-action:hover,
+html.jct-dark .list-group-item-action:focus {
+	background-color: #263348 !important;
+	color: #ffffff !important;
+}
+
+/* ============================================
+   4. Top Navbar (LearnR / Boost Union high specificity), Tabs, Drawers & Footer
+   ============================================ */
+
+html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white,
+html.jct-dark nav.navbar.fixed-top.navbar-light.bg-white,
+html.jct-dark nav.navbar.bg-white,
+html.jct-dark .navbar.fixed-top,
+html.jct-dark .navbar.navbar-light,
+html.jct-dark header.navbar,
+html.jct-dark .navbar {
+	background: rgba(11, 18, 32, 0.92) !important;
+	background-color: rgba(11, 18, 32, 0.92) !important;
+	border-bottom: 1px solid #334155 !important;
+	color: #f1f5f9 !important;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.jct-dark .navbar .container-fluid,
+html.jct-dark .navbar .primary-navigation,
+html.jct-dark .navbar .primary-navigation .moremenu,
+html.jct-dark .navbar .moremenu.navigation,
+html.jct-dark .navbar ul.more-nav,
+html.jct-dark .navbar #usernavigation {
+	background: transparent !important;
+	background-color: transparent !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .navbar.navbar-light .navbar-brand,
+html.jct-dark .navbar.navbar-light .navbar-nav .nav-link,
+html.jct-dark .navbar.navbar-light .navbar-nav .nav-link.active,
+html.jct-dark .navbar .nav-link,
+html.jct-dark .navbar .navbar-brand,
+html.jct-dark .navbar .btn,
+html.jct-dark .navbar .icon,
+html.jct-dark .navbar i.fa,
+html.jct-dark .navbar .usertext,
+html.jct-dark .navbar .dropdown-toggle,
+html.jct-dark .navbar .popover-region-toggle {
+	color: #e2e8f0 !important;
+}
+
+html.jct-dark .navbar.navbar-light .navbar-nav .nav-link:hover,
+html.jct-dark .navbar.navbar-light .navbar-nav .nav-link:focus,
+html.jct-dark .navbar.navbar-light .navbar-nav .nav-link.active,
+html.jct-dark .navbar .popover-region-toggle:hover,
+html.jct-dark .navbar .btn-open:hover {
+	background-color: #1e293b !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .navbar .primary-navigation .navigation .nav-link.active {
+	border-bottom-color: #818cf8 !important;
+}
+
+html.jct-dark .navbar .navbar-toggler-icon {
+	filter: invert(1) brightness(1.8);
+}
+
+/* Navbar search form */
+html.jct-dark #searchform-navbar,
+html.jct-dark .navbar .searchform-navbar,
+html.jct-dark .navbar .simplesearchform .input-group {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .navbar .simplesearchform .btn-submit,
+html.jct-dark .navbar .simplesearchform .btn-close {
+	background-color: #263348 !important;
+	color: #e2e8f0 !important;
+	border-color: #334155 !important;
+}
+
+/* User initials avatar in navbar */
+html.jct-dark .usermenu .userinitials,
+html.jct-dark span.userinitials {
+	background: var(--jct-brand-gradient) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Boost Union smartmenu & usermenu carousels */
+html.jct-dark .boost-union-moremenu,
+html.jct-dark .theme-boost-union-smartmenu-carousel .dropdown-menu,
+html.jct-dark #user-action-menu,
+html.jct-dark #user-action-menu .carousel-item,
+html.jct-dark #user-action-menu .header {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+}
+
+/* Secondary Navigation & Tabs */
+html.jct-dark .secondary-navigation,
+html.jct-dark .secondary-navigation .navigation,
+html.jct-dark .secondary-navigation .moremenu,
+html.jct-dark .moremenu .nav-tabs {
+	background-color: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .nav-tabs {
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .nav-tabs .nav-link,
+html.jct-dark .nav-pills .nav-link {
+	color: #cbd5e1 !important;
+	background: transparent !important;
+	border-color: transparent !important;
+}
+
+html.jct-dark .nav-tabs .nav-link:hover,
+html.jct-dark .nav-pills .nav-link:hover {
+	background-color: #263348 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .nav-tabs .nav-link.active,
+html.jct-dark .nav-tabs .nav-item.show .nav-link {
+	background-color: #263348 !important;
+	border-color: #334155 #334155 #818cf8 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .format-onetopic .nav-tabs .nav-link .tab_content,
+html.jct-dark .tabs .nav-tabs li a {
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .format-onetopic .nav-tabs .nav-link.active .tab_content {
+	color: #ffffff !important;
+}
+
+/* Drawers, Drawer Toggles & Course Index */
+html.jct-dark #nav-drawer,
+html.jct-dark .drawer,
+html.jct-dark .drawercontent,
+html.jct-dark .drawerheader {
+	background-color: #111c2e !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .drawer-toggles .drawer-toggler .btn,
+html.jct-dark .drawer-toggler .btn {
+	background-color: #1e293b !important;
+	border: 1px solid #334155 !important;
+	color: #f1f5f9 !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.jct-dark .drawer-toggles .drawer-toggler .btn:hover {
+	background-color: #334155 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .drawer-toggles .drawer-toggler .btn .icon,
+html.jct-dark .drawer .icon {
+	color: #e2e8f0 !important;
+}
+
+html.jct-dark .courseindex .courseindex-item,
+html.jct-dark .courseindex .courseindex-link,
+html.jct-dark .courseindex .courseindex-chevron {
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .courseindex .courseindex-item:hover,
+html.jct-dark .courseindex .courseindex-item.pageitem {
+	background-color: #263348 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .courseindex .courseindex-item.pageitem a {
+	color: #ffffff !important;
+}
+
+/* Breadcrumbs, Skip Links & Footer */
+html.jct-dark .breadcrumb-item,
+html.jct-dark .breadcrumb-item.active,
+html.jct-dark .breadcrumb-item + .breadcrumb-item::before {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark #page-footer {
+	background: #0b1220 !important;
+	border-top: 1px solid #334155 !important;
+	color: #94a3b8 !important;
+}
+
+html.jct-dark #page-footer a {
+	color: #60a5fa !important;
+}
+
+/* ============================================
+   5. Dropdowns, Popovers, Notifications & Moodle Modals
+   ============================================ */
+
+html.jct-dark .dropdown-menu,
+html.jct-dark .popover,
+html.jct-dark .popover-region-container,
+html.jct-dark .popover-region-header-container,
+html.jct-dark .popover-region-content-container,
+html.jct-dark .popover-region-content,
+html.jct-dark .popover-region-footer-container,
+html.jct-dark .modal-content,
+html.jct-dark .moodle-dialogue-base .moodle-dialogue-wrap {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .dropdown-menu,
+html.jct-dark .popover-region-container,
+html.jct-dark .modal-content {
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.jct-dark .dropdown-item,
+html.jct-dark a.dropdown-item {
+	color: #f1f5f9 !important;
+	background-color: transparent !important;
+}
+
+html.jct-dark .dropdown-item:hover,
+html.jct-dark .dropdown-item:focus,
+html.jct-dark .dropdown-item.active {
+	background-color: #263348 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .dropdown-divider {
+	border-top-color: #334155 !important;
+}
+
+html.jct-dark .popover-header,
+html.jct-dark .popover-region-header-container,
+html.jct-dark .popover-region-footer-container,
+html.jct-dark .modal-header,
+html.jct-dark .modal-footer,
+html.jct-dark .moodle-dialogue-base .moodle-dialogue-hd {
+	background-color: #162033 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .popover-body,
+html.jct-dark .modal-body,
+html.jct-dark .moodle-dialogue-base .moodle-dialogue-bd {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .content-item-container {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .content-item-container.unread {
+	background-color: rgba(59, 130, 246, 0.16) !important;
+}
+
+html.jct-dark .content-item-container:hover {
+	background-color: #263348 !important;
+}
+
+/* Monochrome Moodle core icons (arrows, aggregation icons, gears) */
+html.jct-dark img.icon[src*="/theme/image.php/"][src*="/core/"] {
+	filter: invert(0.88) hue-rotate(180deg) brightness(1.1);
+}
+
+/* ============================================
+   6. Forms, Inputs, Selects, Buttons, Tables & Alerts
+   ============================================ */
+
+html.jct-dark.jct-moodle-redesign input[type="text"],
+html.jct-dark.jct-moodle-redesign input[type="search"],
+html.jct-dark.jct-moodle-redesign input[type="email"],
+html.jct-dark.jct-moodle-redesign input[type="password"],
+html.jct-dark.jct-moodle-redesign input[type="number"],
+html.jct-dark.jct-moodle-redesign input[type="date"],
+html.jct-dark.jct-moodle-redesign input[type="time"],
+html.jct-dark.jct-moodle-redesign input[type="url"],
+html.jct-dark.jct-moodle-redesign select,
+html.jct-dark.jct-moodle-redesign select.jct-settings-select,
+html.jct-dark.jct-moodle-redesign input.jct-settings-number,
+html.jct-dark.jct-moodle-redesign textarea,
+html.jct-dark .form-control,
+html.jct-dark .custom-select,
+html.jct-dark .form-select {
+	background: #263348 !important;
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+	border-color: #475569 !important;
+}
+
+html.jct-dark select option {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark input::placeholder,
+html.jct-dark textarea::placeholder {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .input-group-text {
+	background-color: #334155 !important;
+	border-color: #475569 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .btn-secondary,
+html.jct-dark .btn-light,
+html.jct-dark .btn-default,
+html.jct-dark .btn-outline-secondary,
+html.jct-dark .btn-icon {
+	background-color: #263348 !important;
+	border-color: #475569 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .btn-secondary:hover,
+html.jct-dark .btn-light:hover,
+html.jct-dark .btn-default:hover,
+html.jct-dark .btn-outline-secondary:hover,
+html.jct-dark .btn-icon:hover {
+	background-color: #334155 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .btn-icon .icon,
+html.jct-dark .btn-secondary .icon {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .close,
+html.jct-dark .btn-close {
+	color: #f1f5f9 !important;
+	text-shadow: none !important;
+}
+
+/* Tables */
+html.jct-dark table,
+html.jct-dark .generaltable,
+html.jct-dark table.flexible,
+html.jct-dark .table {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark table thead th,
+html.jct-dark .generaltable th,
+html.jct-dark table.flexible th,
+html.jct-dark .table th {
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark table td,
+html.jct-dark .generaltable td,
+html.jct-dark table.flexible td,
+html.jct-dark .table td {
+	background-color: #1e293b !important;
+	border-color: #273549 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .generaltable tbody tr:nth-of-type(odd) > td,
+html.jct-dark .table-striped tbody tr:nth-of-type(odd) > td {
+	background-color: #222f43 !important;
+}
+
+html.jct-dark .generaltable tbody tr:hover > td,
+html.jct-dark .table-hover tbody tr:hover > td {
+	background-color: #2a3a54 !important;
+}
+
+/* Pagination */
+html.jct-dark .page-link {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .page-link:hover {
+	background-color: #263348 !important;
+}
+
+html.jct-dark .page-item.active .page-link {
+	background-color: #3b82f6 !important;
+	border-color: #3b82f6 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .page-item.disabled .page-link {
+	background-color: #0f172a !important;
+	color: #64748b !important;
+}
+
+/* Alerts & Badges */
+html.jct-dark .alert-info {
+	background-color: rgba(59, 130, 246, 0.16) !important;
+	border-color: rgba(59, 130, 246, 0.4) !important;
+	color: #bfdbfe !important;
+}
+
+html.jct-dark .alert-success {
+	background-color: rgba(34, 197, 94, 0.16) !important;
+	border-color: rgba(34, 197, 94, 0.4) !important;
+	color: #bbf7d0 !important;
+}
+
+html.jct-dark .alert-warning {
+	background-color: rgba(245, 158, 11, 0.16) !important;
+	border-color: rgba(245, 158, 11, 0.4) !important;
+	color: #fde68a !important;
+}
+
+html.jct-dark .alert-danger {
+	background-color: rgba(239, 68, 68, 0.16) !important;
+	border-color: rgba(239, 68, 68, 0.4) !important;
+	color: #fecaca !important;
+}
+
+html.jct-dark .badge-light,
+html.jct-dark .badge-secondary,
+html.jct-dark .badge.bg-light {
+	background-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+/* Filepicker, Editors & Code */
+html.jct-dark .filemanager-container,
+html.jct-dark .fp-navbar,
+html.jct-dark .fp-content,
+html.jct-dark .editor_atto_toolbar,
+html.jct-dark .editor_atto_content_wrap,
+html.jct-dark .editor_atto_content {
+	background-color: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .editor_atto_toolbar button .icon {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark pre,
+html.jct-dark code {
+	background-color: #0b1220 !important;
+	color: #e2e8f0 !important;
+	border-color: #334155 !important;
+}
+
+/* ============================================
+   7. Page Header, Frontpage, Course Cards, Thumbnails & Search
+   ============================================ */
+
+html.jct-dark.jct-moodle-redesign #page-header {
+	background: linear-gradient(135deg, rgba(15, 23, 42, 0.34), rgba(15, 23, 42, 0.48)), var(--jct-brand-gradient) !important;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.jct-dark #frontpage-course-list h2,
+html.jct-dark #site-news-forum h2 {
+	color: #f1f5f9 !important;
+	border-bottom-color: #334155 !important;
+}
+
+/* Course Search Box */
+html.jct-dark.jct-moodle-redesign form.jct-course-search-form .input-group {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.jct-dark.jct-moodle-redesign form.jct-course-search-form .input-group:focus-within {
+	border-color: #818cf8 !important;
+	box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25) !important;
+}
+
+html.jct-dark.jct-moodle-redesign form.jct-course-search-form input.form-control {
+	background: transparent !important;
+	background-color: transparent !important;
+	border: none !important;
+	color: #f1f5f9 !important;
+}
+
+/* Course Cards (all view modes & all 5 card styles) */
+html.jct-dark.jct-moodle-redesign .jct-courses-grid > .list-group-item,
+html.jct-dark.jct-moodle-redesign .jct-courses-grid .list-group > .list-group-item,
+html.jct-dark.jct-moodle-redesign .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign .jct-courses-grid .card.course,
+html.jct-dark.jct-moodle-redesign .jct-courses-grid .course-list > li,
+html.jct-dark.jct-moodle-redesign .jct-courses-list-view .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign .jct-courses-list-view .course-listitem,
+html.jct-dark.jct-moodle-redesign .jct-view-original .jct-courses-grid > .list-group-item,
+html.jct-dark.jct-moodle-redesign .jct-view-original .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign .jct-view-carousel .jct-carousel-container > * {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.jct-dark.jct-moodle-redesign .jct-courses-grid > .list-group-item:hover,
+html.jct-dark.jct-moodle-redesign .jct-courses-grid .coursebox:hover,
+html.jct-dark.jct-moodle-redesign .jct-courses-grid .card.course:hover,
+html.jct-dark.jct-moodle-redesign .jct-style-minimal .jct-courses-grid .coursebox:hover,
+html.jct-dark.jct-moodle-redesign .jct-style-cards .jct-courses-grid .coursebox:hover,
+html.jct-dark.jct-moodle-redesign .jct-style-modern .jct-courses-grid .coursebox:hover {
+	background: #263348 !important;
+	border-color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 65%)), 60%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign .jct-style-minimal .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign .jct-style-minimal .jct-courses-grid > .list-group-item {
+	background: #162032 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark.jct-moodle-redesign .jct-style-cards .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign .jct-style-cards .jct-courses-grid > .list-group-item {
+	background: linear-gradient(135deg, #1e293b 0%, #162033 100%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign .jct-style-modern .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign .jct-style-modern .jct-courses-grid > .list-group-item {
+	background: #1e293b !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.jct-style-glass .jct-courses-grid > .list-group-item,
+html.jct-dark.jct-moodle-redesign body.jct-style-glass .jct-courses-grid .coursebox,
+html.jct-dark.jct-moodle-redesign body.jct-style-glass .jct-courses-grid .card.course {
+	border: 1px solid rgba(255, 255, 255, 0.14) !important;
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 55%)), 24%, 0.55) 0%,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 45%)), 16%, 0.65) 100%
+	) !important;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+html.jct-dark body.jct-style-glass .jct-courses-grid .coursename a,
+html.jct-dark body.jct-style-glass .jct-courses-grid .teachers,
+html.jct-dark body.jct-style-glass .jct-courses-grid .summary {
+	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Course Card Thumbnails — dark-adapted placeholder & gentle dimming on bright images */
+html.jct-dark .jct-thumb-wrap {
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 55%)), 20%, 1) 0%,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 45%)), 14%, 1) 100%
+	) !important;
+	border-color: hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 50%)), 45%, 0.35) !important;
+}
+
+html.jct-dark .jct-courses-grid .jct-course-yearly .jct-thumb-wrap {
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 55%)), 20%, 1) 0%,
+		hsla(var(--jct-accent-2-h, 145), calc(var(--jct-accent-2-s, 55%)), 18%, 1) 100%
+	) !important;
+}
+
+html.jct-dark .jct-thumb-img[src*="placeholder.svg"] {
+	filter: invert(0.9) hue-rotate(180deg) brightness(0.85) contrast(1.1) !important;
+	opacity: 0.55 !important;
+	mix-blend-mode: lighten !important;
+}
+
+html.jct-dark .jct-thumb-img:not([src*="placeholder.svg"]),
+html.jct-dark .jct-moved-bottom img {
+	filter: brightness(0.84) contrast(1.04) !important;
+}
+
+html.jct-dark .jct-courses-grid .coursename a,
+html.jct-dark .jct-courses-grid .course-title a,
+html.jct-dark .jct-courses-grid .list-group-item a.course-title,
+html.jct-dark .jct-courses-grid .list-group-item .coursename a {
+	color: hsl(var(--jct-accent-h, 220), calc(var(--jct-accent-s, 75%)), 78%) !important;
+}
+
+html.jct-dark .jct-courses-grid .coursename a:hover,
+html.jct-dark .jct-courses-grid .course-title a:hover {
+	color: hsl(var(--jct-accent-h, 220), calc(var(--jct-accent-s, 85%)), 86%) !important;
+}
+
+html.jct-dark .jct-courses-grid .teachers,
+html.jct-dark .jct-courses-grid .summary,
+html.jct-dark .jct-courses-grid .card-text {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-fav-toggle,
+html.jct-dark .jct-schedule-btn {
+	background: rgba(15, 23, 42, 0.85) !important;
+	border-color: rgba(148, 163, 184, 0.28) !important;
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-fav-toggle.jct-fav-on {
+	background: rgba(245, 158, 11, 0.22) !important;
+	border-color: rgba(245, 158, 11, 0.65) !important;
+	color: #fbbf24 !important;
+}
+
+html.jct-dark .jct-view-carousel .jct-semester-group {
+	background: linear-gradient(135deg, #162033 0%, #1e293b 100%) !important;
+	border: 1px solid #334155;
+}
+
+html.jct-dark .jct-view-carousel .jct-semester-header {
+	color: #f1f5f9 !important;
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .jct-view-carousel .jct-carousel-btn {
+	background: #263348 !important;
+	color: #e2e8f0 !important;
+}
+
+/* My Courses Page (/my/courses.php) — higher specificity than course-page.css */
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .card-text h5,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="courses-view"] h5 {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-deck .dashboard-card,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .card-deck .coursebox,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .card-deck .card,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .list-group-item {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .coursename a,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-title a,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .multiline a {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .progress {
+	background: #334155 !important;
+}
+
+/* Frontpage moved sitetopic & sections */
+html.jct-dark .sitetopic,
+html.jct-dark .sitetopic li.section {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+/* ============================================
+   8. Course Page Theming in Dark Mode
+   ============================================ */
+
+html.jct-dark.jct-course-page-themed body.pagelayout-course,
+html.jct-dark.jct-course-page-themed body.pagelayout-incourse {
+	background: linear-gradient(
+		180deg,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 45%)), 14%, 1) 0%,
+		#0f172a 280px,
+		#0f172a 100%
+	) !important;
+}
+
+html.jct-dark.jct-course-page-themed #page-header {
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 55%)), 22%, 1) 0%,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 45%)), 15%, 1) 100%
+	) !important;
+	border-bottom-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 70%)), 58%) !important;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.jct-dark.jct-course-page-themed.jct-course-yearly #page-header {
+	background: linear-gradient(
+		135deg,
+		hsla(var(--jct-course-h, 230), calc(var(--jct-course-s, 55%)), 22%, 1) 0%,
+		hsla(var(--jct-course-2-h, 145), calc(var(--jct-course-2-s, 55%)), 20%, 1) 100%
+	) !important;
+}
+
+html.jct-dark.jct-course-page-themed #page-header h1,
+html.jct-dark.jct-course-page-themed #page-header .page-header-headings h1 {
+	color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 80%)), 85%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign .course-content li.section,
+html.jct-dark.jct-course-page-themed .course-content li.section {
+	background: #1e293b !important;
+	border-top-color: #334155 !important;
+	border-right-color: #334155 !important;
+	border-bottom-color: #334155 !important;
+	border-left-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 70%)), 58%) !important;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.jct-dark.jct-moodle-redesign .course-content .sectionname,
+html.jct-dark.jct-course-page-themed .course-content .sectionname {
+	color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 75%)), 78%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign .activity,
+html.jct-dark.jct-course-page-themed .activity,
+html.jct-dark .activity-item {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark.jct-moodle-redesign .activity:hover,
+html.jct-dark.jct-course-page-themed .activity:hover {
+	background: #334155 !important;
+	border-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), 60%) !important;
+}
+
+html.jct-dark .activity-dates,
+html.jct-dark .description-inner {
+	background: rgba(15, 23, 42, 0.5) !important;
+	border-color: #334155 !important;
+	color: #cbd5e1 !important;
+}
+
+/* Section & Activity Availability / Restrictions */
+html.jct-dark .section_availability,
+html.jct-dark .activity-availability,
+html.jct-dark .availabilityinfo,
+html.jct-dark .availabilityinfo.isrestricted,
+html.jct-dark .availabilityinfo .showmore-container {
+	background: rgba(245, 158, 11, 0.1) !important;
+	background-color: rgba(245, 158, 11, 0.1) !important;
+	border-color: rgba(245, 158, 11, 0.3) !important;
+	color: #e2e8f0 !important;
+	border-radius: 8px !important;
+}
+
+html.jct-dark .section_availability,
+html.jct-dark .activity-availability {
+	background: transparent !important;
+	background-color: transparent !important;
+}
+
+html.jct-dark .availabilityinfo .showmore-container {
+	background: transparent !important;
+	background-color: transparent !important;
+}
+
+html.jct-dark .availabilityinfo .availability-excerpt,
+html.jct-dark .availabilityinfo .collapsed-content,
+html.jct-dark .availabilityinfo .expanded-content,
+html.jct-dark .availabilityinfo li,
+html.jct-dark .availabilityinfo strong,
+html.jct-dark .availabilityinfo .fa-lock {
+	color: #fde68a !important;
+}
+
+html.jct-dark .availabilityinfo .showmore-button,
+html.jct-dark .availabilityinfo .showmore-button span,
+html.jct-dark .availabilityinfo .showmore-button .icon {
+	color: #93c5fd !important;
+	background: transparent !important;
+}
+
+/* ============================================
+   9. Gradebook (User Report & Overview), Assignments, Quizzes, VPL, Forums & Login
+   ============================================ */
+
+/* Gradebook (/grade/report/user & /grade/report/overview) */
+html.jct-dark .user-report-container,
+html.jct-dark .user-report-container .table-responsive,
+html.jct-dark .user-report-container table.user-grade,
+html.jct-dark table.user-grade,
+html.jct-dark table.user-grade tbody,
+html.jct-dark table.user-grade tr {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .user-report-container table.user-grade thead th,
+html.jct-dark table.user-grade thead th.header {
+	background-color: #162033 !important;
+	color: #e2e8f0 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .user-report-container table.user-grade th.category,
+html.jct-dark table.user-grade th.category {
+	background-color: #263348 !important;
+	color: #ffffff !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .user-report-container table.user-grade tr.spacer td,
+html.jct-dark table.user-grade tr.spacer td {
+	background-color: #0f172a !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .user-report-container table.user-grade th.baggt,
+html.jct-dark .user-report-container table.user-grade td.baggt,
+html.jct-dark .user-report-container table.user-grade th.baggb,
+html.jct-dark .user-report-container table.user-grade td.baggb {
+	background-color: #243248 !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .user-report-container table.user-grade th.cell,
+html.jct-dark .user-report-container table.user-grade td.cell {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .user-report-container .category-content,
+html.jct-dark .user-report-container .courseitem,
+html.jct-dark .user-report-container .rowtitle,
+html.jct-dark .user-report-container .gradeitemheader,
+html.jct-dark .user-report-container .small {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .user-report-container .toggle-category {
+	background-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+/* Assignments (/mod/assign) */
+html.jct-dark .submissionstatustable .submissionstatussubmitted,
+html.jct-dark .submissionstatustable .earlysubmission,
+html.jct-dark td.submissionstatussubmitted,
+html.jct-dark td.earlysubmission {
+	background-color: rgba(22, 163, 74, 0.22) !important;
+	color: #86efac !important;
+}
+
+html.jct-dark .submissionstatustable .submissionstatusdraft,
+html.jct-dark .submissionstatustable .submissionnotgraded,
+html.jct-dark td.submissionnotgraded {
+	background-color: rgba(245, 158, 11, 0.16) !important;
+	color: #fde68a !important;
+}
+
+html.jct-dark .submissionstatustable .latesubmission,
+html.jct-dark .submissionstatustable .overdue,
+html.jct-dark td.latesubmission,
+html.jct-dark td.overdue {
+	background-color: rgba(220, 38, 38, 0.22) !important;
+	color: #fca5a5 !important;
+}
+
+/* Quizzes (/mod/quiz) */
+html.jct-dark .que,
+html.jct-dark .que .qtext,
+html.jct-dark .que .ablock,
+html.jct-dark .que .answer,
+html.jct-dark .que .prompt {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .que .info {
+	background-color: #1e293b !important;
+	border: 1px solid #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .que .formulation {
+	background-color: #16243b !important;
+	border: 1px solid #2b456d !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .que .outcome,
+html.jct-dark .que .comment {
+	background-color: #2c2414 !important;
+	border: 1px solid #5b461f !important;
+	color: #fef3c7 !important;
+}
+
+html.jct-dark .que .answer .r0,
+html.jct-dark .que .answer .r1 {
+	background: transparent !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .que .specificfeedback,
+html.jct-dark .que .generalfeedback,
+html.jct-dark .que .rightanswer {
+	color: #fde68a !important;
+}
+
+html.jct-dark .que .correct,
+html.jct-dark .que .answer .correct {
+	background-color: rgba(22, 163, 74, 0.22) !important;
+}
+
+html.jct-dark .que .incorrect,
+html.jct-dark .que .answer .incorrect {
+	background-color: rgba(220, 38, 38, 0.22) !important;
+}
+
+html.jct-dark #quiz-timer-wrapper #quiz-timer {
+	background-color: #1e293b !important;
+	border-color: #ef4444 !important;
+	color: #fca5a5 !important;
+}
+
+html.jct-dark .path-mod-quiz .qn_buttons .qnbutton {
+	background-color: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .path-mod-quiz .qn_buttons .qnbutton .trafficlight {
+	background-color: #334155 !important;
+}
+
+html.jct-dark .path-mod-quiz .qn_buttons .qnbutton.thispage {
+	border-color: #60a5fa !important;
+	box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.35) !important;
+}
+
+html.jct-dark table.quizreviewsummary th.cell {
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark table.quizreviewsummary td.cell {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+}
+
+/* VPL (/mod/vpl) */
+html.jct-dark .path-mod-vpl .ui-widget-content,
+html.jct-dark .path-mod-vpl .ui-tabs,
+html.jct-dark .path-mod-vpl .ui-dialog,
+html.jct-dark .path-mod-vpl .vpl_ide_menu,
+html.jct-dark .path-mod-vpl .vpl_ide_status {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .path-mod-vpl .ui-widget-header,
+html.jct-dark .path-mod-vpl .ui-state-default {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .path-mod-vpl .ui-state-active {
+	background: #334155 !important;
+	color: #ffffff !important;
+}
+
+/* Forums (/mod/forum) */
+html.jct-dark .forumpost,
+html.jct-dark .forum-post-container {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+/* Moodle Calendar (/calendar) */
+html.jct-dark .maincalendar .calendarmonth td,
+html.jct-dark .maincalendar .calendarmonth th {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .maincalendar .calendarmonth td.today {
+	background-color: rgba(59, 130, 246, 0.22) !important;
+}
+
+/* Messaging Drawer */
+html.jct-dark .message-app {
+	background-color: #1e293b !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .message-app .message.received {
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .message-app .message.send {
+	background-color: #1d4ed8 !important;
+	color: #ffffff !important;
+}
+
+/* Login Page, Profile, Preferences, Search Results & Reports */
+html.jct-dark .login-container,
+html.jct-dark .userprofile .profile_tree section,
+html.jct-dark .userprofile .node_category,
+html.jct-dark .preferences-container .preferences-group,
+html.jct-dark .search-results .result,
+html.jct-dark .course-search-result,
+html.jct-dark .reportbuilder-table {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .login-container {
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.jct-dark .automatic-completion-conditions .badge,
+html.jct-dark .completion-info .badge {
+	background-color: #263348 !important;
+	color: #cbd5e1 !important;
+	border: 1px solid #334155 !important;
+}
+
+html.jct-dark .automatic-completion-conditions .badge.alert-success {
+	background-color: rgba(22, 163, 74, 0.22) !important;
+	color: #86efac !important;
+	border-color: rgba(34, 197, 94, 0.45) !important;
+}
+
+html.jct-dark .mform fieldset.collapsible legend a.fheader,
+html.jct-dark .collapsible-actions a {
+	color: #93c5fd !important;
+}
+
+/* Preserve colored course card titles over the generic #page a rule */
+html.jct-dark #page .jct-courses-grid .coursename a,
+html.jct-dark #page .jct-courses-grid .course-title a,
+html.jct-dark #page .jct-courses-grid .list-group-item a.course-title,
+html.jct-dark #page .jct-courses-grid .list-group-item .coursename a {
+	color: hsl(var(--jct-accent-h, 220), calc(var(--jct-accent-s, 75%)), 78%) !important;
+}
+
+html.jct-dark #page .jct-courses-grid .coursename a:hover,
+html.jct-dark #page .jct-courses-grid .course-title a:hover {
+	color: hsl(var(--jct-accent-h, 220), calc(var(--jct-accent-s, 85%)), 86%) !important;
+}
+
+/* Defend against lecturer-pasted inline black text & white backgrounds */
+html.jct-dark .no-overflow [style*="background-color: rgb(255, 255, 255)"],
+html.jct-dark .no-overflow [style*="background-color: #fff"],
+html.jct-dark .no-overflow [style*="background-color: white"],
+html.jct-dark .no-overflow [style*="background: white"],
+html.jct-dark .no-overflow [style*="background: #fff"],
+html.jct-dark .qtext [style*="background-color: rgb(255, 255, 255)"],
+html.jct-dark .qtext [style*="background-color: #fff"],
+html.jct-dark .qtext [style*="background-color: white"],
+html.jct-dark .summary [style*="background-color: rgb(255, 255, 255)"],
+html.jct-dark .summary [style*="background-color: white"] {
+	background-color: transparent !important;
+	background: transparent !important;
+}
+
+html.jct-dark .no-overflow [style*="color: rgb(0, 0, 0)"],
+html.jct-dark .no-overflow [style*="color: #000"],
+html.jct-dark .no-overflow [style*="color: black"],
+html.jct-dark .qtext [style*="color: rgb(0, 0, 0)"],
+html.jct-dark .qtext [style*="color: #000"],
+html.jct-dark .qtext [style*="color: black"],
+html.jct-dark .summary [style*="color: rgb(0, 0, 0)"],
+html.jct-dark .summary [style*="color: #000"],
+html.jct-dark .summary [style*="color: black"] {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .MathJax,
+html.jct-dark mjx-container {
+	color: #f1f5f9 !important;
+}
+
+/* ============================================
+   10. Extension Widgets: Weekly Schedule & TODO
+   ============================================ */
+
+html.jct-dark .jct-weekly-schedule {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.jct-dark .jct-schedule-header {
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .jct-settings-button {
+	background: #263348 !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-settings-button:hover {
+	background: #334155 !important;
+	border-color: #60a5fa !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .jct-week-nav-btn {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-week-nav-btn:hover {
+	background: #334155 !important;
+}
+
+html.jct-dark .jct-week-nav-label {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-schedule-hint {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-schedule-delete-all-btn {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f87171 !important;
+}
+
+html.jct-dark .jct-schedule-delete-all-btn:hover {
+	background: rgba(220, 38, 38, 0.2) !important;
+	border-color: #ef4444 !important;
+}
+
+html.jct-dark .jct-schedule-day {
+	background: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-schedule-day-header {
+	background: #263348 !important;
+	color: #f1f5f9 !important;
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .jct-schedule-today {
+	border-color: #3b82f6 !important;
+}
+
+html.jct-dark .jct-schedule-today .jct-schedule-day-header {
+	background: #2563eb !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .jct-schedule-day-courses.jct-schedule-drag-over {
+	background: rgba(59, 130, 246, 0.2) !important;
+	border-color: #60a5fa !important;
+}
+
+html.jct-dark .jct-schedule-separator {
+	border-top-color: #334155 !important;
+}
+
+html.jct-dark .jct-schedule-course-item {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-schedule-course-item:hover {
+	background: #263348 !important;
+	border-color: #60a5fa !important;
+}
+
+html.jct-dark .jct-schedule-course-item a.jct-schedule-course-link {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-schedule-course-item .jct-session-time {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-schedule-edit-course {
+	background: rgba(59, 130, 246, 0.22) !important;
+	color: #93c5fd !important;
+}
+
+html.jct-dark .jct-schedule-assignment-item {
+	background: rgba(245, 158, 11, 0.14) !important;
+	border-color: rgba(245, 158, 11, 0.35) !important;
+	color: #fde68a !important;
+}
+
+html.jct-dark .jct-schedule-assignment-item.submitted {
+	background: rgba(22, 163, 74, 0.16) !important;
+	border-color: rgba(34, 197, 94, 0.35) !important;
+	color: #bbf7d0 !important;
+}
+
+html.jct-dark .jct-schedule-assignment-item.not-submitted {
+	background: rgba(220, 38, 38, 0.16) !important;
+	border-color: rgba(239, 68, 68, 0.35) !important;
+	color: #fecaca !important;
+}
+
+html.jct-dark .jct-schedule-event-item {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #cbd5e1 !important;
+}
+
+/* TODO Column & Dialog */
+html.jct-dark .jct-todo-column {
+	background: #171f36 !important;
+	border-color: #3730a3 !important;
+}
+
+html.jct-dark .jct-todo-column .jct-schedule-day-header.jct-todo-header {
+	background: #1e1b4b !important;
+	color: #c7d2fe !important;
+	border-bottom-color: #3730a3 !important;
+}
+
+html.jct-dark .jct-todo-empty-add {
+	background: rgba(99, 102, 241, 0.18) !important;
+	border-color: #6366f1 !important;
+	color: #c7d2fe !important;
+}
+
+html.jct-dark .jct-todo-item {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	border-right-color: var(--todo-color, #6366f1) !important;
+}
+
+html.jct-dark .jct-todo-item.completed {
+	background: #131c2e !important;
+}
+
+html.jct-dark .jct-todo-item .jct-todo-text {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-todo-item.completed .jct-todo-text {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-todo-modal-card,
+html.jct-dark .jct-schedule-modal-content,
+html.jct-dark .jct-time-picker-content {
+	background: #1e293b !important;
+	border: 1px solid #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-todo-field label,
+html.jct-dark .jct-schedule-modal-header h3,
+html.jct-dark .jct-time-picker-header h3,
+html.jct-dark .jct-time-picker-body label span {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-todo-icon-opt,
+html.jct-dark .jct-todo-priority-opt {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-todo-icon-opt.active,
+html.jct-dark .jct-todo-priority-opt.active {
+	background: #334155 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .jct-todo-modal-footer,
+html.jct-dark .jct-schedule-modal-footer,
+html.jct-dark .jct-time-picker-footer,
+html.jct-dark .jct-schedule-modal-header,
+html.jct-dark .jct-time-picker-header {
+	background: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-todo-modal-cancel,
+html.jct-dark .jct-time-picker-skip,
+html.jct-dark .jct-schedule-modal-close,
+html.jct-dark .jct-time-picker-close {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-session-item {
+	background: #263348 !important;
+}
+
+/* ============================================
+   11. Extension Modals: Settings, Assignments & Calendar
+   ============================================ */
+
+html.jct-dark .jct-assignments-modal-content,
+html.jct-dark .jct-calendar-modal-content,
+html.jct-dark .jct-scan-warning-content,
+html.jct-dark .jct-day-details-card,
+html.jct-dark .jct-event-edit-content {
+	background: #1e293b !important;
+	border: 1px solid #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-assignments-modal-header {
+	background: #162033 !important;
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .jct-settings-modal-header,
+html.jct-dark .jct-calendar-modal-header {
+	background: linear-gradient(135deg, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.42)), var(--jct-brand-gradient) !important;
+}
+
+html.jct-dark .jct-gradient-color-input {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-gradient-preset-btn.active {
+	border-color: #0f172a;
+	box-shadow: 0 0 0 2.5px #f1f5f9, 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+html.jct-dark .jct-assignments-modal-header h3 {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-assignments-modal-close {
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-assignments-modal-close:hover {
+	background: #263348 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .jct-settings-section,
+html.jct-dark .jct-settings-modal-footer {
+	background: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-settings-section-title,
+html.jct-dark .jct-settings-field,
+html.jct-dark .jct-semester-color-label {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-semester-color-card,
+html.jct-dark .jct-theme-option {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-theme-option.active {
+	background: rgba(99, 102, 241, 0.25) !important;
+	border-color: #818cf8 !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark .jct-settings-reset-btn {
+	background: #263348 !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-settings-reset-btn:hover {
+	background: #334155 !important;
+}
+
+html.jct-dark .jct-yearly-preview-note {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-assign-modal-layout,
+html.jct-dark .jct-assign-main-area {
+	background: #1e293b !important;
+}
+
+html.jct-dark .jct-filter-controls {
+	background: #162033 !important;
+	border-left-color: #334155 !important;
+}
+
+html.jct-dark .jct-filter-section-title,
+html.jct-dark .jct-filter-label {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-filter-divider {
+	background: #334155 !important;
+}
+
+html.jct-dark .jct-course-checkbox-item {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-modal-status {
+	background: #162033 !important;
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark #jct-loading-status {
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-course-assignments-group {
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .jct-course-group-title a {
+	color: #60a5fa !important;
+}
+
+html.jct-dark .jct-assignment-box {
+	background: #263348 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-assignment-box:hover {
+	background: #334155 !important;
+	border-color: #60a5fa !important;
+}
+
+html.jct-dark .jct-assignment-box-name {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-no-assignments {
+	background: #162033 !important;
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-scan-warning-content h3 {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-scan-warning-content p {
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-scan-warning-cancel {
+	background: #263348 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-calendar-controls,
+html.jct-dark .jct-calendar-footer {
+	background: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-cal-weekday-header {
+	background: #1e293b !important;
+	color: #c7d2fe !important;
+	border: 1px solid #334155;
+}
+
+html.jct-dark .jct-cal-empty-cell {
+	background: #111c2e !important;
+	border-color: #273549 !important;
+}
+
+html.jct-dark .jct-calendar-day {
+	background: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-calendar-day:hover {
+	border-color: var(--jct-brand-start, #818cf8) !important;
+	background: #1e293b !important;
+}
+
+html.jct-dark .jct-calendar-day.is-today {
+	background: rgba(59, 130, 246, 0.22) !important;
+	border-color: #3b82f6 !important;
+}
+
+html.jct-dark .jct-calendar-day-num {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-calendar-day.is-today .jct-calendar-day-num {
+	color: #93c5fd !important;
+}
+
+html.jct-dark .jct-day-event-card {
+	background: #263348 !important;
+}
+
+html.jct-dark .jct-day-event-card.is-custom {
+	background: rgba(34, 197, 94, 0.14) !important;
+}
+
+html.jct-dark .jct-day-event-card h4,
+html.jct-dark .jct-day-details-header h3 {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-day-details-header {
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark .jct-day-event-meta {
+	color: #cbd5e1 !important;
+}
+
+/* What's New Modal in Dark Mode */
+html.jct-dark .jct-whats-new-item {
+	background: #162033 !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-whats-new-icon {
+	background: rgba(129, 140, 248, 0.16) !important;
+}
+
+html.jct-dark .jct-whats-new-text strong {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-whats-new-text p {
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark .jct-whats-new-text code {
+	background: #263348 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-wn-try-btn {
+	background: #263348 !important;
+	border-color: #475569 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-whats-new-footer {
+	background: #162033 !important;
+	border-top-color: #334155 !important;
+}
