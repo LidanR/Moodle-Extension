@@ -24,7 +24,9 @@
 			semesterColors: null,
 			columnCount: DEFAULT_COLUMN_COUNT,
 			viewMode: 'grid',
-			cardStyle: 'compact'
+			cardStyle: 'compact',
+			hideWeeklySchedule: false,
+			hideTodo: false
 		});
 
 		const colors =
@@ -39,6 +41,8 @@
 		const viewMode = settings.viewMode || 'grid';
 		const cardStyle = settings.cardStyle || 'compact';
 		let selectedTheme = settings.themeMode || 'light';
+		let hideWeeklySchedule = Boolean(settings.hideWeeklySchedule);
+		let hideTodo = Boolean(settings.hideTodo);
 
 		const themeOptionsHtml = THEME_OPTIONS.map((t) => `
 			<button type="button" class="jct-theme-option${t.id === selectedTheme ? ' active' : ''}" data-theme="${t.id}">
@@ -77,75 +81,106 @@
 				</div>
 
 				<div class="jct-settings-modal-body">
-					<section class="jct-settings-section">
-						<h4 class="jct-settings-section-title">🌓 ערכת נושא</h4>
-						<div class="jct-theme-picker">
-							${themeOptionsHtml}
-						</div>
-					</section>
+					<div class="jct-settings-col">
+						<section class="jct-settings-section">
+							<h4 class="jct-settings-section-title">🌓 ערכת נושא</h4>
+							<div class="jct-theme-picker">
+								${themeOptionsHtml}
+							</div>
+						</section>
 
-					<section class="jct-settings-section">
-						<h4 class="jct-settings-section-title">🌈 צבע כותרת וגרדיאנט</h4>
-						<div class="jct-gradient-presets">
-							${gradientPresetsHtml}
-						</div>
-						<div class="jct-gradient-custom-row">
-							<label class="jct-gradient-color-input" for="jct-grad-start">
-								<span class="jct-mini-swatch" id="jct-grad-start-swatch" style="background:${gradient[0]};">
-									<input type="color" id="jct-grad-start" value="${gradient[0]}">
-								</span>
-								<span>צבע התחלה</span>
-							</label>
-							<label class="jct-gradient-color-input" for="jct-grad-end">
-								<span class="jct-mini-swatch" id="jct-grad-end-swatch" style="background:${gradient[1]};">
-									<input type="color" id="jct-grad-end" value="${gradient[1]}">
-								</span>
-								<span>צבע סיום</span>
-							</label>
-						</div>
-					</section>
+						<section class="jct-settings-section">
+							<h4 class="jct-settings-section-title">🌈 צבע כותרת וגרדיאנט</h4>
+							<div class="jct-gradient-presets">
+								${gradientPresetsHtml}
+							</div>
+							<div class="jct-gradient-custom-row">
+								<label class="jct-gradient-color-input" for="jct-grad-start">
+									<span class="jct-mini-swatch" id="jct-grad-start-swatch" style="background:${gradient[0]};">
+										<input type="color" id="jct-grad-start" value="${gradient[0]}">
+									</span>
+									<span>צבע התחלה</span>
+								</label>
+								<label class="jct-gradient-color-input" for="jct-grad-end">
+									<span class="jct-mini-swatch" id="jct-grad-end-swatch" style="background:${gradient[1]};">
+										<input type="color" id="jct-grad-end" value="${gradient[1]}">
+									</span>
+									<span>צבע סיום</span>
+								</label>
+							</div>
+						</section>
 
-					<section class="jct-settings-section">
-						<h4 class="jct-settings-section-title">🎨 צבעי סמסטרים</h4>
-						<div class="jct-semester-colors-grid">
-							${semesterCardsHtml}
-						</div>
-						<div class="jct-yearly-preview-note">
-							<span class="jct-yearly-preview-bar" id="jct-yearly-preview-bar" style="background: linear-gradient(90deg, ${colors[1]}, ${colors[2]});"></span>
-							<span>קורסים שנתיים משלבים אוטומטית את צבעי סמסטר א׳ וב׳</span>
-						</div>
-					</section>
+						<section class="jct-settings-section">
+							<h4 class="jct-settings-section-title">🎨 צבעי סמסטרים</h4>
+							<div class="jct-semester-colors-grid">
+								${semesterCardsHtml}
+							</div>
+							<div class="jct-yearly-preview-note">
+								<span class="jct-yearly-preview-bar" id="jct-yearly-preview-bar" style="background: linear-gradient(90deg, ${colors[1]}, ${colors[2]});"></span>
+								<span>קורסים שנתיים משלבים אוטומטית את צבעי סמסטר א׳ וב׳</span>
+							</div>
+						</section>
+					</div>
 
-					<section class="jct-settings-section">
-						<h4 class="jct-settings-section-title">⚡ הגדרות תצוגה</h4>
-						<div class="jct-settings-fields">
-							<label class="jct-settings-field">
-								<span>תצוגת קורסים</span>
-								<select id="jct-view-mode" class="jct-settings-select">
-									<option value="grid" ${viewMode === 'grid' ? 'selected' : ''}>🔲 בלוקים</option>
-									<option value="list" ${viewMode === 'list' ? 'selected' : ''}>📋 רשימה</option>
-									<option value="original" ${viewMode === 'original' ? 'selected' : ''}>📄 מקורי</option>
-									<option value="carousel" ${viewMode === 'carousel' ? 'selected' : ''}>🎠 קלפים</option>
-								</select>
-							</label>
+					<div class="jct-settings-col">
+						<section class="jct-settings-section">
+							<h4 class="jct-settings-section-title">⚡ הגדרות תצוגה</h4>
+							<div class="jct-settings-fields">
+								<label class="jct-settings-field">
+									<span>תצוגת קורסים</span>
+									<select id="jct-view-mode" class="jct-settings-select">
+										<option value="grid" ${viewMode === 'grid' ? 'selected' : ''}>🔲 בלוקים</option>
+										<option value="list" ${viewMode === 'list' ? 'selected' : ''}>📋 רשימה</option>
+										<option value="original" ${viewMode === 'original' ? 'selected' : ''}>📄 מקורי</option>
+										<option value="carousel" ${viewMode === 'carousel' ? 'selected' : ''}>🎠 קלפים</option>
+									</select>
+								</label>
 
-							<label class="jct-settings-field">
-								<span>עיצוב כרטיסים</span>
-								<select id="jct-card-style" class="jct-settings-select">
-									<option value="compact" ${cardStyle === 'compact' ? 'selected' : ''}>📦 קומפקטי</option>
-									<option value="minimal" ${cardStyle === 'minimal' ? 'selected' : ''}>✨ מינימליסטי</option>
-									<option value="cards" ${cardStyle === 'cards' ? 'selected' : ''}>🎴 כרטיסים</option>
-									<option value="modern" ${cardStyle === 'modern' ? 'selected' : ''}>🚀 מודרני</option>
-									<option value="glass" ${cardStyle === 'glass' ? 'selected' : ''}>💎 זכוכית</option>
-								</select>
-							</label>
+								<label class="jct-settings-field">
+									<span>עיצוב כרטיסים</span>
+									<select id="jct-card-style" class="jct-settings-select">
+										<option value="compact" ${cardStyle === 'compact' ? 'selected' : ''}>📦 קומפקטי</option>
+										<option value="minimal" ${cardStyle === 'minimal' ? 'selected' : ''}>✨ מינימליסטי</option>
+										<option value="cards" ${cardStyle === 'cards' ? 'selected' : ''}>🎴 כרטיסים</option>
+										<option value="modern" ${cardStyle === 'modern' ? 'selected' : ''}>🚀 מודרני</option>
+										<option value="glass" ${cardStyle === 'glass' ? 'selected' : ''}>💎 זכוכית</option>
+									</select>
+								</label>
 
-							<label class="jct-settings-field" id="jct-column-count-row">
-								<span>עמודות בבלוקים <small>(3–6)</small></span>
-								<input id="jct-column-count" type="number" min="3" max="6" step="1" value="${columnCount}" class="jct-settings-number">
-							</label>
-						</div>
-					</section>
+								<label class="jct-settings-field" id="jct-column-count-row">
+									<span>עמודות בבלוקים <small>(3–6)</small></span>
+									<input id="jct-column-count" type="number" min="3" max="6" step="1" value="${columnCount}" class="jct-settings-number">
+								</label>
+							</div>
+						</section>
+
+						<section class="jct-settings-section">
+							<h4 class="jct-settings-section-title">👁️ רכיבי דף הבית</h4>
+							<div class="jct-settings-toggles">
+								<label class="jct-settings-toggle-row" for="jct-hide-weekly-schedule">
+									<div class="jct-settings-toggle-text">
+										<strong>הסתר מערכת שבועית</strong>
+										<span>מסתיר את לוח הימים ומציג רק את כפתורי הפעולה</span>
+									</div>
+									<span class="jct-switch">
+										<input type="checkbox" id="jct-hide-weekly-schedule" ${hideWeeklySchedule ? 'checked' : ''}>
+										<span class="jct-switch-slider"></span>
+									</span>
+								</label>
+
+								<label class="jct-settings-toggle-row" for="jct-hide-todo">
+									<div class="jct-settings-toggle-text">
+										<strong>הסתר רשימת TODO</strong>
+										<span>מסתיר את עמודת המשימות מדף הבית</span>
+									</div>
+									<span class="jct-switch">
+										<input type="checkbox" id="jct-hide-todo" ${hideTodo ? 'checked' : ''}>
+										<span class="jct-switch-slider"></span>
+									</span>
+								</label>
+							</div>
+						</section>
+					</div>
 				</div>
 
 				<div class="jct-settings-modal-footer">
@@ -233,6 +268,24 @@
 		viewModeSelect.addEventListener('change', toggleColRow);
 		toggleColRow();
 
+		// Home widget visibility toggles (live apply + instant persistence)
+		const hideScheduleCheckbox = modal.querySelector('#jct-hide-weekly-schedule');
+		const hideTodoCheckbox = modal.querySelector('#jct-hide-todo');
+
+		hideScheduleCheckbox?.addEventListener('change', async () => {
+			hideWeeklySchedule = hideScheduleCheckbox.checked;
+			JCT.state.hideWeeklySchedule = hideWeeklySchedule;
+			await JCT.storage.storageSet('sync', { hideWeeklySchedule });
+			JCT.schedule.updateWeeklyScheduleView();
+		});
+
+		hideTodoCheckbox?.addEventListener('change', async () => {
+			hideTodo = hideTodoCheckbox.checked;
+			JCT.state.hideTodo = hideTodo;
+			await JCT.storage.storageSet('sync', { hideTodo });
+			JCT.schedule.updateWeeklyScheduleView();
+		});
+
 		const saveBtn = modal.querySelector('#jct-settings-save');
 		const resetBtn = modal.querySelector('#jct-settings-reset');
 
@@ -249,9 +302,13 @@
 			const newColumnCount = Math.max(3, Math.min(6, isNaN(parsedCols) ? DEFAULT_COLUMN_COUNT : parsedCols));
 			const newViewMode = viewModeSelect.value || 'grid';
 			const newCardStyle = modal.querySelector('#jct-card-style').value || 'compact';
+			hideWeeklySchedule = Boolean(hideScheduleCheckbox?.checked);
+			hideTodo = Boolean(hideTodoCheckbox?.checked);
 
 			JCT.state.semesterColors = newColors;
 			JCT.state.currentColumnCount = newColumnCount;
+			JCT.state.hideWeeklySchedule = hideWeeklySchedule;
+			JCT.state.hideTodo = hideTodo;
 
 			await JCT.storage.storageSet('sync', {
 				themeMode: selectedTheme,
@@ -259,7 +316,9 @@
 				semesterColors: newColors,
 				columnCount: newColumnCount,
 				viewMode: newViewMode,
-				cardStyle: newCardStyle
+				cardStyle: newCardStyle,
+				hideWeeklySchedule,
+				hideTodo
 			});
 
 			JCT.theme.applyTheme(selectedTheme);
@@ -269,6 +328,7 @@
 			JCT.courses.applyCardStyle(newCardStyle);
 			JCT.courses.ensureStructureAndColor();
 			JCT.courses.applyCoursePageColors();
+			JCT.schedule.updateWeeklyScheduleView();
 
 			const originalText = saveBtn.textContent;
 			saveBtn.textContent = '✓ נשמר!';
@@ -283,8 +343,12 @@
 			const defaultColors = DEFAULT_SEMESTER_COLORS.slice();
 			const defaultGrad = DEFAULT_HEADER_GRADIENT.slice();
 			selectedTheme = 'light';
+			hideWeeklySchedule = false;
+			hideTodo = false;
 			JCT.state.semesterColors = defaultColors;
 			JCT.state.currentColumnCount = DEFAULT_COLUMN_COUNT;
+			JCT.state.hideWeeklySchedule = false;
+			JCT.state.hideTodo = false;
 
 			await JCT.storage.storageSet('sync', {
 				themeMode: 'light',
@@ -292,7 +356,9 @@
 				semesterColors: defaultColors,
 				columnCount: DEFAULT_COLUMN_COUNT,
 				viewMode: 'grid',
-				cardStyle: 'compact'
+				cardStyle: 'compact',
+				hideWeeklySchedule: false,
+				hideTodo: false
 			});
 
 			themeButtons.forEach((b) => b.classList.toggle('active', b.dataset.theme === 'light'));
@@ -308,6 +374,8 @@
 			modal.querySelector('#jct-column-count').value = String(DEFAULT_COLUMN_COUNT);
 			viewModeSelect.value = 'grid';
 			modal.querySelector('#jct-card-style').value = 'compact';
+			if (hideScheduleCheckbox) hideScheduleCheckbox.checked = false;
+			if (hideTodoCheckbox) hideTodoCheckbox.checked = false;
 			toggleColRow();
 
 			document.documentElement.style.setProperty('--jct-columns', String(DEFAULT_COLUMN_COUNT));
@@ -315,6 +383,7 @@
 			JCT.courses.applyCardStyle('compact');
 			JCT.courses.ensureStructureAndColor();
 			JCT.courses.applyCoursePageColors();
+			JCT.schedule.updateWeeklyScheduleView();
 		});
 	}
 

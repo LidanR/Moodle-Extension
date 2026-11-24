@@ -100,6 +100,146 @@
 		updateToggleButtonUI();
 	}
 
+	// Dynamically collapse top navbar to hamburger whenever items would collide/overflow
+	let navbarResponsiveBound = false;
+	function setupNavbarResponsive() {
+		if (navbarResponsiveBound) return;
+		const nav = document.querySelector('nav.navbar.fixed-top, nav.navbar');
+		if (!nav) return;
+
+		const toggler = nav.querySelector('.navbar-toggler');
+		const primaryNav = nav.querySelector('.primary-navigation');
+		if (!toggler || !primaryNav) return;
+
+		navbarResponsiveBound = true;
+		const html = document.documentElement;
+		let cachedRequiredWidth = 0;
+
+		function measureExpandedWidth() {
+			const container = nav.querySelector(':scope > .container-fluid') || nav;
+			const style = window.getComputedStyle(container);
+			const pad = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+			let needed = pad + 40; // safety breathing room
+
+			const brand = nav.querySelector('.navbar-brand');
+			if (brand) needed += brand.getBoundingClientRect().width + 12;
+
+			const userNav = nav.querySelector('#usernavigation');
+			if (userNav) needed += userNav.getBoundingClientRect().width + 12;
+
+			// Sum all visible primary nav items (use scrollWidth of .more-nav if larger)
+			const moreNav = primaryNav.querySelector('.more-nav');
+			let primaryNeeded = 0;
+			if (moreNav) {
+				const items = moreNav.querySelectorAll(':scope > .nav-item:not(.d-none):not([hidden])');
+				items.forEach((item) => {
+					primaryNeeded += item.getBoundingClientRect().width + 4;
+				});
+				primaryNeeded = Math.max(primaryNeeded, moreNav.scrollWidth);
+			} else {
+				primaryNeeded = primaryNav.scrollWidth;
+			}
+			needed += primaryNeeded;
+
+			// Include any secondary direct navbar-nav lists (e.g. Boost Union custom menus)
+			container.querySelectorAll(':scope > ul.navbar-nav').forEach((ul) => {
+				if (ul.id === 'usernavigation') return;
+				needed += ul.scrollWidth + 8;
+			});
+
+			return Math.ceil(needed);
+		}
+
+		function checkNavbarFit() {
+			// Do not toggle compact mode while the desktop search bar is open
+			const searchCollapse = nav.querySelector('#searchform-navbar');
+			if (searchCollapse && searchCollapse.classList.contains('show') && !html.classList.contains('jct-nav-compact')) {
+				return;
+			}
+
+			const navWidth = nav.clientWidth;
+			if (!navWidth) return;
+
+			if (window.innerWidth < 992) {
+				html.classList.add('jct-nav-compact');
+				return;
+			}
+
+			const isCompact = html.classList.contains('jct-nav-compact');
+
+			if (!isCompact) {
+				const needed = measureExpandedWidth();
+				cachedRequiredWidth = needed;
+				const moreNav = primaryNav.querySelector('.more-nav');
+				const overflowsPrimary = moreNav ? moreNav.scrollWidth > primaryNav.clientWidth + 2 : false;
+				if (needed > navWidth || overflowsPrimary) {
+					html.classList.add('jct-nav-compact');
+				}
+			} else if (cachedRequiredWidth === 0 || navWidth >= cachedRequiredWidth + 20) {
+				// Temporarily expand synchronously to measure actual fit (no visible flash)
+				html.classList.remove('jct-nav-compact');
+				const needed = measureExpandedWidth();
+				cachedRequiredWidth = needed;
+				const moreNav = primaryNav.querySelector('.more-nav');
+				const overflowsPrimary = moreNav ? moreNav.scrollWidth > primaryNav.clientWidth + 2 : false;
+				if (needed > navWidth || overflowsPrimary) {
+					html.classList.add('jct-nav-compact');
+				}
+			}
+		}
+
+		if (typeof ResizeObserver !== 'undefined') {
+			const ro = new ResizeObserver(() => checkNavbarFit());
+			ro.observe(nav);
+		}
+		window.addEventListener('resize', checkNavbarFit, { passive: true });
+		if (document.fonts && document.fonts.ready) {
+			document.fonts.ready.then(checkNavbarFit).catch(() => {});
+		}
+
+		// Keep 0 / empty notification & message count badges strictly hidden
+		// Observe only the badge nodes themselves (never the toggle buttons or drawer attributes)
+		let syncingBadges = false;
+		function syncBadge(badge) {
+			const visibleNumEl = badge.querySelector('span[aria-hidden="true"]');
+			const raw = (visibleNumEl ? visibleNumEl.textContent : badge.textContent || '').trim();
+			const num = parseInt(raw, 10);
+			const shouldHide = !raw || isNaN(num) || num <= 0;
+			if (badge.classList.contains('jct-count-zero') !== shouldHide) {
+				badge.classList.toggle('jct-count-zero', shouldHide);
+			}
+		}
+
+		function syncCountBadges() {
+			if (syncingBadges) return;
+			syncingBadges = true;
+			try {
+				nav.querySelectorAll('.count-container, [data-region="count-container"]').forEach(syncBadge);
+			} finally {
+				syncingBadges = false;
+			}
+		}
+
+		syncCountBadges();
+		if (typeof MutationObserver !== 'undefined') {
+			nav.querySelectorAll('.count-container, [data-region="count-container"]').forEach((badge) => {
+				const badgeObs = new MutationObserver(() => syncCountBadges());
+				badgeObs.observe(badge, {
+					childList: true,
+					subtree: true,
+					characterData: true
+				});
+			});
+		}
+
+		// Run immediately and once more after Moodle's moremenu settles
+		checkNavbarFit();
+		setTimeout(() => {
+			syncCountBadges();
+			checkNavbarFit();
+		}, 350);
+	}
+
 	if (mediaQuery && typeof mediaQuery.addEventListener === 'function') {
 		mediaQuery.addEventListener('change', () => {
 			if (JCT.state.themeMode === 'auto') {
@@ -116,6 +256,7 @@
 		applyHeaderGradient,
 		setHeaderGradient,
 		ensureNavbarToggle,
+		setupNavbarResponsive,
 		updateToggleButtonUI
 	};
 })(window.JCT = window.JCT || {});

@@ -5,44 +5,6 @@
    so no LearnR / Bootstrap !important rule can override dark surfaces or text.
    ============================================ */
 
-/* Navbar Quick Toggle Button (visible in both Light & Dark modes) */
-.jct-navbar-theme-toggle {
-	width: 34px !important;
-	height: 34px !important;
-	padding: 0 !important;
-	margin: 0 6px !important;
-	border-radius: 50% !important;
-	border: 1px solid rgba(148, 163, 184, 0.35) !important;
-	background: rgba(255, 255, 255, 0.85) !important;
-	color: #1e293b !important;
-	font-size: 16px !important;
-	line-height: 1 !important;
-	cursor: pointer !important;
-	display: inline-flex !important;
-	align-items: center !important;
-	justify-content: center !important;
-	align-self: center !important;
-	flex-shrink: 0 !important;
-	transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease !important;
-}
-
-.jct-navbar-theme-toggle:hover {
-	transform: scale(1.08);
-	background: #f1f5f9 !important;
-	border-color: #667eea !important;
-}
-
-html.jct-dark .jct-navbar-theme-toggle {
-	background: rgba(30, 41, 59, 0.95) !important;
-	border-color: rgba(148, 163, 184, 0.4) !important;
-	color: #fde68a !important;
-}
-
-html.jct-dark .jct-navbar-theme-toggle:hover {
-	background: #334155 !important;
-	border-color: #818cf8 !important;
-}
-
 /* ============================================
    1. Theme Tokens & Bootstrap 5 Variable Overrides
    ============================================ */
@@ -305,86 +267,27 @@ html.jct-dark .list-group-item-action:focus {
 }
 
 /* ============================================
-   4. Top Navbar (LearnR / Boost Union high specificity), Tabs, Drawers & Footer
+   4. Top Navbar Fallbacks, Tabs, Drawers & Footer
+   (Primary nav.navbar.fixed-top styles live in navbar.css)
    ============================================ */
 
-html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white,
-html.jct-dark nav.navbar.fixed-top.navbar-light.bg-white,
-html.jct-dark nav.navbar.bg-white,
-html.jct-dark .navbar.fixed-top,
-html.jct-dark .navbar.navbar-light,
-html.jct-dark header.navbar,
-html.jct-dark .navbar {
-	background: rgba(11, 18, 32, 0.92) !important;
-	background-color: rgba(11, 18, 32, 0.92) !important;
+html.jct-dark header.navbar:not(.fixed-top),
+html.jct-dark .navbar:not(.fixed-top) {
+	background-color: #0b1220 !important;
 	border-bottom: 1px solid #334155 !important;
 	color: #f1f5f9 !important;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
 }
 
-html.jct-dark .navbar .container-fluid,
-html.jct-dark .navbar .primary-navigation,
-html.jct-dark .navbar .primary-navigation .moremenu,
-html.jct-dark .navbar .moremenu.navigation,
-html.jct-dark .navbar ul.more-nav,
-html.jct-dark .navbar #usernavigation {
-	background: transparent !important;
-	background-color: transparent !important;
-	color: #f1f5f9 !important;
-}
-
-html.jct-dark .navbar.navbar-light .navbar-brand,
-html.jct-dark .navbar.navbar-light .navbar-nav .nav-link,
-html.jct-dark .navbar.navbar-light .navbar-nav .nav-link.active,
-html.jct-dark .navbar .nav-link,
-html.jct-dark .navbar .navbar-brand,
-html.jct-dark .navbar .btn,
 html.jct-dark .navbar .icon,
-html.jct-dark .navbar i.fa,
-html.jct-dark .navbar .usertext,
-html.jct-dark .navbar .dropdown-toggle,
-html.jct-dark .navbar .popover-region-toggle {
-	color: #e2e8f0 !important;
+html.jct-dark .navbar i.fa {
+	color: inherit;
 }
 
-html.jct-dark .navbar.navbar-light .navbar-nav .nav-link:hover,
-html.jct-dark .navbar.navbar-light .navbar-nav .nav-link:focus,
-html.jct-dark .navbar.navbar-light .navbar-nav .nav-link.active,
-html.jct-dark .navbar .popover-region-toggle:hover,
-html.jct-dark .navbar .btn-open:hover {
-	background-color: #1e293b !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark .navbar .primary-navigation .navigation .nav-link.active {
-	border-bottom-color: #818cf8 !important;
-}
-
-html.jct-dark .navbar .navbar-toggler-icon {
-	filter: invert(1) brightness(1.8);
-}
-
-/* Navbar search form */
-html.jct-dark #searchform-navbar,
-html.jct-dark .navbar .searchform-navbar,
-html.jct-dark .navbar .simplesearchform .input-group {
-	background-color: #1e293b !important;
-	border-color: #334155 !important;
-}
-
-html.jct-dark .navbar .simplesearchform .btn-submit,
-html.jct-dark .navbar .simplesearchform .btn-close {
-	background-color: #263348 !important;
-	color: #e2e8f0 !important;
-	border-color: #334155 !important;
-}
-
-/* User initials avatar in navbar */
+/* User initials avatar outside navbar */
 html.jct-dark .usermenu .userinitials,
 html.jct-dark span.userinitials {
 	background: var(--jct-brand-gradient) !important;
 	color: #ffffff !important;
-	border: 1px solid rgba(255, 255, 255, 0.22) !important;
 }
 
 /* Boost Union smartmenu & usermenu carousels */
@@ -654,18 +557,39 @@ html.jct-dark table,
 html.jct-dark .generaltable,
 html.jct-dark table.flexible,
 html.jct-dark .table {
+	--bs-table-bg: #1e293b;
+	--bs-table-color: #f1f5f9;
+	--bs-table-striped-bg: #222f43;
+	--bs-table-striped-color: #f1f5f9;
+	--bs-table-hover-bg: #2a3a54;
+	--bs-table-hover-color: #ffffff;
+	--bs-table-accent-bg: transparent;
+	--bs-table-border-color: #334155;
 	background-color: #1e293b !important;
 	color: #f1f5f9 !important;
 	border-color: #334155 !important;
 }
 
+html.jct-dark table thead,
+html.jct-dark table tbody,
+html.jct-dark table tr,
+html.jct-dark .generaltable tbody,
+html.jct-dark .generaltable tr,
+html.jct-dark .table tbody,
+html.jct-dark .table tr {
+	background-color: #1e293b !important;
+}
+
+html.jct-dark table th,
 html.jct-dark table thead th,
+html.jct-dark table tbody th,
 html.jct-dark .generaltable th,
 html.jct-dark table.flexible th,
 html.jct-dark .table th {
 	background-color: #263348 !important;
 	color: #f1f5f9 !important;
 	border-color: #334155 !important;
+	box-shadow: none !important;
 }
 
 html.jct-dark table td,
@@ -675,16 +599,25 @@ html.jct-dark .table td {
 	background-color: #1e293b !important;
 	border-color: #273549 !important;
 	color: #f1f5f9 !important;
+	box-shadow: none !important;
 }
 
 html.jct-dark .generaltable tbody tr:nth-of-type(odd) > td,
 html.jct-dark .table-striped tbody tr:nth-of-type(odd) > td {
 	background-color: #222f43 !important;
+	box-shadow: none !important;
+}
+
+html.jct-dark .generaltable tbody tr:nth-of-type(odd) > th,
+html.jct-dark .table-striped tbody tr:nth-of-type(odd) > th {
+	background-color: #2a3850 !important;
+	box-shadow: none !important;
 }
 
 html.jct-dark .generaltable tbody tr:hover > td,
 html.jct-dark .table-hover tbody tr:hover > td {
 	background-color: #2a3a54 !important;
+	box-shadow: none !important;
 }
 
 /* Pagination */
@@ -935,9 +868,47 @@ html.jct-dark .jct-view-carousel .jct-carousel-btn {
 }
 
 /* My Courses Page (/my/courses.php) — higher specificity than course-page.css */
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses #page-header {
+	background: linear-gradient(135deg, rgba(15, 23, 42, 0.34), rgba(15, 23, 42, 0.48)), var(--jct-brand-gradient) !important;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses section.block_myoverview.card,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview {
+	background: #162033 !important;
+	border-color: #334155 !important;
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] {
+	border-bottom-color: #334155 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] .dropdown-toggle,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] .btn-outline-secondary,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] input.form-control.withclear {
 	background: #1e293b !important;
 	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] .dropdown-toggle:hover,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] .dropdown-toggle[aria-expanded="true"],
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] input.form-control.withclear:focus {
+	background: #263348 !important;
+	border-color: var(--jct-brand-start, #818cf8) !important;
+	color: #ffffff !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] .dropdown-menu {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+	box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [data-region="filter"] .dropdown-item[aria-current="true"] {
+	background: color-mix(in srgb, var(--jct-brand-start, #818cf8) 24%, transparent) !important;
+	color: #e0e7ff !important;
 }
 
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .card-text h5,
@@ -945,23 +916,108 @@ html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview [d
 	color: #f1f5f9 !important;
 }
 
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .dashboard-card-deck .dashboard-card,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .card-deck .coursebox,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .card-deck .card,
-html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .list-group-item {
-	background: #263348 !important;
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .list-group-item.course-listitem,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-summaryitem,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .block_myoverview .list-group-item {
+	background: #1e293b !important;
 	border-color: #334155 !important;
 	color: #f1f5f9 !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28) !important;
 }
 
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card:hover,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .list-group-item.course-listitem:hover,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-summaryitem:hover {
+	background: #263348 !important;
+	border-color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 65%)), 60%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card .card-img-top {
+	border-bottom-color: #334155 !important;
+	filter: brightness(0.82) contrast(1.04);
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card.jct-mycourse-noimg .card-img-top {
+	filter: none !important;
+	background-image: linear-gradient(
+		135deg,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 55%)), 22%, 1) 0%,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 45%)), 14%, 1) 100%
+	) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card.jct-mycourse-noimg.jct-course-yearly .card-img-top {
+	background-image: linear-gradient(
+		135deg,
+		hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 55%)), 22%, 1) 0%,
+		hsla(var(--jct-accent-2-h, 145), calc(var(--jct-accent-2-s, 55%)), 18%, 1) 100%
+	) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card .card-body,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card .card-footer.menu {
+	background: transparent !important;
+	border-color: transparent !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses a.coursename,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .coursename a,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-title a,
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .multiline a {
-	color: #f1f5f9 !important;
+	color: hsl(var(--jct-accent-h, 220), calc(var(--jct-accent-s, 75%)), 80%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses a.coursename:hover,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .coursename a:hover {
+	color: hsl(var(--jct-accent-h, 220), calc(var(--jct-accent-s, 85%)), 88%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card .categoryname,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-listitem .categoryname,
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-summaryitem .categoryname {
+	background: hsla(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 65%)), 58%, 0.18) !important;
+	color: hsl(var(--jct-accent-h, 230), calc(var(--jct-accent-s, 75%)), 82%) !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card .coursemenubtn {
+	background: transparent !important;
+	border-color: transparent !important;
+	color: #cbd5e1 !important;
+}
+
+html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .course-card .coursemenubtn:hover {
+	background: #334155 !important;
+	color: #ffffff !important;
 }
 
 html.jct-dark.jct-moodle-redesign body.pagelayout-mycourses .progress {
 	background: #334155 !important;
+}
+
+/* Footer Popover & Back-to-Top Floating Buttons (Boost Union / LearnR) */
+html.jct-dark .footer-popover,
+html.jct-dark .footer-content-popover {
+	background-color: #1e293b !important;
+	border-color: #334155 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .btn-footer-popover,
+html.jct-dark #back-to-top {
+	background-color: #263348 !important;
+	border: 1px solid #475569 !important;
+	color: #f1f5f9 !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.jct-dark .btn-footer-popover:hover,
+html.jct-dark #back-to-top:hover {
+	background-color: #334155 !important;
+	color: #ffffff !important;
 }
 
 /* Frontpage moved sitetopic & sections */
@@ -1038,11 +1094,82 @@ html.jct-dark.jct-course-page-themed .activity:hover {
 	border-color: hsl(var(--jct-course-h, 230), calc(var(--jct-course-s, 65%)), 60%) !important;
 }
 
+/* Activity Header (dates, completion, intro box) & Activity Navigation Footer */
+html.jct-dark .activity-header,
+html.jct-dark .activity-header[data-for="page-activity-header"] {
+	background-color: #1e293b !important;
+	background: #1e293b !important;
+	border: 1px solid #334155 !important;
+	border-radius: 12px !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .activity-header .activity-information,
+html.jct-dark .activity-header .activity-description,
+html.jct-dark .activity-header .activity-description .generalbox,
+html.jct-dark .activity-header .activity-description .box {
+	background: transparent !important;
+	background-color: transparent !important;
+	border-color: #334155 !important;
+	color: #e2e8f0 !important;
+}
+
 html.jct-dark .activity-dates,
+html.jct-dark .activity-header .activity-dates,
 html.jct-dark .description-inner {
-	background: rgba(15, 23, 42, 0.5) !important;
+	background: rgba(15, 23, 42, 0.55) !important;
+	background-color: rgba(15, 23, 42, 0.55) !important;
 	border-color: #334155 !important;
 	color: #cbd5e1 !important;
+}
+
+html.jct-dark .activity-header strong,
+html.jct-dark .activity-dates strong {
+	color: #f8fafc !important;
+}
+
+html.jct-dark .activity-navigation,
+html.jct-dark .activity-navigation.container-fluid {
+	background: #1e293b !important;
+	background-color: #1e293b !important;
+	border: 1px solid #334155 !important;
+	border-radius: 12px !important;
+	padding: 14px 16px !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .activity-navigation .row,
+html.jct-dark .activity-navigation .mdl-align,
+html.jct-dark .activity-navigation .urlselect {
+	background: transparent !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .activity-navigation a.btn-link,
+html.jct-dark #prev-activity-link,
+html.jct-dark #next-activity-link {
+	color: #93c5fd !important;
+	background: rgba(30, 58, 138, 0.25) !important;
+	border: 1px solid rgba(96, 165, 250, 0.28) !important;
+	border-radius: 8px !important;
+	padding: 6px 12px !important;
+	text-decoration: none !important;
+}
+
+html.jct-dark .activity-navigation a.btn-link:hover,
+html.jct-dark #prev-activity-link:hover,
+html.jct-dark #next-activity-link:hover {
+	color: #ffffff !important;
+	background: rgba(59, 130, 246, 0.35) !important;
+	border-color: rgba(147, 197, 253, 0.5) !important;
+}
+
+html.jct-dark .activity-navigation select#jump-to-activity,
+html.jct-dark .activity-navigation select.custom-select.urlselect,
+html.jct-dark select.custom-select.urlselect {
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+	border: 1px solid #475569 !important;
 }
 
 /* Section & Activity Availability / Restrictions */
@@ -1150,28 +1277,110 @@ html.jct-dark .user-report-container .toggle-category {
 	color: #f1f5f9 !important;
 }
 
-/* Assignments (/mod/assign) */
-html.jct-dark .submissionstatustable .submissionstatussubmitted,
-html.jct-dark .submissionstatustable .earlysubmission,
+/* Assignments (/mod/assign) — solid dark surfaces (no translucent rgba over light rows!) */
+html.jct-dark .generaltable tbody tr > td.submissionstatussubmitted,
+html.jct-dark .generaltable tbody tr > td.submissiongraded,
+html.jct-dark .generaltable tbody tr > td.earlysubmission,
+html.jct-dark .submissionstatustable tbody tr > td.submissionstatussubmitted,
+html.jct-dark .submissionstatustable tbody tr > td.submissiongraded,
+html.jct-dark .submissionstatustable tbody tr > td.earlysubmission,
+html.jct-dark .path-mod-assign td.submissionstatussubmitted,
+html.jct-dark .path-mod-assign td.submissiongraded,
+html.jct-dark .path-mod-assign td.earlysubmission,
 html.jct-dark td.submissionstatussubmitted,
+html.jct-dark td.submissiongraded,
 html.jct-dark td.earlysubmission {
-	background-color: rgba(22, 163, 74, 0.22) !important;
+	--bs-table-bg: #132e23;
+	--bs-table-accent-bg: transparent;
+	background: #132e23 !important;
+	background-color: #132e23 !important;
 	color: #86efac !important;
+	box-shadow: none !important;
 }
 
-html.jct-dark .submissionstatustable .submissionstatusdraft,
+html.jct-dark .generaltable tbody tr:hover > td.submissionstatussubmitted,
+html.jct-dark .generaltable tbody tr:hover > td.submissiongraded,
+html.jct-dark .generaltable tbody tr:hover > td.earlysubmission,
+html.jct-dark .submissionstatustable tbody tr:hover > td.submissionstatussubmitted,
+html.jct-dark .submissionstatustable tbody tr:hover > td.submissiongraded,
+html.jct-dark .submissionstatustable tbody tr:hover > td.earlysubmission {
+	background: #193d2e !important;
+	background-color: #193d2e !important;
+	color: #bbf7d0 !important;
+}
+
+html.jct-dark .generaltable tbody tr > td.submissionnotgraded,
+html.jct-dark .submissionstatustable tbody tr > td.submissionnotgraded,
 html.jct-dark .submissionstatustable .submissionnotgraded,
+html.jct-dark .path-mod-assign td.submissionnotgraded,
 html.jct-dark td.submissionnotgraded {
-	background-color: rgba(245, 158, 11, 0.16) !important;
-	color: #fde68a !important;
+	--bs-table-bg: #1e293b;
+	--bs-table-accent-bg: transparent;
+	background: #1e293b !important;
+	background-color: #1e293b !important;
+	color: #cbd5e1 !important;
+	box-shadow: none !important;
 }
 
-html.jct-dark .submissionstatustable .latesubmission,
-html.jct-dark .submissionstatustable .overdue,
+html.jct-dark .generaltable tbody tr:hover > td.submissionnotgraded,
+html.jct-dark .submissionstatustable tbody tr:hover > td.submissionnotgraded {
+	background: #2a3a54 !important;
+	background-color: #2a3a54 !important;
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .generaltable tbody tr > td.submissionstatusdraft,
+html.jct-dark .submissionstatustable tbody tr > td.submissionstatusdraft,
+html.jct-dark .submissionstatustable .submissionstatusdraft,
+html.jct-dark .path-mod-assign td.submissionstatusdraft,
+html.jct-dark td.submissionstatusdraft {
+	--bs-table-bg: #262b3d;
+	--bs-table-accent-bg: transparent;
+	background: #262b3d !important;
+	background-color: #262b3d !important;
+	color: #e2e8f0 !important;
+	box-shadow: none !important;
+}
+
+html.jct-dark .generaltable tbody tr:hover > td.submissionstatusdraft,
+html.jct-dark .submissionstatustable tbody tr:hover > td.submissionstatusdraft {
+	background: #2f364d !important;
+	background-color: #2f364d !important;
+	color: #f8fafc !important;
+}
+
+html.jct-dark .generaltable tbody tr > td.latesubmission,
+html.jct-dark .generaltable tbody tr > td.overdue,
+html.jct-dark .generaltable tbody tr > td.submissionlocked,
+html.jct-dark .submissionstatustable tbody tr > td.latesubmission,
+html.jct-dark .submissionstatustable tbody tr > td.overdue,
+html.jct-dark .path-mod-assign td.latesubmission,
+html.jct-dark .path-mod-assign td.overdue,
 html.jct-dark td.latesubmission,
 html.jct-dark td.overdue {
-	background-color: rgba(220, 38, 38, 0.22) !important;
+	--bs-table-bg: #351822;
+	--bs-table-accent-bg: transparent;
+	background: #351822 !important;
+	background-color: #351822 !important;
 	color: #fca5a5 !important;
+	box-shadow: none !important;
+}
+
+html.jct-dark .generaltable tbody tr:hover > td.latesubmission,
+html.jct-dark .generaltable tbody tr:hover > td.overdue,
+html.jct-dark .submissionstatustable tbody tr:hover > td.latesubmission,
+html.jct-dark .submissionstatustable tbody tr:hover > td.overdue {
+	background: #451f2c !important;
+	background-color: #451f2c !important;
+	color: #fecaca !important;
+}
+
+html.jct-dark .generaltable tbody tr > th.cell[scope="row"],
+html.jct-dark .submissionstatustable tbody tr > th.cell {
+	background-color: #263348 !important;
+	color: #f1f5f9 !important;
+	border-color: #334155 !important;
+	box-shadow: none !important;
 }
 
 /* Quizzes (/mod/quiz) */
@@ -1697,6 +1906,31 @@ html.jct-dark .jct-settings-reset-btn:hover {
 
 html.jct-dark .jct-yearly-preview-note {
 	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-settings-toggle-row {
+	background: #1e293b !important;
+	border-color: #334155 !important;
+}
+
+html.jct-dark .jct-settings-toggle-row:hover {
+	border-color: #818cf8 !important;
+}
+
+html.jct-dark .jct-settings-toggle-text strong {
+	color: #f1f5f9 !important;
+}
+
+html.jct-dark .jct-settings-toggle-text span {
+	color: #94a3b8 !important;
+}
+
+html.jct-dark .jct-switch-slider {
+	background: #475569 !important;
+}
+
+html.jct-dark .jct-switch input:checked + .jct-switch-slider {
+	background: var(--jct-brand-start, #818cf8) !important;
 }
 
 html.jct-dark .jct-assign-modal-layout,

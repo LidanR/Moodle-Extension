@@ -116,6 +116,8 @@
 		currentViewMode: 'grid',
 		currentCardStyle: 'compact',
 		currentColumnCount: DEFAULT_COLUMN_COUNT,
+		hideWeeklySchedule: false,
+		hideTodo: false,
 		currentWeekOffset: 0,
 		isReordering: false,
 		stopScanning: false,

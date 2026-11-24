@@ -100,7 +100,7 @@
 			modal = document.createElement('div');
 			modal.className = 'jct-assignments-modal';
 			modal.innerHTML = `
-				<div class="jct-assignments-modal-content jct-assignments-modal-large" style="display: flex; flex-direction: column; max-height: 85vh; height: 800px; width: 95vw; max-width: 1000px; box-sizing: border-box; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+				<div class="jct-assignments-modal-content jct-assignments-modal-large">
 					<div class="jct-assignments-modal-header" style="box-sizing: border-box;">
 						<h3 id="jct-modal-title">טוענים קורסים...</h3>
 						<div id="jct-scanning-notice" style="display: none;">
@@ -109,8 +109,8 @@
 						<button type="button" class="jct-assignments-modal-close">✕</button>
 					</div>
 
-					<div class="jct-assign-modal-layout" style="display: flex; flex: 1; overflow: hidden; min-height: 0; box-sizing: border-box;">
-						<div class="jct-filter-controls" style="width: 280px; min-width: 280px; flex-shrink: 0; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
+					<div class="jct-assign-modal-layout">
+						<div class="jct-filter-controls">
 							<div style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; flex-shrink: 0;">
 								<div class="jct-filter-section-title" style="font-weight: 600; font-size: 0.9rem;">סינון תקופה</div>
 								<div style="display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
@@ -156,7 +156,7 @@
 
 							<div class="jct-filter-divider" style="height: 1px; width: 100%; margin-top: auto; flex-shrink: 0;"></div>
 
-							<div style="display: flex; flex-direction: column; gap: 10px; padding-top: 4px; box-sizing: border-box; flex-shrink: 0;">
+							<div class="jct-filter-actions" style="display: flex; flex-direction: column; gap: 10px; padding-top: 4px; box-sizing: border-box; flex-shrink: 0;">
 								<button type="button" id="jct-refresh-assignments" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2); box-sizing: border-box;" title="בדקו סטטוס הגשות מחדש">
 									<span>🔄</span> בדקו הגשות
 								</button>
@@ -166,13 +166,13 @@
 							</div>
 						</div>
 
-						<div class="jct-assign-main-area" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
-							<div class="jct-modal-status" style="padding: 16px 24px; min-height: 52px; display: flex; align-items: center; box-sizing: border-box;">
+						<div class="jct-assign-main-area">
+							<div class="jct-modal-status" style="padding: 14px 20px; min-height: 48px; display: flex; align-items: center; box-sizing: border-box;">
 								<div id="jct-loading-status" style="font-size: 0.875rem; font-weight: 500;">
 									<span class="jct-loading-spinner-small"></span> מתחילים סריקה...
 								</div>
 							</div>
-							<div class="jct-assignments-modal-body" id="jct-results-container" style="flex: 1; overflow-y: auto; padding: 24px; box-sizing: border-box;"></div>
+							<div class="jct-assignments-modal-body" id="jct-results-container"></div>
 						</div>
 					</div>
 				</div>

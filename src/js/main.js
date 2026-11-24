@@ -45,6 +45,7 @@
 			JCT.courses.markCoursesContainers();
 			JCT.courses.setupCourseSearchBox();
 			JCT.courses.ensureStructureAndColor();
+			JCT.courses.styleMyCoursesCards();
 			JCT.courses.refreshFavoritesUI();
 			JCT.courses.applyViewMode(JCT.state.currentViewMode);
 		});
@@ -182,6 +183,7 @@
 				if (area === 'sync' && changes.semesterColors) {
 					JCT.state.semesterColors = changes.semesterColors.newValue;
 					JCT.courses.ensureStructureAndColor();
+					JCT.courses.styleMyCoursesCards();
 					JCT.courses.applyCoursePageColors();
 				}
 				if (area === 'sync' && changes.favoriteCourseIds) {
@@ -202,6 +204,15 @@
 				}
 				if (area === 'sync' && changes.cardStyle) {
 					JCT.courses.applyCardStyle(changes.cardStyle.newValue || 'compact');
+				}
+				if (area === 'sync' && (changes.hideWeeklySchedule || changes.hideTodo)) {
+					if (changes.hideWeeklySchedule) {
+						JCT.state.hideWeeklySchedule = Boolean(changes.hideWeeklySchedule.newValue);
+					}
+					if (changes.hideTodo) {
+						JCT.state.hideTodo = Boolean(changes.hideTodo.newValue);
+					}
+					JCT.schedule.updateWeeklyScheduleView();
 				}
 			});
 		}
@@ -257,12 +268,14 @@
 		JCT.theme.applyTheme(JCT.state.themeMode);
 		JCT.theme.applyHeaderGradient(JCT.state.headerGradient);
 		JCT.theme.ensureNavbarToggle();
+		JCT.theme.setupNavbarResponsive();
 
 		JCT.courses.removeUnwantedCourses();
 		JCT.courses.hideFrontClutter();
 		JCT.courses.markCoursesContainers();
 		JCT.courses.setupCourseSearchBox();
 		JCT.courses.ensureStructureAndColor();
+		JCT.courses.styleMyCoursesCards();
 		JCT.courses.applyViewMode(JCT.state.currentViewMode);
 		JCT.courses.applyCardStyle(JCT.state.currentCardStyle);
 		JCT.courses.relocateTopBlocksAfterCourses();

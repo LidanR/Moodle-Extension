@@ -1,92 +1,202 @@
 /* ============================================
-   Modern Top Navbar, Dropdowns, Popovers & Drawers
-   Works seamlessly in both Light & Dark modes (html.jct-dark)
+   Modern Responsive Top Navbar, Dropdowns, Popovers & Drawers
+   Single source of truth for Light & Dark modes (html.jct-dark)
    ============================================ */
 
-/* ---- Main Top Navbar Bar ---- */
-.jct-moodle-redesign nav.navbar.fixed-top,
-.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white {
-	height: 62px !important;
-	padding: 0 18px !important;
-	background: rgba(255, 255, 255, 0.92) !important;
-	backdrop-filter: blur(14px) saturate(160%) !important;
-	-webkit-backdrop-filter: blur(14px) saturate(160%) !important;
-	border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
-	box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
-	transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+/* ---- CSS Variables for Navbar ---- */
+.jct-moodle-redesign nav.navbar.fixed-top {
+	--jct-nav-height: 60px;
+	--jct-nav-bg: rgba(255, 255, 255, 0.94);
+	--jct-nav-border: rgba(226, 232, 240, 0.92);
+	--jct-nav-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 6px 18px rgba(15, 23, 42, 0.04);
+	--jct-nav-text: #334155;
+	--jct-nav-text-strong: #0f172a;
+	--jct-nav-hover-bg: #f1f5f9;
+	--jct-nav-hover-border: #e2e8f0;
+	--jct-nav-active-bg: color-mix(in srgb, var(--jct-brand-start, #667eea) 12%, transparent);
+	--jct-nav-active-text: var(--jct-brand-start, #4f46e5);
+	--jct-nav-surface: #ffffff;
+	--jct-nav-surface-soft: #f8fafc;
+	--jct-nav-divider: #e2e8f0;
 }
 
-.jct-moodle-redesign nav.navbar.fixed-top .container-fluid {
-	height: 100% !important;
+html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top {
+	--jct-nav-bg: rgba(15, 23, 42, 0.92);
+	--jct-nav-border: rgba(51, 65, 85, 0.85);
+	--jct-nav-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.28);
+	--jct-nav-text: #cbd5e1;
+	--jct-nav-text-strong: #f8fafc;
+	--jct-nav-hover-bg: rgba(51, 65, 85, 0.65);
+	--jct-nav-hover-border: #475569;
+	--jct-nav-active-bg: color-mix(in srgb, var(--jct-brand-start, #818cf8) 22%, transparent);
+	--jct-nav-active-text: #e0e7ff;
+	--jct-nav-surface: #1e293b;
+	--jct-nav-surface-soft: #162033;
+	--jct-nav-divider: #334155;
+}
+
+/* ---- Main Top Navbar Bar ----
+   NOTE: backdrop-filter is placed on ::before so nav.navbar does NOT become
+   a containing block that traps Moodle's position:fixed mobile popovers/overlays. */
+.jct-moodle-redesign nav.navbar.fixed-top,
+.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white,
+html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top,
+html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white {
+	height: var(--jct-nav-height) !important;
+	min-height: var(--jct-nav-height) !important;
+	max-height: var(--jct-nav-height) !important;
+	padding: 0 16px !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	border-bottom: 1px solid var(--jct-nav-border) !important;
+	box-shadow: var(--jct-nav-shadow) !important;
 	display: flex !important;
 	align-items: center !important;
+	flex-wrap: nowrap !important;
 	gap: 8px !important;
-	padding: 0 !important;
+	color: var(--jct-nav-text) !important;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+	box-sizing: border-box !important;
 }
 
-/* ---- Brand Pill ("לב") ---- */
+.jct-moodle-redesign nav.navbar.fixed-top::before {
+	content: "" !important;
+	position: absolute !important;
+	inset: 0 !important;
+	background: var(--jct-nav-bg) !important;
+	backdrop-filter: blur(14px) saturate(160%) !important;
+	-webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+	z-index: -1 !important;
+	pointer-events: none !important;
+	transition: background-color 0.2s ease !important;
+}
+
+.jct-moodle-redesign nav.navbar.fixed-top > .container-fluid {
+	height: 100% !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: nowrap !important;
+	gap: 8px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	background: transparent !important;
+}
+
+/* ---- Brand Link (Clean Subtle Pill / Logo, Respects Bootstrap Responsive Utilities) ---- */
 .jct-moodle-redesign nav.navbar .navbar-brand {
 	font-weight: 800 !important;
-	font-size: 1.15rem !important;
+	font-size: 1.05rem !important;
 	letter-spacing: -0.02em !important;
-	padding: 6px 14px !important;
-	margin: 0 0 0 8px !important;
+	height: 36px !important;
+	padding: 0 12px !important;
+	margin: 0 !important;
+	margin-inline-end: 6px !important;
 	border-radius: 10px !important;
-	background: var(--jct-brand-gradient) !important;
-	color: #ffffff !important;
-	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16) !important;
-	transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease !important;
+	background: var(--jct-nav-active-bg) !important;
+	color: var(--jct-nav-active-text) !important;
+	box-shadow: none !important;
 	text-decoration: none !important;
-	line-height: 1.2 !important;
+	line-height: 1 !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 8px !important;
+	flex-shrink: 0 !important;
+	white-space: nowrap !important;
+	transition: background-color 0.16s ease, color 0.16s ease, filter 0.16s ease !important;
+}
+
+.jct-moodle-redesign nav.navbar .navbar-brand:has(img) {
+	background: transparent !important;
+	padding: 0 4px !important;
+}
+
+.jct-moodle-redesign nav.navbar .navbar-brand img {
+	max-height: 34px !important;
+	width: auto !important;
+	object-fit: contain !important;
+	display: block !important;
 }
 
 .jct-moodle-redesign nav.navbar .navbar-brand:hover {
-	transform: translateY(-1px) !important;
-	filter: brightness(1.06) !important;
-	box-shadow: 0 4px 12px rgba(15, 23, 42, 0.22) !important;
+	background: var(--jct-nav-hover-bg) !important;
+	color: var(--jct-nav-text-strong) !important;
 	text-decoration: none !important;
 }
 
-/* ---- Mobile Drawer Toggle ---- */
+/* ---- Mobile / Compact Drawer Hamburger Toggle ---- */
 .jct-moodle-redesign nav.navbar .navbar-toggler {
-	width: 38px !important;
-	height: 38px !important;
+	width: 36px !important;
+	height: 36px !important;
 	padding: 0 !important;
+	margin: 0 !important;
 	border-radius: 10px !important;
-	border: 1px solid #e2e8f0 !important;
-	background: #f8fafc !important;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	transition: background 0.15s ease, border-color 0.15s ease !important;
+	border: 1px solid var(--jct-nav-divider) !important;
+	background: var(--jct-nav-surface-soft) !important;
+	color: var(--jct-nav-text) !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex-shrink: 0 !important;
+	box-shadow: none !important;
+	transition: background-color 0.15s ease, border-color 0.15s ease !important;
 }
 
-.jct-moodle-redesign nav.navbar .navbar-toggler:hover {
-	background: #eef2ff !important;
+.jct-moodle-redesign nav.navbar .navbar-toggler:hover,
+.jct-moodle-redesign nav.navbar .navbar-toggler:focus {
+	background: var(--jct-nav-hover-bg) !important;
 	border-color: var(--jct-brand-start, #667eea) !important;
+	box-shadow: none !important;
 }
 
-/* ---- Primary Navigation Links ---- */
+.jct-moodle-redesign nav.navbar .navbar-toggler .navbar-toggler-icon {
+	width: 18px !important;
+	height: 18px !important;
+	background-size: 18px 18px !important;
+}
+
+html.jct-dark.jct-moodle-redesign nav.navbar .navbar-toggler .navbar-toggler-icon {
+	filter: invert(1) brightness(1.8) !important;
+}
+
+/* ---- Primary Navigation Links (Desktop only; collapses to hamburger when compact or <= 991px) ---- */
 .jct-moodle-redesign nav.navbar .primary-navigation {
 	flex: 1 1 auto !important;
 	min-width: 0 !important;
 	height: 100% !important;
 	display: flex !important;
 	align-items: center !important;
+	background: transparent !important;
 }
 
 .jct-moodle-redesign nav.navbar .primary-navigation .moremenu,
-.jct-moodle-redesign nav.navbar .primary-navigation .more-nav {
+.jct-moodle-redesign nav.navbar .primary-navigation .navigation {
 	width: 100% !important;
+	max-width: 100% !important;
 	height: 100% !important;
 	display: flex !important;
 	align-items: center !important;
-	gap: 4px !important;
+	background: transparent !important;
 }
 
-.jct-moodle-redesign nav.navbar .primary-navigation .nav-item:not(.d-none):not([hidden]) {
+.jct-moodle-redesign nav.navbar .primary-navigation .more-nav {
+	height: 100% !important;
 	display: flex !important;
 	align-items: center !important;
+	flex-wrap: nowrap !important;
+	gap: 4px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+	background: transparent !important;
+}
+
+/* Keep nav-item height: auto so flex align-items: center on .more-nav centers every button vertically! */
+.jct-moodle-redesign nav.navbar .primary-navigation .nav-item {
+	height: auto !important;
+	flex-shrink: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
 }
 
 .jct-moodle-redesign nav.navbar .primary-navigation .nav-item.d-none,
@@ -94,247 +204,533 @@
 	display: none !important;
 }
 
-.jct-moodle-redesign nav.navbar .primary-navigation .nav-link {
+/* ---- Dynamic Compact / Hamburger Mode (triggered automatically by ResizeObserver or <= 991px) ---- */
+html.jct-nav-compact.jct-moodle-redesign nav.navbar .navbar-toggler {
+	display: inline-flex !important;
+}
+
+html.jct-nav-compact.jct-moodle-redesign nav.navbar .primary-navigation,
+html.jct-nav-compact.jct-moodle-redesign nav.navbar > ul.navbar-nav,
+html.jct-nav-compact.jct-moodle-redesign nav.navbar > .container-fluid > ul.navbar-nav {
+	display: none !important;
+}
+
+html.jct-nav-compact.jct-moodle-redesign nav.navbar .navbar-brand {
+	display: inline-flex !important;
+}
+
+html.jct-nav-compact.jct-moodle-redesign nav.navbar #user-menu-toggle .usertext {
+	display: none !important;
+}
+
+html.jct-nav-compact.jct-moodle-redesign #theme_boost-drawers-primary.show,
+html.jct-nav-compact.jct-moodle-redesign .drawer-primary.show {
+	display: block !important;
+	visibility: visible !important;
+}
+
+/* Search opens cleanly across the full navbar bar in compact mode */
+html.jct-nav-compact.jct-moodle-redesign nav.navbar #searchform-navbar.show,
+html.jct-nav-compact.jct-moodle-redesign nav.navbar #searchform-navbar.collapsing {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	width: 100% !important;
+	height: var(--jct-nav-height) !important;
+	margin: 0 !important;
+	padding: 0 12px !important;
+	background: var(--jct-nav-surface) !important;
+	border-bottom: 1px solid var(--jct-nav-divider) !important;
+	z-index: 1050 !important;
+	display: flex !important;
+	align-items: center !important;
+}
+
+html.jct-nav-compact.jct-moodle-redesign nav.navbar #searchform-navbar.show .searchform-navbar,
+html.jct-nav-compact.jct-moodle-redesign nav.navbar #searchform-navbar.show .input-group,
+html.jct-dark.jct-nav-compact.jct-moodle-redesign nav.navbar #searchform-navbar.show .input-group {
+	width: 100% !important;
+}
+
+.jct-moodle-redesign nav.navbar .primary-navigation .nav-link,
+.jct-moodle-redesign nav.navbar > ul.navbar-nav .nav-link,
+html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link,
+html.jct-dark.jct-moodle-redesign nav.navbar > ul.navbar-nav .nav-link {
 	position: relative !important;
-	height: auto !important;
-	padding: 7px 14px !important;
-	border-radius: 10px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 4px !important;
+	height: 36px !important;
+	padding: 0 13px !important;
+	margin: 0 !important;
+	border-radius: 9px !important;
 	border: none !important;
-	font-size: 0.9rem !important;
+	border-bottom: none !important;
+	font-size: 0.875rem !important;
 	font-weight: 600 !important;
-	color: #334155 !important;
+	line-height: 1 !important;
+	white-space: nowrap !important;
+	color: var(--jct-nav-text) !important;
 	background: transparent !important;
-	transition: background-color 0.16s ease, color 0.16s ease, transform 0.15s ease !important;
 	text-decoration: none !important;
+	transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
 .jct-moodle-redesign nav.navbar .primary-navigation .nav-link:hover,
-.jct-moodle-redesign nav.navbar .primary-navigation .nav-link:focus {
-	background: #f1f5f9 !important;
-	color: #0f172a !important;
+.jct-moodle-redesign nav.navbar .primary-navigation .nav-link:focus,
+html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link:focus {
+	background: var(--jct-nav-hover-bg) !important;
+	color: var(--jct-nav-text-strong) !important;
 	text-decoration: none !important;
+	box-shadow: none !important;
 }
 
-.jct-moodle-redesign nav.navbar .primary-navigation .nav-link.active {
-	background: rgba(102, 126, 234, 0.12) !important;
-	color: var(--jct-brand-start, #4f46e5) !important;
+.jct-moodle-redesign nav.navbar .primary-navigation .nav-link.active,
+html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link.active {
+	background: var(--jct-nav-active-bg) !important;
+	color: var(--jct-nav-active-text) !important;
 	border-bottom: none !important;
+	font-weight: 700 !important;
 }
 
+/* Remove Moodle's default bottom border indicator cleanly */
+.jct-moodle-redesign nav.navbar .primary-navigation .nav-link.active::before,
 .jct-moodle-redesign nav.navbar .primary-navigation .nav-link.active::after {
-	content: "" !important;
-	position: absolute !important;
-	bottom: 2px !important;
-	left: 14px !important;
-	right: 14px !important;
-	height: 3px !important;
-	border-radius: 999px !important;
-	background: var(--jct-brand-gradient) !important;
+	display: none !important;
+}
+
+/* Secondary inline navbar-nav (e.g. custom Boost Union menu items) */
+.jct-moodle-redesign nav.navbar > ul.navbar-nav {
+	align-items: center !important;
+	flex-shrink: 0 !important;
+	gap: 4px !important;
 }
 
 /* ---- Navbar Utility Area (#usernavigation) ---- */
 .jct-moodle-redesign nav.navbar #usernavigation {
 	display: flex !important;
 	align-items: center !important;
-	gap: 6px !important;
+	flex-wrap: nowrap !important;
+	gap: 4px !important;
 	height: 100% !important;
+	flex-shrink: 0 !important;
+	margin-inline-start: auto !important;
+	background: transparent !important;
+}
+
+.jct-moodle-redesign nav.navbar #usernavigation > :not(#jct-navbar-theme-toggle):not(.jct-navbar-theme-toggle):not(.d-none):not([hidden]) {
+	display: flex !important;
+	align-items: center !important;
+	height: auto !important;
+	flex-shrink: 0 !important;
 }
 
 .jct-moodle-redesign nav.navbar #usernavigation .divider {
-	height: 22px !important;
+	height: 20px !important;
+	width: 1px !important;
 	margin: 0 4px !important;
-	border-color: #cbd5e1 !important;
-	opacity: 0.6 !important;
+	border-color: var(--jct-nav-divider) !important;
+	opacity: 0.75 !important;
 }
 
-/* Unified icon buttons: Theme Toggle, Search Open, Notifications, Messages */
+/* Unified 36x36 Icon Buttons: Theme Toggle, Search Open, Notifications, Messages */
+.jct-moodle-redesign nav.navbar #jct-navbar-theme-toggle,
 .jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle,
-.jct-moodle-redesign nav.navbar #usernavigation .btn-open,
-.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle {
-	width: 38px !important;
-	height: 38px !important;
+.jct-moodle-redesign nav.navbar #usernavigation #jct-navbar-theme-toggle,
+.jct-moodle-redesign nav.navbar #usernavigation .btn-open:not(.d-none),
+.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle,
+.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"],
+html.jct-dark.jct-moodle-redesign nav.navbar #jct-navbar-theme-toggle,
+html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle,
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation #jct-navbar-theme-toggle,
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .btn-open:not(.d-none),
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle,
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"] {
+	position: relative !important;
+	overflow: visible !important;
+	width: 36px !important;
+	height: 36px !important;
+	min-width: 36px !important;
+	min-height: 36px !important;
 	padding: 0 !important;
 	margin: 0 !important;
 	border-radius: 10px !important;
 	border: 1px solid transparent !important;
 	background: transparent !important;
-	color: #475569 !important;
+	color: var(--jct-nav-text) !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
 	cursor: pointer !important;
-	transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.15s ease !important;
+	flex-shrink: 0 !important;
+	font-size: 17px !important;
+	line-height: 1 !important;
+	box-shadow: none !important;
 	text-decoration: none !important;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+}
+
+html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle {
+	color: #fde68a !important;
 }
 
 .jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle:hover,
 .jct-moodle-redesign nav.navbar #usernavigation .btn-open:hover,
-.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle:hover {
-	background: #f1f5f9 !important;
-	border-color: #e2e8f0 !important;
-	color: #0f172a !important;
-	transform: translateY(-1px) !important;
+.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle:hover,
+.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"]:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .btn-open:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"]:hover {
+	background: var(--jct-nav-hover-bg) !important;
+	border-color: var(--jct-nav-hover-border) !important;
+	color: var(--jct-nav-text-strong) !important;
+	transform: none !important;
+}
+
+.jct-moodle-redesign nav.navbar #usernavigation .popover-region {
+	position: relative !important;
+	overflow: visible !important;
 }
 
 .jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle .icon,
+.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"] .icon,
 .jct-moodle-redesign nav.navbar #usernavigation .btn-open .icon {
 	font-size: 16px !important;
 	margin: 0 !important;
 	width: auto !important;
 	height: auto !important;
+	line-height: 1 !important;
+	color: inherit !important;
 }
 
-/* Notification / Message Unread Count Badge */
-.jct-moodle-redesign nav.navbar .popover-region .count-container {
-	top: 3px !important;
-	right: 3px !important;
+/* Notification & Message Unread Count Badge (NEVER force display so hidden/0 stays hidden!) */
+.jct-moodle-redesign nav.navbar .popover-region .count-container,
+.jct-moodle-redesign nav.navbar .popover-region-toggle .count-container,
+.jct-moodle-redesign nav.navbar a[id^="message-drawer-toggle"] .count-container,
+.jct-moodle-redesign nav.navbar [data-region="count-container"],
+.jct-moodle-redesign nav.navbar #usernavigation .badge.bg-danger,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region .count-container,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-toggle .count-container,
+html.jct-dark.jct-moodle-redesign nav.navbar a[id^="message-drawer-toggle"] .count-container,
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"] {
+	position: absolute !important;
+	top: 0 !important;
+	right: 0 !important;
+	left: auto !important;
+	bottom: auto !important;
+	transform: translate(15%, -15%) !important;
 	min-width: 17px !important;
 	height: 17px !important;
-	padding: 0 4px !important;
+	padding: 0 5px !important;
+	margin: 0 !important;
 	border-radius: 999px !important;
 	background: #ef4444 !important;
+	background-color: #ef4444 !important;
 	color: #ffffff !important;
 	font-size: 10px !important;
 	font-weight: 700 !important;
 	line-height: 17px !important;
-	box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4) !important;
+	text-align: center !important;
+	box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45) !important;
+	pointer-events: none !important;
+	z-index: 5 !important;
 }
 
-/* ---- Navbar Inline Search Bar ---- */
+.jct-moodle-redesign nav.navbar .count-container.hidden,
+.jct-moodle-redesign nav.navbar .count-container.d-none,
+.jct-moodle-redesign nav.navbar .count-container[hidden],
+.jct-moodle-redesign nav.navbar .count-container[aria-hidden="true"],
+.jct-moodle-redesign nav.navbar .count-container:empty,
+.jct-moodle-redesign nav.navbar .count-container.jct-count-zero,
+.jct-moodle-redesign nav.navbar [data-region="count-container"].hidden,
+.jct-moodle-redesign nav.navbar [data-region="count-container"].d-none,
+.jct-moodle-redesign nav.navbar [data-region="count-container"][hidden],
+.jct-moodle-redesign nav.navbar [data-region="count-container"][aria-hidden="true"],
+.jct-moodle-redesign nav.navbar [data-region="count-container"]:empty,
+.jct-moodle-redesign nav.navbar [data-region="count-container"].jct-count-zero,
+html.jct-dark.jct-moodle-redesign nav.navbar .count-container.hidden,
+html.jct-dark.jct-moodle-redesign nav.navbar .count-container.d-none,
+html.jct-dark.jct-moodle-redesign nav.navbar .count-container[hidden],
+html.jct-dark.jct-moodle-redesign nav.navbar .count-container[aria-hidden="true"],
+html.jct-dark.jct-moodle-redesign nav.navbar .count-container:empty,
+html.jct-dark.jct-moodle-redesign nav.navbar .count-container.jct-count-zero,
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"].hidden,
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"].d-none,
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"][hidden],
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"][aria-hidden="true"],
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"]:empty,
+html.jct-dark.jct-moodle-redesign nav.navbar [data-region="count-container"].jct-count-zero {
+	display: none !important;
+}
+
+/* ---- Navbar Search Bar (Inline on Desktop, Full-Bar Overlay on Mobile) ---- */
 .jct-moodle-redesign nav.navbar .simplesearchform {
 	display: flex !important;
 	align-items: center !important;
+	background: transparent !important;
 }
 
+.jct-moodle-redesign nav.navbar #searchform-navbar {
+	background: transparent !important;
+	border: none !important;
+}
+
+/* Keep desktop search inline right next to the search icon (overrides Moodle's position:absolute; right:0) */
 .jct-moodle-redesign nav.navbar #searchform-navbar.show,
 .jct-moodle-redesign nav.navbar #searchform-navbar.collapsing {
-	margin: 0 4px !important;
-}
-
-.jct-moodle-redesign nav.navbar .searchform-navbar .input-group {
+	position: static !important;
+	top: auto !important;
+	right: auto !important;
+	left: auto !important;
+	bottom: auto !important;
+	width: auto !important;
+	height: auto !important;
 	display: flex !important;
 	align-items: center !important;
-	background: #f8fafc !important;
-	border: 1.5px solid #cbd5e1 !important;
+	margin-inline: 4px !important;
+	padding: 0 !important;
+	z-index: auto !important;
+}
+
+.jct-moodle-redesign nav.navbar .searchform-navbar {
+	display: flex !important;
+	align-items: center !important;
+	background: transparent !important;
+	border: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.jct-moodle-redesign nav.navbar .searchform-navbar .input-group,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .input-group {
+	display: flex !important;
+	flex-wrap: nowrap !important;
+	align-items: center !important;
+	width: clamp(170px, 20vw, 260px) !important;
+	height: 36px !important;
+	background: var(--jct-nav-surface-soft) !important;
+	border: 1.5px solid var(--jct-nav-divider) !important;
 	border-radius: 999px !important;
 	overflow: hidden !important;
 	padding: 2px 4px !important;
+	gap: 2px !important;
 	transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
 }
 
 .jct-moodle-redesign nav.navbar .searchform-navbar .input-group:focus-within {
 	border-color: var(--jct-brand-start, #667eea) !important;
-	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--jct-brand-start, #667eea) 18%, transparent) !important;
 }
 
-.jct-moodle-redesign nav.navbar .searchform-navbar input.form-control {
-	height: 32px !important;
+.jct-moodle-redesign nav.navbar .searchform-navbar input.form-control,
+.jct-moodle-redesign nav.navbar .searchform-navbar input[type="text"],
+.jct-moodle-redesign nav.navbar .searchform-navbar input[type="search"],
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar input.form-control,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar input[type="text"],
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar input[type="search"] {
+	flex: 1 1 auto !important;
+	min-width: 0 !important;
+	height: 30px !important;
 	border: none !important;
+	border-radius: 0 !important;
 	background: transparent !important;
+	background-color: transparent !important;
+	color: var(--jct-nav-text-strong) !important;
 	box-shadow: none !important;
-	padding: 0 12px !important;
-	font-size: 13.5px !important;
+	outline: none !important;
+	padding: 0 10px !important;
+	font-size: 13px !important;
 }
 
 .jct-moodle-redesign nav.navbar .searchform-navbar .btn-close,
-.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit {
-	width: 30px !important;
-	height: 30px !important;
+.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit {
+	width: 28px !important;
+	height: 28px !important;
+	min-width: 28px !important;
 	padding: 0 !important;
+	margin: 0 !important;
 	border-radius: 50% !important;
 	border: none !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
+	flex-shrink: 0 !important;
+	box-shadow: none !important;
+	transition: background-color 0.15s ease, color 0.15s ease, filter 0.15s ease !important;
+}
+
+.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close {
 	background: transparent !important;
-	color: #475569 !important;
-	transition: background 0.15s ease, color 0.15s ease !important;
+	color: var(--jct-nav-text) !important;
 }
 
-.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit {
+.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close:hover {
+	background: var(--jct-nav-hover-bg) !important;
+	color: var(--jct-nav-text-strong) !important;
+}
+
+.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit,
+html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit {
 	background: var(--jct-brand-gradient) !important;
 	color: #ffffff !important;
 }
 
-.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close:hover {
-	background: #e2e8f0 !important;
-	color: #0f172a !important;
-}
-
-/* ---- User Avatar Toggle ---- */
-.jct-moodle-redesign nav.navbar .usermenu-container {
-	align-items: center !important;
-}
-
-.jct-moodle-redesign nav.navbar #user-menu-toggle {
-	display: inline-flex !important;
-	align-items: center !important;
-	gap: 6px !important;
-	padding: 4px 8px 4px 10px !important;
-	border-radius: 999px !important;
-	border: 1.5px solid #e2e8f0 !important;
-	background: #f8fafc !important;
-	transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease !important;
-}
-
-.jct-moodle-redesign nav.navbar #user-menu-toggle:hover,
-.jct-moodle-redesign nav.navbar #user-menu-toggle[aria-expanded="true"] {
-	border-color: var(--jct-brand-start, #667eea) !important;
-	background: #ffffff !important;
-	box-shadow: 0 2px 10px rgba(102, 126, 234, 0.18) !important;
-}
-
-.jct-moodle-redesign nav.navbar .userinitials {
-	width: 32px !important;
-	height: 32px !important;
-	border-radius: 50% !important;
-	background: var(--jct-brand-gradient) !important;
+.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit .icon {
 	color: #ffffff !important;
-	font-weight: 700 !important;
-	font-size: 13px !important;
+	margin: 0 !important;
+}
+
+.jct-moodle-redesign nav.navbar .searchform-navbar .btn-submit:hover {
+	filter: brightness(1.08) !important;
+}
+
+/* ---- User Avatar Menu Toggle ---- */
+.jct-moodle-redesign nav.navbar .usermenu-container,
+.jct-moodle-redesign nav.navbar .usermenu,
+.jct-moodle-redesign nav.navbar .usermenu .dropdown {
+	display: flex !important;
+	align-items: center !important;
+	height: auto !important;
+}
+
+.jct-moodle-redesign nav.navbar #user-menu-toggle,
+html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle {
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18) !important;
+	gap: 6px !important;
+	height: 36px !important;
+	padding: 2px 8px 2px 6px !important;
+	margin: 0 !important;
+	border-radius: 999px !important;
+	border: 1px solid var(--jct-nav-divider) !important;
+	background: var(--jct-nav-surface-soft) !important;
+	color: var(--jct-nav-text-strong) !important;
+	box-shadow: none !important;
+	text-decoration: none !important;
+	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.jct-moodle-redesign nav.navbar #user-menu-toggle:hover,
+.jct-moodle-redesign nav.navbar #user-menu-toggle[aria-expanded="true"],
+html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle[aria-expanded="true"] {
+	border-color: var(--jct-brand-start, #667eea) !important;
+	background: var(--jct-nav-surface) !important;
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--jct-brand-start, #667eea) 18%, transparent) !important;
+}
+
+.jct-moodle-redesign nav.navbar #user-menu-toggle .userbutton,
+.jct-moodle-redesign nav.navbar #user-menu-toggle .avatars {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.jct-moodle-redesign nav.navbar #user-menu-toggle .usertext {
+	font-size: 0.82rem !important;
+	font-weight: 600 !important;
+	color: var(--jct-nav-text-strong) !important;
+	max-width: 140px !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+}
+
+.jct-moodle-redesign nav.navbar .userinitials,
+.jct-moodle-redesign nav.navbar #user-menu-toggle img.userpicture {
+	width: 28px !important;
+	height: 28px !important;
+	border-radius: 50% !important;
+	margin: 0 !important;
+	flex-shrink: 0 !important;
+	object-fit: cover !important;
+}
+
+.jct-moodle-redesign nav.navbar .userinitials,
+html.jct-dark.jct-moodle-redesign nav.navbar .userinitials {
+	background: var(--jct-brand-gradient) !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+	font-size: 12px !important;
+	line-height: 1 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border: none !important;
+	box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16) !important;
+}
+
+.jct-moodle-redesign nav.navbar #user-menu-toggle::after {
+	margin: 0 !important;
+	margin-inline-start: 2px !important;
+	opacity: 0.7 !important;
 }
 
 /* ---- Dropdown Menus (More Menu, Boost Union Smartmenus, User Menu) ---- */
 .jct-moodle-redesign nav.navbar .dropdown-menu,
 .jct-moodle-redesign nav.navbar .boost-union-moremenu,
-.jct-moodle-redesign nav.navbar #user-action-menu {
-	min-width: 220px !important;
-	padding: 8px !important;
+.jct-moodle-redesign nav.navbar #user-action-menu,
+html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu,
+html.jct-dark.jct-moodle-redesign nav.navbar .boost-union-moremenu,
+html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu {
+	min-width: 210px !important;
+	max-width: calc(100vw - 24px) !important;
+	padding: 6px !important;
 	margin-top: 8px !important;
 	border-radius: 14px !important;
-	border: 1px solid #e2e8f0 !important;
-	background: #ffffff !important;
-	box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06) !important;
-	animation: jctFadeIn 0.14s ease !important;
+	border: 1px solid var(--jct-nav-divider) !important;
+	background: var(--jct-nav-surface) !important;
+	color: var(--jct-nav-text-strong) !important;
+	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+	animation: jctFadeIn 0.12s ease !important;
 }
 
-.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item {
+html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu,
+html.jct-dark.jct-moodle-redesign nav.navbar .boost-union-moremenu,
+html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu {
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
+}
+
+.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item,
+html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item {
 	display: flex !important;
 	align-items: center !important;
-	justify-content: space-between !important;
-	padding: 9px 12px !important;
+	justify-content: flex-start !important;
+	gap: 10px !important;
+	padding: 8px 12px !important;
 	border-radius: 9px !important;
 	font-size: 0.875rem !important;
 	font-weight: 500 !important;
-	color: #334155 !important;
+	color: var(--jct-nav-text) !important;
+	background: transparent !important;
 	text-decoration: none !important;
-	transition: background-color 0.14s ease, color 0.14s ease, transform 0.14s ease !important;
+	white-space: nowrap !important;
+	transition: background-color 0.14s ease, color 0.14s ease !important;
 }
 
 .jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item:hover,
 .jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item:focus,
-.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item.active {
-	background: #eef2ff !important;
-	color: #3730a3 !important;
-	transform: translateX(-2px) !important;
+.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item.active,
+html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item:focus,
+html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item.active {
+	background: var(--jct-nav-active-bg) !important;
+	color: var(--jct-nav-active-text) !important;
 	text-decoration: none !important;
 }
 
-/* Distinct logout hover highlight */
+/* Distinct logout item */
 .jct-moodle-redesign nav.navbar #user-action-menu a.dropdown-item[href*="logout.php"] {
 	color: #dc2626 !important;
 }
@@ -344,9 +740,18 @@
 	color: #b91c1c !important;
 }
 
+html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu a.dropdown-item[href*="logout.php"] {
+	color: #f87171 !important;
+}
+
+html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu a.dropdown-item[href*="logout.php"]:hover {
+	background: rgba(239, 68, 68, 0.16) !important;
+	color: #fca5a5 !important;
+}
+
 .jct-moodle-redesign nav.navbar .dropdown-divider {
 	margin: 6px 4px !important;
-	border-top: 1px solid #e2e8f0 !important;
+	border-top: 1px solid var(--jct-nav-divider) !important;
 }
 
 /* User Menu Language Submenu Header */
@@ -354,36 +759,45 @@
 	display: flex !important;
 	align-items: center !important;
 	gap: 6px !important;
-	padding: 6px 8px !important;
+	padding: 6px 10px !important;
 	font-weight: 700 !important;
 	font-size: 0.875rem !important;
+	color: var(--jct-nav-text-strong) !important;
 }
 
-/* ---- Notifications Popover Panel ---- */
-.jct-moodle-redesign nav.navbar .popover-region-container {
-	width: 340px !important;
+/* ---- Notifications & Messages Popover Panel ---- */
+.jct-moodle-redesign nav.navbar .popover-region-container,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-container {
+	width: min(350px, calc(100vw - 24px)) !important;
+	max-width: calc(100vw - 24px) !important;
 	border-radius: 16px !important;
-	border: 1px solid #e2e8f0 !important;
-	background: #ffffff !important;
-	box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16) !important;
+	border: 1px solid var(--jct-nav-divider) !important;
+	background: var(--jct-nav-surface) !important;
+	box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16) !important;
 	overflow: hidden !important;
 	top: calc(100% + 10px) !important;
 }
 
-.jct-moodle-redesign nav.navbar .popover-region-header-container {
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-container {
+	box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55) !important;
+}
+
+.jct-moodle-redesign nav.navbar .popover-region-header-container,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-container {
 	height: auto !important;
 	padding: 12px 16px !important;
-	background: #f8fafc !important;
-	border-bottom: 1px solid #e2e8f0 !important;
+	background: var(--jct-nav-surface-soft) !important;
+	border-bottom: 1px solid var(--jct-nav-divider) !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: space-between !important;
 }
 
-.jct-moodle-redesign nav.navbar .popover-region-header-text {
-	font-size: 0.95rem !important;
+.jct-moodle-redesign nav.navbar .popover-region-header-text,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-text {
+	font-size: 0.92rem !important;
 	font-weight: 700 !important;
-	color: #0f172a !important;
+	color: var(--jct-nav-text-strong) !important;
 	margin: 0 !important;
 }
 
@@ -402,18 +816,19 @@
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	color: #64748b !important;
-	transition: background 0.15s ease, color 0.15s ease !important;
+	color: var(--jct-nav-text) !important;
+	transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
 .jct-moodle-redesign nav.navbar .popover-region-header-actions a:hover,
 .jct-moodle-redesign nav.navbar .popover-region-header-actions button:hover {
-	background: #e2e8f0 !important;
-	color: #0f172a !important;
+	background: var(--jct-nav-hover-bg) !important;
+	color: var(--jct-nav-text-strong) !important;
 }
 
 .jct-moodle-redesign nav.navbar .popover-region-content-container {
 	min-height: 120px !important;
+	max-height: min(380px, 60vh) !important;
 	padding: 8px !important;
 }
 
@@ -424,25 +839,36 @@
 	font-size: 0.875rem !important;
 }
 
-.jct-moodle-redesign nav.navbar .popover-region-footer-container {
+.jct-moodle-redesign nav.navbar .popover-region-footer-container,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-footer-container {
 	height: auto !important;
 	padding: 10px 16px !important;
-	background: #f8fafc !important;
-	border-top: 1px solid #e2e8f0 !important;
+	background: var(--jct-nav-surface-soft) !important;
+	border-top: 1px solid var(--jct-nav-divider) !important;
 	text-align: center !important;
 	font-size: 0.85rem !important;
 	font-weight: 600 !important;
-	transition: background 0.15s ease !important;
+	transition: background-color 0.15s ease !important;
 }
 
-.jct-moodle-redesign nav.navbar .popover-region-footer-container:hover {
-	background: #eef2ff !important;
+.jct-moodle-redesign nav.navbar .popover-region-footer-container:hover,
+html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-footer-container:hover {
+	background: var(--jct-nav-hover-bg) !important;
+}
+
+.jct-moodle-redesign nav.navbar .popover-region.collapsed .popover-region-container {
+	pointer-events: none !important;
 }
 
 /* ---- Side Drawers (Primary Mobile Drawer, Blocks Drawer, Messages Drawer) ---- */
 .jct-moodle-redesign .drawer {
 	box-shadow: 0 12px 36px rgba(15, 23, 42, 0.16) !important;
 	border-color: #e2e8f0 !important;
+	max-width: 90vw !important;
+}
+
+.jct-moodle-redesign .drawer[data-region="right-hand-drawer"]:not(.hidden) {
+	z-index: 1040 !important;
 }
 
 .jct-moodle-redesign .drawer .drawerheader {
@@ -464,165 +890,174 @@
 	margin: 2px 8px !important;
 	border: none !important;
 	font-weight: 500 !important;
-	transition: background 0.15s ease, transform 0.14s ease !important;
+	transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
 .jct-moodle-redesign .drawer .list-group-item:hover {
 	background: #eef2ff !important;
-	transform: translateX(-2px) !important;
-}
-
-/* ============================================
-   Dark Mode Overrides for Modern Navbar & Menus
-   ============================================ */
-
-html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top,
-html.jct-dark.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white {
-	background: rgba(11, 18, 32, 0.92) !important;
-	border-bottom: 1px solid #334155 !important;
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45) !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .navbar-brand {
-	background: linear-gradient(135deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.3)), var(--jct-brand-gradient) !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .navbar-toggler {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link {
-	color: #cbd5e1 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link:hover,
-html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link:focus {
-	background: #1e293b !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link.active {
-	background: rgba(129, 140, 248, 0.18) !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .divider {
-	border-color: #334155 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle,
-html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .btn-open,
-html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle {
-	color: #cbd5e1 !important;
-	background: transparent !important;
-	border-color: transparent !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle {
-	color: #fde68a !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle:hover,
-html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .btn-open:hover,
-html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle:hover {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .input-group {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar input.form-control {
-	background: transparent !important;
-	color: #f1f5f9 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close {
-	color: #cbd5e1 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .searchform-navbar .btn-close:hover {
-	background: #334155 !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-	color: #f1f5f9 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle:hover,
-html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle[aria-expanded="true"] {
-	background: #263348 !important;
-	border-color: var(--jct-brand-start, #818cf8) !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu,
-html.jct-dark.jct-moodle-redesign nav.navbar .boost-union-moremenu,
-html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu,
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-container {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-	box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55) !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item {
-	color: #e2e8f0 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item:hover,
-html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item:focus,
-html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-menu .dropdown-item.active {
-	background: #263348 !important;
-	color: #ffffff !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu a.dropdown-item[href*="logout.php"] {
-	color: #f87171 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar #user-action-menu a.dropdown-item[href*="logout.php"]:hover {
-	background: rgba(239, 68, 68, 0.16) !important;
-	color: #fca5a5 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .dropdown-divider {
-	border-top-color: #334155 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-container,
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-footer-container {
-	background: #162033 !important;
-	border-color: #334155 !important;
-	color: #f1f5f9 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-footer-container:hover {
-	background: #263348 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-text {
-	color: #f1f5f9 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-actions a,
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-actions button {
-	color: #cbd5e1 !important;
-}
-
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-actions a:hover,
-html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-header-actions button:hover {
-	background: #334155 !important;
-	color: #ffffff !important;
 }
 
 html.jct-dark.jct-moodle-redesign .drawer .list-group-item:hover {
 	background: #263348 !important;
 	color: #ffffff !important;
+}
+
+/* ============================================
+   Responsive Navbar Breakpoints
+   ============================================ */
+
+/* Medium laptops / compact desktop (<= 1199px) */
+@media (max-width: 1199.98px) {
+	.jct-moodle-redesign nav.navbar.fixed-top,
+	.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white {
+		padding: 0 12px !important;
+		gap: 6px !important;
+	}
+
+	.jct-moodle-redesign nav.navbar .primary-navigation .nav-link,
+	html.jct-dark.jct-moodle-redesign nav.navbar .primary-navigation .nav-link {
+		padding: 0 10px !important;
+		font-size: 0.84rem !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #user-menu-toggle .usertext {
+		max-width: 100px !important;
+	}
+}
+
+/* Tablet / Split-Screen (<= 991px) — collapse to hamburger cleanly */
+@media (max-width: 991.98px) {
+	.jct-moodle-redesign nav.navbar .navbar-toggler {
+		display: inline-flex !important;
+	}
+
+	.jct-moodle-redesign nav.navbar .primary-navigation,
+	.jct-moodle-redesign nav.navbar > ul.navbar-nav,
+	.jct-moodle-redesign nav.navbar > .container-fluid > ul.navbar-nav {
+		display: none !important;
+	}
+
+	.jct-moodle-redesign nav.navbar .navbar-brand {
+		display: inline-flex !important;
+	}
+
+	.jct-moodle-redesign #theme_boost-drawers-primary.show,
+	.jct-moodle-redesign .drawer-primary.show {
+		display: block !important;
+		visibility: visible !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #user-menu-toggle .usertext {
+		display: none !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #usernavigation {
+		gap: 2px !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #searchform-navbar.show,
+	.jct-moodle-redesign nav.navbar #searchform-navbar.collapsing {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		height: var(--jct-nav-height) !important;
+		margin: 0 !important;
+		padding: 0 12px !important;
+		background: var(--jct-nav-surface) !important;
+		border-bottom: 1px solid var(--jct-nav-divider) !important;
+		z-index: 1050 !important;
+		display: flex !important;
+		align-items: center !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #searchform-navbar.show .searchform-navbar,
+	.jct-moodle-redesign nav.navbar #searchform-navbar.show .input-group,
+	html.jct-dark.jct-moodle-redesign nav.navbar #searchform-navbar.show .input-group {
+		width: 100% !important;
+	}
+}
+
+/* Mobile & Narrow Split-Screen (<= 767.98px) */
+@media (max-width: 767.98px) {
+	.jct-moodle-redesign nav.navbar.fixed-top {
+		--jct-nav-height: 56px;
+	}
+
+	.jct-moodle-redesign nav.navbar.fixed-top,
+	.jct-moodle-redesign nav.navbar.fixed-top.navbar-light.bg-white {
+		padding: 0 10px !important;
+		gap: 4px !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #jct-navbar-theme-toggle,
+	.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle,
+	.jct-moodle-redesign nav.navbar #usernavigation #jct-navbar-theme-toggle,
+	.jct-moodle-redesign nav.navbar #usernavigation .btn-open,
+	.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle,
+	.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"],
+	html.jct-dark.jct-moodle-redesign nav.navbar #jct-navbar-theme-toggle,
+	html.jct-dark.jct-moodle-redesign nav.navbar .jct-navbar-theme-toggle,
+	html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation #jct-navbar-theme-toggle,
+	html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .btn-open,
+	html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation .popover-region-toggle,
+	html.jct-dark.jct-moodle-redesign nav.navbar #usernavigation a[id^="message-drawer-toggle"] {
+		width: 34px !important;
+		height: 34px !important;
+		min-width: 34px !important;
+		min-height: 34px !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #usernavigation .divider {
+		display: none !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #user-menu-toggle,
+	html.jct-dark.jct-moodle-redesign nav.navbar #user-menu-toggle {
+		height: 34px !important;
+		padding: 2px 6px 2px 4px !important;
+	}
+
+	.jct-moodle-redesign nav.navbar .userinitials,
+	.jct-moodle-redesign nav.navbar #user-menu-toggle img.userpicture {
+		width: 26px !important;
+		height: 26px !important;
+		font-size: 11px !important;
+	}
+
+	/* Search opens cleanly across the full navbar bar on mobile without pushing icons off-screen */
+	.jct-moodle-redesign nav.navbar #searchform-navbar.show,
+	.jct-moodle-redesign nav.navbar #searchform-navbar.collapsing {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		height: var(--jct-nav-height) !important;
+		margin: 0 !important;
+		padding: 0 12px !important;
+		background: var(--jct-nav-surface) !important;
+		border-bottom: 1px solid var(--jct-nav-divider) !important;
+		z-index: 1050 !important;
+		display: flex !important;
+		align-items: center !important;
+	}
+
+	.jct-moodle-redesign nav.navbar #searchform-navbar.show .searchform-navbar,
+	.jct-moodle-redesign nav.navbar #searchform-navbar.show .input-group,
+	html.jct-dark.jct-moodle-redesign nav.navbar #searchform-navbar.show .input-group {
+		width: 100% !important;
+	}
+
+	/* Popovers span viewport cleanly on mobile */
+	.jct-moodle-redesign nav.navbar .popover-region-container,
+	html.jct-dark.jct-moodle-redesign nav.navbar .popover-region-container {
+		position: fixed !important;
+		top: calc(var(--jct-nav-height) + 6px) !important;
+		left: 10px !important;
+		right: 10px !important;
+		width: auto !important;
+		max-width: none !important;
+	}
 }

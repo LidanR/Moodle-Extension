@@ -176,11 +176,15 @@
 		const res = await storageGet('sync', {
 			viewMode: 'grid',
 			cardStyle: 'compact',
-			columnCount: DEFAULT_COLUMN_COUNT
+			columnCount: DEFAULT_COLUMN_COUNT,
+			hideWeeklySchedule: false,
+			hideTodo: false
 		});
 		JCT.state.currentViewMode = res.viewMode || 'grid';
 		JCT.state.currentCardStyle = res.cardStyle || 'compact';
 		JCT.state.currentColumnCount = res.columnCount || DEFAULT_COLUMN_COUNT;
+		JCT.state.hideWeeklySchedule = Boolean(res.hideWeeklySchedule);
+		JCT.state.hideTodo = Boolean(res.hideTodo);
 		document.documentElement.style.setProperty('--jct-columns', String(JCT.state.currentColumnCount));
 		return res;
 	}

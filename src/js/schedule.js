@@ -285,6 +285,51 @@
 		const scheduleContainer = document.getElementById('jct-weekly-schedule');
 		if (!scheduleContainer) return;
 
+		const hideSchedule = Boolean(JCT.state.hideWeeklySchedule);
+		const hideTodo = Boolean(JCT.state.hideTodo);
+
+		scheduleContainer.classList.toggle('jct-weekly-schedule-bar-only', hideSchedule && hideTodo);
+
+		// Both hidden: keep a sleek action bar so Settings / Calendar / Assignments stay accessible
+		if (hideSchedule && hideTodo) {
+			scheduleContainer.innerHTML = `
+				<div class="jct-schedule-header jct-schedule-header-bar-only">
+					<div class="jct-schedule-actions" id="jct-schedule-actions"></div>
+				</div>
+			`;
+			if (JCT.main?.addActionButtons) {
+				JCT.main.addActionButtons();
+			}
+			scheduleContainer.style.display = 'block';
+			return;
+		}
+
+		// Schedule hidden, TODO visible: compact actions header + full-width TODO widget
+		if (hideSchedule && !hideTodo) {
+			scheduleContainer.innerHTML = `
+				<div class="jct-schedule-header">
+					<div class="jct-schedule-actions" id="jct-schedule-actions"></div>
+				</div>
+				<div class="jct-schedule-grid jct-schedule-only-todo">
+					<div class="jct-schedule-day jct-todo-column">
+						<div class="jct-schedule-day-header jct-todo-header">
+							<span>✓ TODO</span>
+							<button type="button" id="jct-todo-add-btn" class="jct-todo-open-menu-btn" title="הוסף משימה חדשה">+</button>
+						</div>
+						<div class="jct-todo-body">
+							<div id="jct-todo-list"></div>
+						</div>
+					</div>
+				</div>
+			`;
+			if (JCT.main?.addActionButtons) {
+				JCT.main.addActionButtons();
+			}
+			await initializeTodoList();
+			scheduleContainer.style.display = 'block';
+			return;
+		}
+
 		const sessionsByDay = {};
 		const assignmentsByDay = {};
 		const eventsByDay = {};
@@ -387,7 +432,7 @@
 		html += '<span class="jct-schedule-hint">גררו את ה 📅 מהקורס למערכת או לחצו עליו</span>';
 		html += '<button type="button" class="jct-schedule-delete-all-btn" title="מחק את כל הקורסים מהלוח זמנים">🗑️ מחק הכל</button>';
 		html += '</div></div>';
-		html += '<div class="jct-schedule-grid">';
+		html += `<div class="jct-schedule-grid${hideTodo ? ' jct-schedule-no-todo' : ''}">`;
 
 		DAYS_OF_WEEK.forEach((dayName, idx) => {
 			const dayKey = DAYS_OF_WEEK_EN[idx];
@@ -447,16 +492,18 @@
 			html += '</div></div>';
 		});
 
-		// TODO column (8th column) — clean header + "+" button that opens the rich Add Task menu
-		html += `<div class="jct-schedule-day jct-todo-column">
-			<div class="jct-schedule-day-header jct-todo-header">
-				<span>✓ TODO</span>
-				<button type="button" id="jct-todo-add-btn" class="jct-todo-open-menu-btn" title="הוסף משימה חדשה">+</button>
-			</div>
-			<div class="jct-todo-body">
-				<div id="jct-todo-list"></div>
-			</div>
-		</div>`;
+		// TODO column (8th column) — rendered only when TODO is not hidden
+		if (!hideTodo) {
+			html += `<div class="jct-schedule-day jct-todo-column">
+				<div class="jct-schedule-day-header jct-todo-header">
+					<span>✓ TODO</span>
+					<button type="button" id="jct-todo-add-btn" class="jct-todo-open-menu-btn" title="הוסף משימה חדשה">+</button>
+				</div>
+				<div class="jct-todo-body">
+					<div id="jct-todo-list"></div>
+				</div>
+			</div>`;
+		}
 
 		html += '</div>';
 		scheduleContainer.innerHTML = html;
@@ -479,7 +526,9 @@
 		}
 
 		setupScheduleDropZones();
-		await initializeTodoList();
+		if (!hideTodo) {
+			await initializeTodoList();
+		}
 
 		scheduleContainer.style.display = 'block';
 	}

@@ -94,6 +94,7 @@
 .jct-week-nav {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 6px;
 }
 
@@ -145,15 +146,15 @@
 .jct-schedule-header-right {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	margin-right: auto;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-inline-start: auto;
 }
 
 .jct-schedule-hint {
 	font-size: 12px;
 	color: #64748b;
 	font-style: italic;
-	white-space: nowrap;
 }
 
 .jct-schedule-delete-all-btn {
@@ -179,11 +180,12 @@
 /* Schedule Grid (7 days + TODO column) */
 .jct-schedule-grid {
 	display: grid;
-	grid-template-columns: repeat(7, 1fr) minmax(160px, 1.5fr);
+	grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(185px, 1.45fr);
 	gap: 8px;
 }
 
 .jct-schedule-day {
+	min-width: 0;
 	background: #ffffff;
 	border-radius: 10px;
 	border: 1px solid #e2e8f0;
@@ -948,6 +950,7 @@
 .jct-session-item {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 8px;
 	padding: 12px;
 	background: #f8fafc;
@@ -1104,41 +1107,127 @@ input.jct-session-time {
 	color: #475569;
 }
 
-/* Responsive Schedule Grid */
-@media (max-width: 768px) {
-	.jct-schedule-grid {
-		grid-template-columns: repeat(2, 1fr);
+/* Compact Action-Bar-Only mode (when both Weekly Schedule & TODO are hidden) */
+.jct-weekly-schedule.jct-weekly-schedule-bar-only {
+	padding: 12px 18px;
+	margin: 16px 0;
+}
+
+.jct-schedule-header.jct-schedule-header-bar-only {
+	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: none;
+	justify-content: center;
+}
+
+/* Schedule Grid variants when TODO or Weekly Schedule is hidden */
+.jct-schedule-grid.jct-schedule-no-todo {
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.jct-schedule-grid.jct-schedule-only-todo {
+	grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.jct-schedule-grid.jct-schedule-only-todo .jct-todo-body {
+	max-height: 260px;
+}
+
+.jct-schedule-grid.jct-schedule-only-todo #jct-todo-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 8px;
+}
+
+.jct-schedule-grid.jct-schedule-only-todo .jct-todo-item {
+	margin-bottom: 0;
+}
+
+.jct-schedule-grid.jct-schedule-only-todo .jct-todo-empty {
+	grid-column: 1 / -1;
+}
+
+/* Responsive Schedule Grid (8 items: 7 days + TODO -> 8 / 4 / 2 / 1 balanced columns) */
+@media (max-width: 1359.98px) {
+	.jct-schedule-grid,
+	.jct-schedule-grid.jct-schedule-no-todo {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.jct-weekly-schedule {
+		padding: 18px;
+	}
+}
+
+@media (max-width: 899.98px) {
+	.jct-schedule-grid,
+	.jct-schedule-grid.jct-schedule-no-todo {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 8px;
 	}
 
 	.jct-weekly-schedule {
-		padding: 12px;
+		padding: 14px;
+		margin: 16px 0;
 	}
 
 	.jct-schedule-header {
 		flex-direction: column;
 		align-items: stretch;
+		gap: 10px;
 	}
 
+	.jct-schedule-actions,
+	.jct-week-nav,
 	.jct-schedule-header-right {
 		justify-content: center;
-		margin-right: 0;
+		margin-inline-start: 0;
 	}
 
-	.jct-todo-column {
-		grid-column: 1 / -1;
+	.jct-schedule-hint {
+		text-align: center;
+	}
+
+	.jct-scan-hint-bubble {
+		white-space: normal;
+		max-width: min(260px, calc(100vw - 32px));
+		text-align: center;
 	}
 }
 
-@media (min-width: 769px) and (max-width: 1100px) {
-	.jct-schedule-grid {
-		grid-template-columns: repeat(4, 1fr);
+@media (max-width: 539.98px) {
+	.jct-schedule-grid,
+	.jct-schedule-grid.jct-schedule-no-todo {
+		grid-template-columns: minmax(0, 1fr);
 	}
-}
 
-@media (min-width: 1101px) {
-	.jct-schedule-grid {
-		grid-template-columns: repeat(7, 1fr) minmax(160px, 1.5fr);
+	.jct-weekly-schedule {
+		padding: 12px;
+		border-radius: 12px;
+	}
+
+	.jct-schedule-day-courses {
+		min-height: 64px;
+	}
+
+	.jct-settings-button {
+		padding: 6px 10px !important;
+		font-size: 12.5px !important;
+	}
+
+	.jct-schedule-modal,
+	.jct-time-picker-dialog,
+	.jct-todo-modal {
+		padding: 10px;
+	}
+
+	.jct-schedule-modal-header,
+	.jct-time-picker-header,
+	.jct-schedule-modal-body,
+	.jct-time-picker-body,
+	.jct-schedule-modal-footer,
+	.jct-time-picker-footer {
+		padding: 14px 16px;
 	}
 }
 

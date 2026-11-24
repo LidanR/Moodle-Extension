@@ -121,19 +121,40 @@
 	width: 100% !important;
 	max-width: none !important;
 	display: grid !important;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
 	gap: 16px;
 	padding: 16px 0;
 	text-align: right !important;
+	box-sizing: border-box;
+}
+
+@media (max-width: 559.98px) {
+	.jct-courses-grid,
+	.jct-courses-grid.list-group {
+		grid-template-columns: 1fr !important;
+		gap: 12px;
+	}
 }
 
 @media (min-width: 992px) {
 	.jct-courses-grid {
 		display: grid !important;
-		grid-template-columns: repeat(var(--jct-columns, 3), minmax(0, 1fr)) !important;
+		grid-template-columns: repeat(min(var(--jct-columns, 3), 3), minmax(0, 1fr)) !important;
 		column-gap: 16px !important;
 		row-gap: 16px !important;
 		padding-inline: 8px;
+	}
+}
+
+@media (min-width: 1200px) {
+	.jct-courses-grid {
+		grid-template-columns: repeat(min(var(--jct-columns, 3), 4), minmax(0, 1fr)) !important;
+	}
+}
+
+@media (min-width: 1440px) {
+	.jct-courses-grid {
+		grid-template-columns: repeat(var(--jct-columns, 3), minmax(0, 1fr)) !important;
 	}
 }
 
@@ -956,5 +977,82 @@ body.jct-style-glass .jct-courses-grid .card-body,
 body.jct-style-glass .jct-courses-grid .content {
 	position: relative !important;
 	z-index: 2 !important;
+}
+
+/* ============================================
+   Responsive Adjustments for Courses & Carousel
+   ============================================ */
+
+@media (max-width: 991.98px) {
+	.jct-view-carousel .jct-semester-group {
+		padding: 18px 54px;
+	}
+
+	.jct-view-carousel .jct-carousel-wrapper {
+		padding: 0 8px;
+	}
+
+	.jct-view-carousel .jct-carousel-container > * {
+		flex: 0 0 280px !important;
+		padding: 18px !important;
+		min-height: 210px !important;
+	}
+
+	.jct-view-carousel .jct-carousel-btn-prev,
+	.jct-rtl .jct-view-carousel .jct-carousel-btn-prev {
+		left: 8px;
+	}
+
+	.jct-view-carousel .jct-carousel-btn-next,
+	.jct-rtl .jct-view-carousel .jct-carousel-btn-next {
+		right: 8px;
+	}
+}
+
+@media (max-width: 767.98px) {
+	#frontpage-course-list h2 {
+		font-size: 1.4rem !important;
+		margin: 20px auto 12px auto !important;
+	}
+
+	.jct-moodle-redesign form.jct-course-search-form,
+	.jct-moodle-redesign #frontpage-course-list form.simplesearchform {
+		max-width: 100% !important;
+		margin-bottom: 16px !important;
+	}
+
+	.jct-courses-list-view .jct-courses-grid > .list-group-item,
+	.jct-courses-list-view .jct-courses-grid .list-group > .list-group-item,
+	.jct-courses-list-view .jct-courses-grid .coursebox,
+	.jct-courses-list-view .jct-courses-grid .card.course,
+	.jct-courses-list-view .jct-courses-grid .course-list > li,
+	.jct-courses-list-view .course-listitem,
+	.jct-view-original .jct-courses-grid > .list-group-item,
+	.jct-view-original .jct-courses-grid .list-group > .list-group-item,
+	.jct-view-original .jct-courses-grid .coursebox,
+	.jct-view-original .jct-courses-grid .card.course {
+		padding: 10px 44px !important;
+	}
+
+	.jct-view-carousel .jct-semester-group {
+		padding: 14px 44px;
+		margin-bottom: 20px;
+	}
+
+	.jct-view-carousel .jct-carousel-container {
+		gap: 12px;
+	}
+
+	.jct-view-carousel .jct-carousel-container > * {
+		flex: 0 0 min(260px, calc(100vw - 128px)) !important;
+		padding: 16px !important;
+		min-height: 190px !important;
+	}
+
+	.jct-view-carousel .jct-carousel-btn {
+		width: 34px;
+		height: 34px;
+		font-size: 16px;
+	}
 }
 

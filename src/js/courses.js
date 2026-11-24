@@ -314,7 +314,10 @@
 		container.setAttribute('data-carousel-index', String(clamped));
 
 		const isRtl = document.documentElement.dir === 'rtl' || document.documentElement.classList.contains('jct-rtl');
-		const step = 320 + 20;
+		const firstItem = container.firstElementChild;
+		const itemWidth = firstItem ? firstItem.getBoundingClientRect().width : 320;
+		const computedGap = parseFloat(window.getComputedStyle(container).columnGap || window.getComputedStyle(container).gap) || 20;
+		const step = itemWidth + computedGap;
 		const offset = isRtl ? clamped * step : -(clamped * step);
 		container.style.transform = `translateX(${offset}px)`;
 
@@ -333,6 +336,20 @@
 			}
 		}
 	}
+
+	let carouselResizeTimer = null;
+	window.addEventListener('resize', () => {
+		if (!document.body?.classList.contains('jct-view-carousel')) return;
+		clearTimeout(carouselResizeTimer);
+		carouselResizeTimer = setTimeout(() => {
+			document.querySelectorAll('.jct-carousel-container').forEach((container) => {
+				const idx = parseInt(container.getAttribute('data-carousel-index') || '0', 10);
+				if (container.children.length > 0) {
+					updateCarouselPosition(container, idx, container.children.length);
+				}
+			});
+		}, 120);
+	});
 
 	function moveCarousel(container, direction, totalItems) {
 		const currentIndex = parseInt(container.getAttribute('data-carousel-index') || '0', 10);
@@ -703,6 +720,43 @@
 		document.documentElement.classList.add('jct-course-page-themed');
 	}
 
+	// Apply semester accent colors & clean noimg detection to /my/courses.php (block_myoverview) cards
+	function styleMyCoursesCards() {
+		const cards = document.querySelectorAll(
+			'.block_myoverview .course-card, .block_myoverview .course-listitem, .block_myoverview .course-summaryitem'
+		);
+		if (cards.length === 0) return;
+
+		cards.forEach((card) => {
+			const text = card.innerText || card.textContent || '';
+			const { semIdx } = parseHebrewYearAndSemester(text);
+			const color = colorFor(semIdx);
+
+			card.style.setProperty('--jct-accent-h', String(color.h));
+			card.style.setProperty('--jct-accent-s', `${color.s}%`);
+			card.style.setProperty('--jct-accent-l', `${color.l}%`);
+
+			if (color.isYearly && color.secondary) {
+				card.classList.add('jct-course-yearly');
+				card.style.setProperty('--jct-accent-2-h', String(color.secondary.h));
+				card.style.setProperty('--jct-accent-2-s', `${color.secondary.s}%`);
+				card.style.setProperty('--jct-accent-2-l', `${color.secondary.l}%`);
+			} else {
+				card.classList.remove('jct-course-yearly');
+				card.style.removeProperty('--jct-accent-2-h');
+				card.style.removeProperty('--jct-accent-2-s');
+				card.style.removeProperty('--jct-accent-2-l');
+			}
+
+			const cover = card.querySelector('.card-img-top');
+			if (cover) {
+				const bg = cover.style.backgroundImage || '';
+				const isPlaceholder = !bg || bg === 'none' || bg.includes('/noimg') || bg.includes('noimg');
+				card.classList.toggle('jct-mycourse-noimg', isPlaceholder);
+			}
+		});
+	}
+
 	JCT.courses = {
 		applyCardStyle,
 		applyViewMode,
@@ -711,6 +765,7 @@
 		removeUnwantedCourses,
 		markCoursesContainers,
 		ensureStructureAndColor,
+		styleMyCoursesCards,
 		reorderContainerByFavorites,
 		refreshFavoritesUI,
 		setupCourseSearchBox,

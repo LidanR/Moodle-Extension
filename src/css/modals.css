@@ -29,6 +29,11 @@
 
 .jct-assignments-modal-large {
 	max-width: 1000px;
+	width: 95vw;
+	height: min(800px, 88vh);
+	max-height: 88vh;
+	overflow: hidden;
+	box-sizing: border-box;
 }
 
 .jct-assignments-modal-header {
@@ -195,25 +200,26 @@
 }
 
 /* ============================================
-   Compact Settings Modal
+   Spacious 2-Column Settings Modal (No Scrolling on Desktop)
    ============================================ */
 
 .jct-settings-modal-compact {
-	max-width: 480px !important;
+	max-width: 780px !important;
 	width: 92vw !important;
+	max-height: 92vh !important;
 	overflow: hidden;
 }
 
 .jct-settings-modal-header {
 	background: var(--jct-brand-gradient);
 	color: #ffffff;
-	padding: 16px 22px !important;
+	padding: 14px 22px !important;
 	border-bottom: none !important;
 }
 
 .jct-settings-modal-header h3 {
 	color: #ffffff !important;
-	font-size: 1.2rem !important;
+	font-size: 1.15rem !important;
 	margin: 0;
 }
 
@@ -228,23 +234,31 @@
 }
 
 .jct-settings-modal-body {
-	padding: 20px 22px;
+	padding: 16px 20px;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+	align-items: start;
+	overflow-y: auto;
+}
+
+.jct-settings-col {
 	display: flex;
 	flex-direction: column;
-	gap: 20px;
-	overflow-y: auto;
+	gap: 14px;
+	min-width: 0;
 }
 
 .jct-settings-section {
 	background: #f8fafc;
 	border: 1px solid #e2e8f0;
 	border-radius: 12px;
-	padding: 16px;
+	padding: 14px 16px;
 }
 
 .jct-settings-section-title {
-	margin: 0 0 14px 0;
-	font-size: 14.5px;
+	margin: 0 0 11px 0;
+	font-size: 14px;
 	font-weight: 700;
 	color: #1e293b;
 }
@@ -482,6 +496,99 @@
 	text-align: center;
 }
 
+/* Home Widget Visibility Toggles (Switch Controls) */
+.jct-settings-toggles {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.jct-settings-toggle-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px;
+	margin: 0;
+	background: #ffffff;
+	border: 1.5px solid #e2e8f0;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.jct-settings-toggle-row:hover {
+	border-color: var(--jct-brand-start, #667eea);
+}
+
+.jct-settings-toggle-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.jct-settings-toggle-text strong {
+	font-size: 13.5px;
+	font-weight: 600;
+	color: #1e293b;
+	line-height: 1.3;
+}
+
+.jct-settings-toggle-text span {
+	font-size: 11.5px;
+	color: #64748b;
+	line-height: 1.35;
+}
+
+.jct-switch {
+	position: relative;
+	display: inline-block;
+	width: 42px;
+	height: 24px;
+	flex-shrink: 0;
+}
+
+.jct-switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.jct-switch-slider {
+	position: absolute;
+	inset: 0;
+	background: #cbd5e1;
+	border-radius: 999px;
+	transition: background-color 0.2s ease;
+}
+
+.jct-switch-slider::before {
+	content: "";
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	left: 3px;
+	top: 3px;
+	background: #ffffff;
+	border-radius: 50%;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+	transition: transform 0.2s ease;
+}
+
+.jct-switch input:checked + .jct-switch-slider {
+	background: var(--jct-brand-start, #667eea);
+}
+
+.jct-switch input:checked + .jct-switch-slider::before {
+	transform: translateX(18px);
+}
+
+.jct-switch input:focus-visible + .jct-switch-slider {
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--jct-brand-start, #667eea) 28%, transparent);
+}
+
 .jct-settings-modal-footer {
 	padding: 14px 22px;
 	background: #f8fafc;
@@ -678,11 +785,10 @@
 }
 
 .jct-calendar-day:hover {
-	transform: scale(1.04);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+	box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12), inset 0 0 0 1px color-mix(in srgb, var(--jct-brand-start, #667eea) 35%, transparent);
 	border-color: var(--jct-brand-start, #667eea);
-	transition: all 0.18s ease;
-	z-index: 10;
+	transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+	z-index: 2;
 }
 
 .jct-calendar-day-top {
@@ -899,13 +1005,37 @@
 	width: 90%;
 }
 
-/* Assignments Modal Semantic Surface Classes (Light defaults) */
-.jct-assign-modal-layout,
+/* Assignments Modal Semantic Surface & Responsive Layout */
+.jct-assign-modal-layout {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+	min-height: 0;
+	box-sizing: border-box;
+	background: #ffffff;
+}
+
 .jct-assign-main-area {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	box-sizing: border-box;
 	background: #ffffff;
 }
 
 .jct-filter-controls {
+	width: 270px;
+	min-width: 240px;
+	flex-shrink: 0;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	box-sizing: border-box;
 	background: #f8fafc;
 	border-left: 1px solid #e5e7eb;
 }
@@ -966,24 +1096,48 @@
 	justify-content: center;
 }
 
+.jct-cal-grid-wrap {
+	min-width: 0;
+	overflow: visible;
+}
+
+.jct-cal-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 4px;
+	margin-bottom: 6px;
+}
+
+.jct-cal-days-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	grid-auto-rows: minmax(86px, auto);
+	gap: 4px;
+	padding: 2px;
+}
+
 .jct-cal-weekday-header {
 	text-align: center;
 	font-weight: 600;
-	padding: 4px;
+	padding: 5px 4px;
 	background: #e0e7ff;
 	border-radius: 4px;
 	font-size: 0.75rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .jct-cal-empty-cell {
-	aspect-ratio: 1 / 1;
+	min-height: 86px;
 	background: #f8fafc;
 	border-radius: 3px;
 	border: 1px solid #e5e7eb;
 }
 
 .jct-calendar-day {
-	aspect-ratio: 1 / 1;
+	min-height: 86px;
+	min-width: 0;
 	background: #ffffff;
 	border-radius: 6px;
 	border: 1px solid #e5e7eb;
@@ -1061,15 +1215,185 @@
 	color: #64748b;
 }
 
-@media (max-width: 768px) {
+/* Always show quick-add "+" on touch devices where hover isn't available */
+@media (hover: none) {
+	.jct-cal-quick-add {
+		opacity: 0.85;
+	}
+}
+
+/* Tablet / Compact Desktop Modals (<= 820px) */
+@media (max-width: 820px) {
+	.jct-assignments-modal {
+		padding: 10px;
+	}
+
+	.jct-assignments-modal-large {
+		width: 96vw;
+		height: 92vh;
+		max-height: 92vh;
+	}
+
+	.jct-assign-modal-layout {
+		flex-direction: column;
+		overflow-y: auto;
+	}
+
+	.jct-filter-controls {
+		width: 100%;
+		min-width: 0;
+		max-height: 38vh;
+		border-left: none;
+		border-bottom: 1px solid #e5e7eb;
+		padding: 12px 14px;
+	}
+
+	html.jct-dark .jct-filter-controls {
+		border-bottom-color: #334155 !important;
+	}
+
+	.jct-filter-actions {
+		flex-direction: row !important;
+	}
+
+	.jct-assign-main-area {
+		flex: 1 1 auto;
+		min-height: 240px;
+	}
+
+	.jct-assignments-modal-body {
+		padding: 14px;
+	}
+
+	.jct-assignments-modal-header {
+		padding: 14px 16px;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.jct-assignments-modal-header h3 {
+		font-size: 1.15rem;
+	}
+
+	#jct-scanning-notice {
+		position: static;
+		transform: none;
+		animation: none;
+	}
+}
+
+/* Stack 2-column settings modal into 1 column on tablets / narrow screens */
+@media (max-width: 740px) {
+	.jct-settings-modal-compact {
+		max-width: 520px !important;
+	}
+
+	.jct-settings-modal-body {
+		grid-template-columns: 1fr;
+		padding: 16px;
+	}
+}
+
+/* Mobile Modals (<= 640px) */
+@media (max-width: 640px) {
+	.jct-assignments-modal,
+	.jct-calendar-modal {
+		padding: 8px;
+	}
+
 	.jct-assignments-modal-content {
 		max-width: 100%;
-		max-height: 100vh;
-		border-radius: 0;
+		max-height: 94vh;
+		border-radius: 12px;
 	}
 
 	.jct-assignments-list-modal {
 		grid-template-columns: 1fr;
+	}
+
+	.jct-calendar-modal-content {
+		max-width: 100%;
+		width: 100%;
+		max-height: 94vh;
+	}
+
+	.jct-calendar-modal-header {
+		padding: 14px 16px;
+	}
+
+	.jct-calendar-modal-header h3 {
+		font-size: 1.15rem;
+	}
+
+	.jct-cal-grid-wrap {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.jct-cal-weekdays,
+	.jct-cal-days-grid {
+		min-width: 460px;
+	}
+
+	.jct-cal-days-grid {
+		grid-auto-rows: minmax(68px, auto);
+	}
+
+	.jct-cal-empty-cell,
+	.jct-calendar-day {
+		min-height: 68px;
+	}
+
+	.jct-day-details-card,
+	.jct-event-edit-content {
+		padding: 16px;
+		width: 94%;
+	}
+
+	.jct-day-details-header h3 {
+		font-size: 1.2rem;
+	}
+}
+
+/* Small Mobile (<= 480px) */
+@media (max-width: 480px) {
+	.jct-settings-modal-compact,
+	.jct-whats-new-card {
+		width: 96vw !important;
+	}
+
+	.jct-settings-modal-body,
+	.jct-whats-new-body {
+		padding: 14px;
+		gap: 14px;
+	}
+
+	.jct-settings-field {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 6px;
+	}
+
+	.jct-moodle-redesign .jct-settings-select,
+	.jct-settings-number {
+		width: 100%;
+	}
+
+	.jct-theme-picker {
+		gap: 6px;
+	}
+
+	.jct-theme-option {
+		padding: 8px 6px;
+		font-size: 12px;
+	}
+
+	.jct-gradient-custom-row {
+		grid-template-columns: 1fr;
+	}
+
+	.jct-filter-actions {
+		flex-direction: column !important;
 	}
 }
 

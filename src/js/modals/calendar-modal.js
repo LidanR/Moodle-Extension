@@ -98,10 +98,11 @@
 			).join('');
 
 			let html = `
-				<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px;">
-					${dayHeadersHtml}
-				</div>
-				<div style="display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; gap: 4px;">
+				<div class="jct-cal-grid-wrap">
+					<div class="jct-cal-weekdays">
+						${dayHeadersHtml}
+					</div>
+					<div class="jct-cal-days-grid">
 			`;
 
 			for (let i = 0; i < startingDayOfWeek; i++) {
@@ -180,7 +181,7 @@
 				html += '</div></div>';
 			}
 
-			html += '</div>';
+			html += '</div></div>';
 			grid.innerHTML = html;
 
 			// Quick-add "+" button inside each day cell
